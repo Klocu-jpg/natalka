@@ -127,8 +127,36 @@ const Header = () => {
                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </Button>
                     </div>
+                    
+                    <div className="relative my-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-popover px-2 text-muted-foreground">lub dołącz do innej pary</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Wpisz kod zaproszenia"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        className="font-mono uppercase text-sm"
+                      />
+                      <Button 
+                        onClick={handleJoinCouple} 
+                        variant="outline" 
+                        className="w-full" 
+                        size="sm"
+                        disabled={joinCouple.isPending}
+                      >
+                        {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz do innej pary 💕"}
+                      </Button>
+                    </div>
+                    
                     <p className="text-xs text-muted-foreground text-center">
-                      Partner musi się zarejestrować i wpisać ten kod
+                      Partner musi się zarejestrować i wpisać Twój kod
                     </p>
                   </div>
                 ) : (

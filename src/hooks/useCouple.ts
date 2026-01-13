@@ -66,7 +66,7 @@ export const useCouple = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["couple"] }),
   });
 
-  const hasPartner = couple?.user2_id !== null;
+  const hasPartner = couple !== null && couple.user2_id !== null;
   const isCreator = couple?.user1_id === user?.id;
 
   return { couple, isLoading, createCouple, joinCouple, hasPartner, isCreator };
