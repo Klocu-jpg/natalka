@@ -280,22 +280,7 @@ export type Database = {
     }
     Functions: {
       get_partner_id: { Args: { p_user_id: string }; Returns: string }
-      join_couple: {
-        Args: { invite_code: string }
-        Returns: {
-          created_at: string
-          id: string
-          invite_code: string
-          user1_id: string
-          user2_id: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "couples"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      join_couple: { Args: { invite_code: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
