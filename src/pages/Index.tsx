@@ -6,6 +6,7 @@ import DateIdeas from "@/components/DateIdeas";
 import SharedNotes from "@/components/SharedNotes";
 import CoupleManager from "@/components/CoupleManager";
 import ExpenseTracker from "@/components/ExpenseTracker";
+import DaysCounter from "@/components/DaysCounter";
 import { useCouple } from "@/hooks/useCouple";
 
 const Index = () => {
@@ -23,6 +24,7 @@ const Index = () => {
           {/* Left Column */}
           <div className="space-y-6">
             {showCoupleManager && <CoupleManager />}
+            <DaysCounter />
             <ShoppingList />
             <DateIdeas />
           </div>

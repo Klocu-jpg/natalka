@@ -41,6 +41,38 @@ export type Database = {
         }
         Relationships: []
       }
+      couple_anniversaries: {
+        Row: {
+          couple_id: string
+          created_at: string
+          id: string
+          name: string
+          start_date: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          id?: string
+          name?: string
+          start_date: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_anniversaries_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: true
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couples: {
         Row: {
           created_at: string
