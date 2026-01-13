@@ -43,45 +43,25 @@ export const useCouple = () => {
 
   const joinCouple = useMutation({
     mutationFn: async (inviteCode: string) => {
-      // Find the couple with this invite code
-      const { data: coupleData, error: findError } = await supabase
-        .from("couples")
-        .select("*")
-        .eq("invite_code", inviteCode.toLowerCase())
-        .is("user2_id", null)
-        .single();
-      
-      if (findError || !coupleData) {
-        throw new Error("Nieprawidłowy kod lub para już ma partnera");
+      const code = inviteCode.trim().toLowerCase();
+      if (!code) throw new Error("Wpisz kod zaproszenia");
+
+      // Use a backend function so we don't need public SELECT access on `couples`
+      const { data, error } = await supabase.rpc("join_couple", { invite_code: code });
+
+      if (error) {
+        // Normalize common messages to Polish UI copy
+        const msg = error.message || "Nie udało się dołączyć";
+        if (msg.toLowerCase().includes("nie możesz dołączyć")) {
+          throw new Error("Nie możesz dołączyć do własnej pary");
+        }
+        if (msg.toLowerCase().includes("nieprawidłowy kod")) {
+          throw new Error("Nieprawidłowy kod lub para już ma partnera");
+        }
+        throw new Error(msg);
       }
 
-      // Check if user is trying to join their own couple
-      if (coupleData.user1_id === user!.id) {
-        throw new Error("Nie możesz dołączyć do własnej pary");
-      }
-
-      // Delete user's existing couple if they created one (and it has no partner)
-      const { data: existingCouple } = await supabase
-        .from("couples")
-        .select("*")
-        .eq("user1_id", user!.id)
-        .is("user2_id", null)
-        .maybeSingle();
-
-      if (existingCouple) {
-        await supabase
-          .from("couples")
-          .delete()
-          .eq("id", existingCouple.id);
-      }
-
-      // Join the couple
-      const { error: updateError } = await supabase
-        .from("couples")
-        .update({ user2_id: user!.id })
-        .eq("id", coupleData.id);
-      
-      if (updateError) throw updateError;
+      return data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["couple"] }),
   });
