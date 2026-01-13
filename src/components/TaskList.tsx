@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTasks } from "@/hooks/useTasks";
+import WidgetWrapper from "./WidgetWrapper";
 
 const TaskList = () => {
   const { tasks, isLoading, addTask, toggleTask, deleteTask } = useTasks();
@@ -26,14 +27,11 @@ const TaskList = () => {
   };
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-coral flex items-center justify-center">
-          <CheckCircle2 className="w-5 h-5 text-accent-foreground" />
-        </div>
-        <h2 className="text-xl font-heading font-semibold">Zadania</h2>
-      </div>
-
+    <WidgetWrapper
+      title="Zadania"
+      icon={<CheckCircle2 className="w-5 h-5 text-accent-foreground" />}
+      iconBg="bg-coral"
+    >
       <div className="flex gap-2 mb-4">
         <Input
           placeholder="Dodaj zadanie..."
@@ -52,7 +50,7 @@ const TaskList = () => {
           <Loader2 className="w-6 h-6 animate-spin text-coral" />
         </div>
       ) : (
-        <ul className="space-y-2 max-h-64 overflow-y-auto">
+        <ul className="space-y-2 overflow-y-auto">
           {tasks.map((task) => (
             <li
               key={task.id}
@@ -94,7 +92,7 @@ const TaskList = () => {
           Wszystko zrobione! 🎉
         </p>
       )}
-    </div>
+    </WidgetWrapper>
   );
 };
 

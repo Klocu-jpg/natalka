@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/hooks/useNotes";
+import WidgetWrapper from "./WidgetWrapper";
 
 const noteColors = [
   "bg-rose-light",
@@ -29,23 +30,21 @@ const SharedNotes = () => {
   };
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-            <StickyNote className="w-5 h-5 text-foreground" />
-          </div>
-          <h2 className="text-xl font-heading font-semibold">Notatki</h2>
-        </div>
+    <WidgetWrapper
+      title="Notatki"
+      icon={<StickyNote className="w-5 h-5 text-foreground" />}
+      iconBg="bg-secondary"
+      actions={
         <Button 
           onClick={() => setIsAdding(!isAdding)} 
           size="icon" 
           variant={isAdding ? "outline" : "soft"}
+          className="h-8 w-8"
         >
-          {isAdding ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+          {isAdding ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </Button>
-      </div>
-
+      }
+    >
       {isAdding && (
         <div className="mb-4 p-4 bg-secondary rounded-xl space-y-3">
           <Input
@@ -99,7 +98,7 @@ const SharedNotes = () => {
           Zostaw sobie wiadomość! 📝
         </p>
       )}
-    </div>
+    </WidgetWrapper>
   );
 };
 

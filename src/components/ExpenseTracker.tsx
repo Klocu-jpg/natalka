@@ -11,7 +11,7 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { format, parseISO } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import WidgetWrapper from "./WidgetWrapper";
 
 const ExpenseTracker = () => {
   const { expenses, categories, isLoading, addExpense, deleteExpense, totalThisMonth, byCategory } = useExpenses();
@@ -56,19 +56,15 @@ const ExpenseTracker = () => {
   }));
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 animate-slide-up" style={{ animationDelay: "0.5s" }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-coral flex items-center justify-center">
-            <Wallet className="w-5 h-5 text-accent-foreground" />
-          </div>
-          <h2 className="text-xl font-heading font-semibold">Wydatki</h2>
-        </div>
-        
+    <WidgetWrapper
+      title="Wydatki"
+      icon={<Wallet className="w-5 h-5 text-accent-foreground" />}
+      iconBg="bg-coral"
+      actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="icon" variant="coral">
-              <Plus className="w-5 h-5" />
+            <Button size="icon" variant="coral" className="h-8 w-8">
+              <Plus className="w-4 h-4" />
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -143,8 +139,8 @@ const ExpenseTracker = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
+      }
+    >
       {/* Monthly total */}
       <div className="bg-coral-light rounded-xl p-4 mb-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -197,7 +193,7 @@ const ExpenseTracker = () => {
           )}
 
           {/* Recent expenses */}
-          <div className="space-y-2 max-h-40 overflow-y-auto">
+          <div className="space-y-2 overflow-y-auto">
             {expenses.slice(0, 5).map(expense => {
               const category = categories.find(c => c.id === expense.category_id);
               return (
@@ -233,7 +229,7 @@ const ExpenseTracker = () => {
           )}
         </>
       )}
-    </div>
+    </WidgetWrapper>
   );
 };
 

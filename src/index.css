@@ -129,3 +129,55 @@
     @apply bg-white/80 backdrop-blur-md;
   }
 }
+
+/* React Grid Layout Styles */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, box-shadow;
+}
+
+.react-grid-item.resizing {
+  z-index: 100;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  cursor: grabbing;
+  box-shadow: 0 20px 40px -10px hsl(350 70% 60% / 0.3);
+  transform: scale(1.02);
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item > .react-resizable-handle {
+  display: none;
+}
+
+.react-grid-placeholder {
+  background: hsl(350 70% 60% / 0.15);
+  border-radius: 1rem;
+  border: 2px dashed hsl(350 70% 60% / 0.4);
+}
+
+/* Drag handle styling */
+.drag-handle {
+  touch-action: none;
+}
+
+.drag-handle:hover {
+  background: hsl(var(--secondary));
+}
+
+.widget-container {
+  height: 100%;
+}
