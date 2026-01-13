@@ -55,6 +55,26 @@ export const useCouple = () => {
         throw new Error("Nieprawidłowy kod lub para już ma partnera");
       }
 
+      // Check if user is trying to join their own couple
+      if (coupleData.user1_id === user!.id) {
+        throw new Error("Nie możesz dołączyć do własnej pary");
+      }
+
+      // Delete user's existing couple if they created one (and it has no partner)
+      const { data: existingCouple } = await supabase
+        .from("couples")
+        .select("*")
+        .eq("user1_id", user!.id)
+        .is("user2_id", null)
+        .maybeSingle();
+
+      if (existingCouple) {
+        await supabase
+          .from("couples")
+          .delete()
+          .eq("id", existingCouple.id);
+      }
+
       // Join the couple
       const { error: updateError } = await supabase
         .from("couples")
