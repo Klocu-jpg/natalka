@@ -15,17 +15,23 @@ const DraggableWidget = ({ id, index, children }: DraggableWidgetProps) => {
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`relative group ${snapshot.isDragging ? "z-50" : ""}`}
+          style={provided.draggableProps.style}
+          className={`group ${snapshot.isDragging ? "z-50" : ""}`}
         >
-          {/* Drag handle */}
-          <div
-            {...provided.dragHandleProps}
-            className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-full opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-1 rounded-lg hover:bg-secondary z-10"
+          <div 
+            className={`
+              relative transition-all duration-200
+              ${snapshot.isDragging ? "scale-[1.02] shadow-2xl" : ""}
+            `}
           >
-            <GripVertical className="w-5 h-5 text-muted-foreground" />
-          </div>
-          
-          <div className={snapshot.isDragging ? "shadow-2xl rounded-2xl" : ""}>
+            {/* Drag handle - inside the card at top right */}
+            <div
+              {...provided.dragHandleProps}
+              className="absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-secondary/80 z-20"
+            >
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+            </div>
+            
             {children}
           </div>
         </div>
