@@ -1,33 +1,19 @@
 import { useState } from "react";
-import { ShoppingCart, Plus, Trash2, Check } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ShoppingItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { useShoppingItems } from "@/hooks/useShoppingItems";
 
 const ShoppingList = () => {
-  const [items, setItems] = useState<ShoppingItem[]>([
-    { id: "1", name: "Mleko", completed: false },
-    { id: "2", name: "Chleb", completed: true },
-    { id: "3", name: "Jabłka", completed: false },
-  ]);
+  const { items, isLoading, addItem, toggleItem, deleteItem } = useShoppingItems();
   const [newItem, setNewItem] = useState("");
 
-  const addItem = () => {
+  const handleAddItem = () => {
     if (newItem.trim()) {
-      setItems([...items, { id: Date.now().toString(), name: newItem, completed: false }]);
+      addItem.mutate(newItem);
       setNewItem("");
     }
-  };
-
-  const toggleItem = (id: string) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, completed: !item.completed } : item
-    ));
-  };
-
-  const deleteItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
   };
 
   return (
@@ -44,51 +30,57 @@ const ShoppingList = () => {
           placeholder="Dodaj produkt..."
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && addItem()}
+          onKeyPress={(e) => e.key === "Enter" && handleAddItem()}
           className="rounded-xl border-2 focus:border-primary"
         />
-        <Button onClick={addItem} size="icon" variant="soft">
-          <Plus className="w-5 h-5" />
+        <Button onClick={handleAddItem} size="icon" variant="soft" disabled={addItem.isPending}>
+          {addItem.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
         </Button>
       </div>
 
-      <ul className="space-y-2 max-h-64 overflow-y-auto">
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className={cn(
-              "flex items-center gap-3 p-3 rounded-xl transition-all duration-300",
-              item.completed ? "bg-muted/50" : "bg-secondary hover:bg-secondary/80"
-            )}
-          >
-            <button
-              onClick={() => toggleItem(item.id)}
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <ul className="space-y-2 max-h-64 overflow-y-auto">
+          {items.map((item) => (
+            <li
+              key={item.id}
               className={cn(
-                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                item.completed
-                  ? "bg-primary border-primary"
-                  : "border-muted-foreground hover:border-primary"
+                "flex items-center gap-3 p-3 rounded-xl transition-all duration-300",
+                item.completed ? "bg-muted/50" : "bg-secondary hover:bg-secondary/80"
               )}
             >
-              {item.completed && <Check className="w-4 h-4 text-primary-foreground" />}
-            </button>
-            <span className={cn(
-              "flex-1 transition-all",
-              item.completed && "line-through text-muted-foreground"
-            )}>
-              {item.name}
-            </span>
-            <button
-              onClick={() => deleteItem(item.id)}
-              className="text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </li>
-        ))}
-      </ul>
+              <button
+                onClick={() => toggleItem.mutate({ id: item.id, completed: !item.completed })}
+                className={cn(
+                  "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                  item.completed
+                    ? "bg-primary border-primary"
+                    : "border-muted-foreground hover:border-primary"
+                )}
+              >
+                {item.completed && <Check className="w-4 h-4 text-primary-foreground" />}
+              </button>
+              <span className={cn(
+                "flex-1 transition-all",
+                item.completed && "line-through text-muted-foreground"
+              )}>
+                {item.name}
+              </span>
+              <button
+                onClick={() => deleteItem.mutate(item.id)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {items.length === 0 && (
+      {!isLoading && items.length === 0 && (
         <p className="text-center text-muted-foreground py-8">
           Lista jest pusta! Dodaj coś 🛒
         </p>

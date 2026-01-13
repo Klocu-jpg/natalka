@@ -1,30 +1,19 @@
 import { useState } from "react";
-import { Heart, Plus, Sparkles, Check } from "lucide-react";
+import { Heart, Plus, Sparkles, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DateIdea } from "@/types";
 import { cn } from "@/lib/utils";
+import { useDateIdeas } from "@/hooks/useDateIdeas";
 
 const DateIdeas = () => {
-  const [ideas, setIdeas] = useState<DateIdea[]>([
-    { id: "1", title: "Piknik w parku 🌳", completed: false },
-    { id: "2", title: "Wieczór filmowy z popcornem 🍿", completed: true },
-    { id: "3", title: "Wspólne gotowanie kolacji 👨‍🍳", completed: false },
-    { id: "4", title: "Spacer po starym mieście 🏛️", completed: false },
-  ]);
+  const { ideas, isLoading, addIdea, toggleIdea } = useDateIdeas();
   const [newIdea, setNewIdea] = useState("");
 
-  const addIdea = () => {
+  const handleAddIdea = () => {
     if (newIdea.trim()) {
-      setIdeas([...ideas, { id: Date.now().toString(), title: newIdea, completed: false }]);
+      addIdea.mutate(newIdea);
       setNewIdea("");
     }
-  };
-
-  const toggleIdea = (id: string) => {
-    setIdeas(ideas.map(idea => 
-      idea.id === id ? { ...idea, completed: !idea.completed } : idea
-    ));
   };
 
   return (
@@ -41,50 +30,56 @@ const DateIdeas = () => {
           placeholder="Dodaj pomysł..."
           value={newIdea}
           onChange={(e) => setNewIdea(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && addIdea()}
+          onKeyPress={(e) => e.key === "Enter" && handleAddIdea()}
           className="rounded-xl border-2 focus:border-primary"
         />
-        <Button onClick={addIdea} size="icon">
-          <Plus className="w-5 h-5" />
+        <Button onClick={handleAddIdea} size="icon" disabled={addIdea.isPending}>
+          {addIdea.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
         </Button>
       </div>
 
-      <ul className="space-y-2 max-h-48 overflow-y-auto">
-        {ideas.map((idea) => (
-          <li
-            key={idea.id}
-            onClick={() => toggleIdea(idea.id)}
-            className={cn(
-              "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300",
-              idea.completed 
-                ? "bg-rose-light/50 border-2 border-primary/20" 
-                : "bg-secondary hover:bg-secondary/80"
-            )}
-          >
-            <div className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center transition-all",
-              idea.completed ? "bg-primary" : "border-2 border-muted-foreground"
-            )}>
-              {idea.completed && <Check className="w-4 h-4 text-primary-foreground" />}
-            </div>
-            <span className={cn(
-              "flex-1",
-              idea.completed && "text-muted-foreground"
-            )}>
-              {idea.title}
-            </span>
-            <Heart 
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <ul className="space-y-2 max-h-48 overflow-y-auto">
+          {ideas.map((idea) => (
+            <li
+              key={idea.id}
+              onClick={() => toggleIdea.mutate({ id: idea.id, completed: !idea.completed })}
               className={cn(
-                "w-4 h-4 transition-colors",
-                idea.completed ? "text-primary" : "text-muted-foreground"
-              )} 
-              fill={idea.completed ? "currentColor" : "none"}
-            />
-          </li>
-        ))}
-      </ul>
+                "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300",
+                idea.completed 
+                  ? "bg-rose-light/50 border-2 border-primary/20" 
+                  : "bg-secondary hover:bg-secondary/80"
+              )}
+            >
+              <div className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center transition-all",
+                idea.completed ? "bg-primary" : "border-2 border-muted-foreground"
+              )}>
+                {idea.completed && <Check className="w-4 h-4 text-primary-foreground" />}
+              </div>
+              <span className={cn(
+                "flex-1",
+                idea.completed && "text-muted-foreground"
+              )}>
+                {idea.title}
+              </span>
+              <Heart 
+                className={cn(
+                  "w-4 h-4 transition-colors",
+                  idea.completed ? "text-primary" : "text-muted-foreground"
+                )} 
+                fill={idea.completed ? "currentColor" : "none"}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {ideas.length === 0 && (
+      {!isLoading && ideas.length === 0 && (
         <p className="text-center text-muted-foreground py-8">
           Dodaj swój pierwszy pomysł! 💕
         </p>
