@@ -6,8 +6,14 @@ import DateIdeas from "@/components/DateIdeas";
 import SharedNotes from "@/components/SharedNotes";
 import CoupleManager from "@/components/CoupleManager";
 import ExpenseTracker from "@/components/ExpenseTracker";
+import { useCouple } from "@/hooks/useCouple";
 
 const Index = () => {
+  const { hasPartner, isLoading } = useCouple();
+  
+  // Show CoupleManager only if couple is not complete
+  const showCoupleManager = !isLoading && !hasPartner;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -16,7 +22,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            <CoupleManager />
+            {showCoupleManager && <CoupleManager />}
             <ShoppingList />
             <DateIdeas />
           </div>
