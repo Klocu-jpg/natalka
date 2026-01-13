@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
+import WidgetWrapper from "./WidgetWrapper";
 
 const MiniCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -46,27 +47,16 @@ const MiniCalendar = () => {
     toast.success("Wydarzenie dodane! 📅");
   };
 
-  const eventTypeLabels = {
-    task: "Zadanie",
-    date: "Randka 💕",
-    anniversary: "Rocznica ❤️",
-    other: "Inne",
-  };
-
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
-            <CalendarIcon className="w-5 h-5 text-primary" />
-          </div>
-          <h2 className="text-xl font-heading font-semibold">Kalendarz</h2>
-        </div>
-        
+    <WidgetWrapper
+      title="Kalendarz"
+      icon={<CalendarIcon className="w-5 h-5 text-primary" />}
+      iconBg="bg-rose-light"
+      actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="icon" variant="soft">
-              <Plus className="w-5 h-5" />
+            <Button size="icon" variant="soft" className="h-8 w-8">
+              <Plus className="w-4 h-4" />
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -128,8 +118,8 @@ const MiniCalendar = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
+      }
+    >
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -200,7 +190,7 @@ const MiniCalendar = () => {
       {events.length > 0 && (
         <div className="mt-4 pt-4 border-t border-border">
           <h4 className="text-sm font-medium mb-2">Nadchodzące wydarzenia</h4>
-          <ul className="space-y-2 max-h-32 overflow-y-auto">
+          <ul className="space-y-2 overflow-y-auto max-h-32">
             {events.slice(0, 5).map(event => (
               <li key={event.id} className="flex items-center gap-2 text-sm group">
                 <div className={cn(
@@ -223,7 +213,7 @@ const MiniCalendar = () => {
           </ul>
         </div>
       )}
-    </div>
+    </WidgetWrapper>
   );
 };
 

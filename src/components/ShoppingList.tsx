@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
+import WidgetWrapper from "./WidgetWrapper";
 
 const ShoppingList = () => {
   const { items, isLoading, addItem, toggleItem, deleteItem } = useShoppingItems();
@@ -17,14 +18,11 @@ const ShoppingList = () => {
   };
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 animate-slide-up">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-          <ShoppingCart className="w-5 h-5 text-primary-foreground" />
-        </div>
-        <h2 className="text-xl font-heading font-semibold">Lista Zakupów</h2>
-      </div>
-
+    <WidgetWrapper
+      title="Lista Zakupów"
+      icon={<ShoppingCart className="w-5 h-5 text-primary-foreground" />}
+      iconBg="gradient-primary"
+    >
       <div className="flex gap-2 mb-4">
         <Input
           placeholder="Dodaj produkt..."
@@ -43,7 +41,7 @@ const ShoppingList = () => {
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : (
-        <ul className="space-y-2 max-h-64 overflow-y-auto">
+        <ul className="space-y-2 overflow-y-auto">
           {items.map((item) => (
             <li
               key={item.id}
@@ -85,7 +83,7 @@ const ShoppingList = () => {
           Lista jest pusta! Dodaj coś 🛒
         </p>
       )}
-    </div>
+    </WidgetWrapper>
   );
 };
 
