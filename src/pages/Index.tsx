@@ -4,6 +4,8 @@ import TaskList from "@/components/TaskList";
 import MiniCalendar from "@/components/MiniCalendar";
 import DateIdeas from "@/components/DateIdeas";
 import SharedNotes from "@/components/SharedNotes";
+import CoupleManager from "@/components/CoupleManager";
+import ExpenseTracker from "@/components/ExpenseTracker";
 
 const Index = () => {
   return (
@@ -14,6 +16,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
+            <CoupleManager />
             <ShoppingList />
             <DateIdeas />
           </div>
@@ -22,6 +25,7 @@ const Index = () => {
           <div className="space-y-6">
             <TaskList />
             <SharedNotes />
+            <ExpenseTracker />
           </div>
           
           {/* Right Column */}

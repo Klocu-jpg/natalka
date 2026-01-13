@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      couples: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          user1_id: string
+          user2_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          user1_id: string
+          user2_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          user1_id?: string
+          user2_id?: string | null
+        }
+        Relationships: []
+      }
       date_ideas: {
         Row: {
           completed: boolean
@@ -67,6 +91,75 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      expense_categories: {
+        Row: {
+          color: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color: string
+          icon: string
+          id: string
+          name: string
+        }
+        Update: {
+          color?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          couple_id: string | null
+          created_at: string
+          date: string
+          description: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string
+          couple_id?: string | null
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          couple_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notes: {
         Row: {
@@ -154,7 +247,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_partner_id: { Args: { p_user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
