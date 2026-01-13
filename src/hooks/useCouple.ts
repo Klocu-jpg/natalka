@@ -47,10 +47,9 @@ export const useCouple = () => {
       if (!code) throw new Error("Wpisz kod zaproszenia");
 
       // Use a backend function so we don't need public SELECT access on `couples`
-      const { data, error } = await supabase.rpc("join_couple", { invite_code: code });
+      const { error } = await supabase.rpc("join_couple", { invite_code: code });
 
       if (error) {
-        // Normalize common messages to Polish UI copy
         const msg = error.message || "Nie udało się dołączyć";
         if (msg.toLowerCase().includes("nie możesz dołączyć")) {
           throw new Error("Nie możesz dołączyć do własnej pary");
@@ -61,7 +60,7 @@ export const useCouple = () => {
         throw new Error(msg);
       }
 
-      return data;
+      return true;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["couple"] }),
   });
