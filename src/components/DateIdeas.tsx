@@ -41,7 +41,7 @@ const DateIdeas = () => {
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : (
-        <ul className="space-y-2 overflow-y-auto">
+        <ul className="space-y-2">
           {ideas.map((idea) => (
             <li
               key={idea.id}

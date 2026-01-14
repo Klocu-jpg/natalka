@@ -190,7 +190,7 @@ const MiniCalendar = () => {
       {events.length > 0 && (
         <div className="mt-4 pt-4 border-t border-border">
           <h4 className="text-sm font-medium mb-2">Nadchodzące wydarzenia</h4>
-          <ul className="space-y-2 overflow-y-auto max-h-32">
+          <ul className="space-y-2">
             {events.slice(0, 5).map(event => (
               <li key={event.id} className="flex items-center gap-2 text-sm group">
                 <div className={cn(
