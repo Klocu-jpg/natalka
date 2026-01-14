@@ -131,14 +131,11 @@ const MealsPlanner = () => {
                 key={day.id}
                 value={String(day.id)}
                 className={cn(
-                  "text-xs px-1 relative",
-                  hasMeals && "font-semibold"
+                  "text-xs px-1",
+                  hasMeals && "bg-primary/20 text-primary font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 )}
               >
                 {day.short}
-                {hasMeals && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
-                )}
               </TabsTrigger>
             );
           })}
