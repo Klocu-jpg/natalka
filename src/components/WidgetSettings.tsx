@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useWidgetVisibility, WIDGET_LABELS } from "@/hooks/useWidgetVisibility";
+import { useWidgetVisibility, WIDGET_LABELS } from "@/contexts/WidgetVisibilityContext";
 
 const WidgetSettings = () => {
   const { visibility, toggleWidget } = useWidgetVisibility();

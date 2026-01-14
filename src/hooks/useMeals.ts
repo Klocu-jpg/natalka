@@ -84,6 +84,44 @@ export const useMeals = () => {
     },
   });
 
+  const addMealFromFavorite = useMutation({
+    mutationFn: async ({
+      name,
+      recipe,
+      ingredients,
+      dayOfWeek,
+    }: {
+      name: string;
+      recipe: string;
+      ingredients: Ingredient[];
+      dayOfWeek: number;
+    }) => {
+      if (!user) throw new Error("Nie jesteś zalogowany");
+
+      const { data, error } = await supabase
+        .from("meals")
+        .insert({
+          user_id: user.id,
+          day_of_week: dayOfWeek,
+          name,
+          recipe,
+          ingredients: JSON.parse(JSON.stringify(ingredients)),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+      toast.success("Przepis dodany do planu! 🍽️");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się dodać przepisu");
+    },
+  });
+
   const deleteMeal = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("meals").delete().eq("id", id);
@@ -106,6 +144,7 @@ export const useMeals = () => {
     meals,
     isLoading,
     addMeal,
+    addMealFromFavorite,
     deleteMeal,
     getMealsForDay,
   };
