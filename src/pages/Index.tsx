@@ -12,7 +12,7 @@ import ExpenseTracker from "@/components/ExpenseTracker";
 import DaysCounter from "@/components/DaysCounter";
 import MealsPlanner from "@/components/MealsPlanner";
 import FavoriteRecipes from "@/components/FavoriteRecipes";
-import WidgetSettings from "@/components/WidgetSettings";
+
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -100,9 +100,6 @@ const Index = () => {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-end mb-4">
-          <WidgetSettings />
-        </div>
         
         <ResponsiveGridLayout
           className="layout"
