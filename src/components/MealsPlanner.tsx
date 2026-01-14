@@ -124,15 +124,24 @@ const MealsPlanner = () => {
     >
       <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))}>
         <TabsList className="w-full grid grid-cols-7 mb-4">
-          {DAYS.map((day) => (
-            <TabsTrigger
-              key={day.id}
-              value={String(day.id)}
-              className="text-xs px-1"
-            >
-              {day.short}
-            </TabsTrigger>
-          ))}
+          {DAYS.map((day) => {
+            const hasMeals = getMealsForDay(day.id).length > 0;
+            return (
+              <TabsTrigger
+                key={day.id}
+                value={String(day.id)}
+                className={cn(
+                  "text-xs px-1 relative",
+                  hasMeals && "font-semibold"
+                )}
+              >
+                {day.short}
+                {hasMeals && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         {DAYS.map((day) => {
