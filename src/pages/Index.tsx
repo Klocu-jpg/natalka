@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider, Layout, Layouts } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -17,7 +17,8 @@ import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const STORAGE_KEY = "dashboard-layouts-v3";
+// Bumped version to reset corrupted layouts
+const STORAGE_KEY = "dashboard-layouts-v4";
 
 const defaultLayouts: Layouts = {
   lg: [
@@ -56,6 +57,7 @@ const defaultLayouts: Layouts = {
 };
 
 const ALL_WIDGETS: Record<string, React.FC> = {
+  "meals-planner": MealsPlanner,
   "days-counter": DaysCounter,
   "shopping-list": ShoppingList,
   "date-ideas": DateIdeas,
@@ -63,42 +65,35 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "shared-notes": SharedNotes,
   "expense-tracker": ExpenseTracker,
   "mini-calendar": MiniCalendar,
-  "meals-planner": MealsPlanner,
   "favorite-recipes": FavoriteRecipes,
 };
 
 const Index = () => {
-  const { isVisible } = useWidgetVisibility();
+  const { visibleWidgets } = useWidgetVisibility();
   
-  const [layouts, setLayouts] = useState<Layouts>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return defaultLayouts;
-      }
-    }
-    return defaultLayouts;
-  });
-
-  const handleLayoutChange = (_: Layout[], allLayouts: Layouts) => {
-    setLayouts(allLayouts);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allLayouts));
-  };
-
-  // Filter layouts to only include visible widgets
-  const getFilteredLayouts = (): Layouts => {
-    const filtered: Layouts = {};
-    for (const [breakpoint, layout] of Object.entries(layouts)) {
+  // Get filtered layouts based on visible widgets - always use defaults with minH preserved
+  const getLayoutsForVisibleWidgets = useMemo(() => {
+    const result: Layouts = {};
+    
+    for (const [breakpoint, layout] of Object.entries(defaultLayouts)) {
       const layoutArray = layout as Layout[];
-      filtered[breakpoint] = layoutArray.filter((item) => isVisible(item.i));
+      // Filter to only visible widgets and preserve all properties including minH
+      result[breakpoint] = layoutArray
+        .filter((item) => visibleWidgets.includes(item.i))
+        .map((item) => ({ ...item }));
     }
-    return filtered;
-  };
+    
+    return result;
+  }, [visibleWidgets]);
 
-  // Get visible widgets
-  const visibleWidgets = Object.entries(ALL_WIDGETS).filter(([id]) => isVisible(id));
+  // Get visible widget components in correct order
+  const widgetComponents = useMemo(() => {
+    // Use the order from defaultLayouts.lg to maintain consistent ordering
+    const orderedIds = defaultLayouts.lg.map(l => l.i);
+    return orderedIds
+      .filter((id) => visibleWidgets.includes(id))
+      .map((id) => ({ id, Component: ALL_WIDGETS[id] }));
+  }, [visibleWidgets]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,17 +106,16 @@ const Index = () => {
         
         <ResponsiveGridLayout
           className="layout"
-          layouts={getFilteredLayouts()}
+          layouts={getLayoutsForVisibleWidgets}
           breakpoints={{ lg: 1024, md: 768, sm: 0 }}
           cols={{ lg: 3, md: 2, sm: 1 }}
           rowHeight={60}
           margin={[16, 16]}
           containerPadding={[0, 0]}
-          onLayoutChange={handleLayoutChange}
           draggableHandle=".drag-handle"
           isResizable={false}
         >
-          {visibleWidgets.map(([id, Component]) => (
+          {widgetComponents.map(({ id, Component }) => (
             <div key={id} className="widget-container">
               <Component />
             </div>
