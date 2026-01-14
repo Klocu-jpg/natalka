@@ -68,8 +68,13 @@ Przepis powinien być prosty i praktyczny. Składniki podawaj z dokładnymi ilo�
     // Parse JSON from response, handle potential markdown code blocks
     let parsed;
     try {
-      // Remove markdown code blocks if present
-      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      // Remove markdown code blocks if present (handles ```json, ``` at start/end)
+      let cleanContent = content.trim();
+      // Remove opening code fence with optional language
+      cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/i, '');
+      // Remove closing code fence
+      cleanContent = cleanContent.replace(/\n?```\s*$/i, '');
+      cleanContent = cleanContent.trim();
       parsed = JSON.parse(cleanContent);
     } catch (e) {
       console.error('Failed to parse AI response:', content);
