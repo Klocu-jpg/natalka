@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 const STORAGE_KEY = "widget-visibility";
 
@@ -30,13 +30,22 @@ export const WIDGET_LABELS: Record<string, string> = {
   "favorite-recipes": "Ulubione przepisy",
 };
 
-export const useWidgetVisibility = () => {
+interface WidgetVisibilityContextType {
+  visibility: WidgetVisibility;
+  toggleWidget: (widgetId: string) => void;
+  setWidgetVisible: (widgetId: string, visible: boolean) => void;
+  isVisible: (widgetId: string) => boolean;
+  visibleWidgets: string[];
+}
+
+const WidgetVisibilityContext = createContext<WidgetVisibilityContextType | undefined>(undefined);
+
+export const WidgetVisibilityProvider = ({ children }: { children: ReactNode }) => {
   const [visibility, setVisibility] = useState<WidgetVisibility>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Merge with defaults to ensure new widgets are visible
         return { ...DEFAULT_VISIBILITY, ...parsed };
       }
     } catch (e) {
@@ -71,11 +80,19 @@ export const useWidgetVisibility = () => {
     .filter(([_, visible]) => visible)
     .map(([id]) => id);
 
-  return {
-    visibility,
-    toggleWidget,
-    setWidgetVisible,
-    isVisible,
-    visibleWidgets,
-  };
+  return (
+    <WidgetVisibilityContext.Provider
+      value={{ visibility, toggleWidget, setWidgetVisible, isVisible, visibleWidgets }}
+    >
+      {children}
+    </WidgetVisibilityContext.Provider>
+  );
+};
+
+export const useWidgetVisibility = () => {
+  const context = useContext(WidgetVisibilityContext);
+  if (context === undefined) {
+    throw new Error("useWidgetVisibility must be used within a WidgetVisibilityProvider");
+  }
+  return context;
 };

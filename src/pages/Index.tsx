@@ -13,7 +13,7 @@ import DaysCounter from "@/components/DaysCounter";
 import MealsPlanner from "@/components/MealsPlanner";
 import FavoriteRecipes from "@/components/FavoriteRecipes";
 import WidgetSettings from "@/components/WidgetSettings";
-import { useWidgetVisibility } from "@/hooks/useWidgetVisibility";
+import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 

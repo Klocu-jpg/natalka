@@ -1,23 +1,38 @@
 import { useState } from "react";
-import { Star, Trash2, ChefHat, Loader2, Plus, Check } from "lucide-react";
+import { Star, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFavoriteRecipes, FavoriteRecipe } from "@/hooks/useFavoriteRecipes";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
+import { useMeals } from "@/hooks/useMeals";
 import WidgetWrapper from "./WidgetWrapper";
 import { toast } from "sonner";
+
+const DAYS = [
+  { id: 0, name: "Poniedziałek" },
+  { id: 1, name: "Wtorek" },
+  { id: 2, name: "Środa" },
+  { id: 3, name: "Czwartek" },
+  { id: 4, name: "Piątek" },
+  { id: 5, name: "Sobota" },
+  { id: 6, name: "Niedziela" },
+];
 
 const FavoriteRecipes = () => {
   const { favoriteRecipes, isLoading, deleteFavoriteRecipe } = useFavoriteRecipes();
   const { addItem } = useShoppingItems();
+  const { addMealFromFavorite } = useMeals();
   const [selectedRecipe, setSelectedRecipe] = useState<FavoriteRecipe | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addedIngredients, setAddedIngredients] = useState<Set<string>>(new Set());
+  const [selectedDay, setSelectedDay] = useState<string>("");
 
   const openRecipe = (recipe: FavoriteRecipe) => {
     setSelectedRecipe(recipe);
     setAddedIngredients(new Set());
+    setSelectedDay("");
     setIsDialogOpen(true);
   };
 
@@ -32,6 +47,18 @@ const FavoriteRecipes = () => {
   const handleAddSingleIngredient = (ingredientName: string, amount: string) => {
     addItem.mutate(`${ingredientName} (${amount})`);
     setAddedIngredients((prev) => new Set(prev).add(ingredientName));
+  };
+
+  const handleAddToDay = () => {
+    if (!selectedRecipe || selectedDay === "") return;
+    
+    addMealFromFavorite.mutate({
+      name: selectedRecipe.name,
+      recipe: selectedRecipe.recipe,
+      ingredients: selectedRecipe.ingredients,
+      dayOfWeek: parseInt(selectedDay),
+    });
+    setSelectedDay("");
   };
 
   return (
@@ -93,6 +120,39 @@ const FavoriteRecipes = () => {
           <ScrollArea className="max-h-[60vh] pr-4">
             {selectedRecipe && (
               <div className="space-y-4">
+                {/* Add to meal plan */}
+                <div className="p-3 bg-primary/10 rounded-xl space-y-2">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <CalendarPlus className="w-4 h-4" />
+                    Dodaj do planu obiadów
+                  </p>
+                  <div className="flex gap-2">
+                    <Select value={selectedDay} onValueChange={setSelectedDay}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Wybierz dzień..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAYS.map((day) => (
+                          <SelectItem key={day.id} value={String(day.id)}>
+                            {day.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      onClick={handleAddToDay}
+                      disabled={selectedDay === "" || addMealFromFavorite.isPending}
+                    >
+                      {addMealFromFavorite.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-sm">Składniki:</h4>
