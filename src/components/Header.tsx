@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Heart, LogOut, Users, Copy, Check, UserPlus, Loader2 } from "lucide-react";
+import { Heart, LogOut, Users, Copy, Check, UserPlus, Loader2, Settings } from "lucide-react";
+import WidgetSettings from "@/components/WidgetSettings";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCouple } from "@/hooks/useCouple";
@@ -206,6 +207,8 @@ const Header = () => {
                 )}
               </PopoverContent>
             </Popover>
+            
+            <WidgetSettings />
             
             <Button variant="ghost" size="icon" onClick={handleSignOut}>
               <LogOut className="w-5 h-5" />
