@@ -172,47 +172,74 @@ const MealsPlanner = () => {
 
       {/* Recipe Dialog */}
       <Dialog open={recipeDialogOpen} onOpenChange={setRecipeDialogOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
           {selectedMeal && (
             <>
-              <DialogHeader>
-                <DialogTitle className="font-heading flex items-center gap-2">
-                  <ChefHat className="w-5 h-5 text-primary" />
+              <DialogHeader className="pb-4 border-b">
+                <DialogTitle className="font-heading text-xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                    <ChefHat className="w-5 h-5 text-primary-foreground" />
+                  </div>
                   {selectedMeal.name}
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4 pt-4">
+              <div className="space-y-6 pt-6">
                 {/* Ingredients */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-heading font-semibold">Składniki</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-heading font-semibold text-lg">🧂 Składniki</h4>
                     <Button
-                      variant="soft"
+                      variant="default"
                       size="sm"
                       onClick={() => handleAddIngredientsToShoppingList(selectedMeal)}
                       disabled={addItem.isPending}
+                      className="gap-2"
                     >
-                      <ShoppingCart className="w-4 h-4 mr-1" />
-                      Do listy zakupów
+                      <ShoppingCart className="w-4 h-4" />
+                      Dodaj do zakupów
                     </Button>
                   </div>
-                  <ul className="bg-secondary rounded-xl p-3 space-y-1">
-                    {selectedMeal.ingredients?.map((ing, idx) => (
-                      <li key={idx} className="text-sm flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="flex-1">{ing.name}</span>
-                        <span className="text-muted-foreground">{ing.amount}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="bg-secondary rounded-2xl p-4">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedMeal.ingredients?.map((ing, idx) => (
+                        <li key={idx} className="flex items-center gap-3 p-2 bg-background/60 rounded-xl">
+                          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                            {idx + 1}
+                          </span>
+                          <span className="flex-1 font-medium text-sm">{ing.name}</span>
+                          <span className="text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-lg">{ing.amount}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Recipe */}
                 <div>
-                  <h4 className="font-heading font-semibold mb-2">Przepis</h4>
-                  <div className="bg-rose-light/50 rounded-xl p-4">
-                    <p className="text-sm whitespace-pre-wrap">{selectedMeal.recipe}</p>
+                  <h4 className="font-heading font-semibold text-lg mb-3">👨‍🍳 Przepis krok po kroku</h4>
+                  <div className="bg-gradient-to-br from-rose-light/70 to-coral-light/50 rounded-2xl p-5 border border-primary/10">
+                    <div className="prose prose-sm max-w-none">
+                      {selectedMeal.recipe?.split('\n').map((line, idx) => {
+                        const trimmed = line.trim();
+                        if (!trimmed) return null;
+                        
+                        // Check if line starts with a number (step)
+                        const isStep = /^\d+[\.\)]/.test(trimmed);
+                        
+                        return (
+                          <p 
+                            key={idx} 
+                            className={cn(
+                              "mb-2 last:mb-0",
+                              isStep && "font-medium text-foreground pl-0"
+                            )}
+                          >
+                            {trimmed}
+                          </p>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
