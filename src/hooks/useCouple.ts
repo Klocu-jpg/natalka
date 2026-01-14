@@ -38,7 +38,8 @@ export const useCouple = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["couple"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["couple", user?.id] }),
   });
 
   const joinCouple = useMutation({
@@ -50,19 +51,32 @@ export const useCouple = () => {
       const { error } = await supabase.rpc("join_couple", { invite_code: code });
 
       if (error) {
-        const msg = error.message || "Nie udało się dołączyć";
-        if (msg.toLowerCase().includes("nie możesz dołączyć")) {
+        // Surface more diagnostic details to the UI layer
+        const msg =
+          error.message ||
+          error.details ||
+          error.hint ||
+          "Nie udało się dołączyć";
+
+        const normalized = msg.toLowerCase();
+        if (normalized.includes("nie możesz dołączyć")) {
           throw new Error("Nie możesz dołączyć do własnej pary");
         }
-        if (msg.toLowerCase().includes("nieprawidłowy kod")) {
+        if (normalized.includes("nieprawidłowy kod")) {
           throw new Error("Nieprawidłowy kod lub para już ma partnera");
         }
-        throw new Error(msg);
+        if (normalized.includes("not authenticated")) {
+          throw new Error("Sesja wygasła — zaloguj się ponownie");
+        }
+
+        // Keep the original message for debugging
+        throw new Error(`Dołączenie nie powiodło się: ${msg}`);
       }
 
       return true;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["couple"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["couple", user?.id] }),
   });
 
   const hasPartner = !!couple && couple.user2_id !== null;
