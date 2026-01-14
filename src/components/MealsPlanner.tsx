@@ -49,6 +49,11 @@ const MealsPlanner = () => {
     toast.success(`Dodano ${meal.ingredients.length} składników do listy zakupów! 🛒`);
   };
 
+  const handleAddSingleIngredient = async (ingredientName: string, ingredientAmount: string) => {
+    await addItem.mutateAsync(`${ingredientName} (${ingredientAmount})`);
+    toast.success(`Dodano "${ingredientName}" do listy zakupów! 🛒`);
+  };
+
   const openRecipe = (meal: Meal) => {
     setSelectedMeal(meal);
     setRecipeDialogOpen(true);
@@ -201,14 +206,22 @@ const MealsPlanner = () => {
                     </Button>
                   </div>
                   <div className="bg-secondary rounded-2xl p-4">
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <ul className="grid grid-cols-1 gap-2">
                       {selectedMeal.ingredients?.map((ing, idx) => (
-                        <li key={idx} className="flex items-center gap-3 p-2 bg-background/60 rounded-xl">
-                          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                        <li key={idx} className="flex items-center gap-3 p-2 bg-background/60 rounded-xl group/item">
+                          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary shrink-0">
                             {idx + 1}
                           </span>
                           <span className="flex-1 font-medium text-sm">{ing.name}</span>
-                          <span className="text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-lg">{ing.amount}</span>
+                          <span className="text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-lg shrink-0">{ing.amount}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 opacity-60 hover:opacity-100 hover:bg-primary/20 hover:text-primary"
+                            onClick={() => handleAddSingleIngredient(ing.name, ing.amount)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
                         </li>
                       ))}
                     </ul>
