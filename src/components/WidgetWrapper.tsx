@@ -1,5 +1,6 @@
 import { GripVertical } from "lucide-react";
 import { ReactNode } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WidgetWrapperProps {
   title: string;
@@ -12,7 +13,7 @@ interface WidgetWrapperProps {
 const WidgetWrapper = ({ title, icon, iconBg = "gradient-primary", children, actions }: WidgetWrapperProps) => {
   return (
     <div className="bg-card rounded-2xl shadow-card p-6 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
             {icon}
@@ -26,9 +27,9 @@ const WidgetWrapper = ({ title, icon, iconBg = "gradient-primary", children, act
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <ScrollArea className="flex-1 -mr-3 pr-3">
         {children}
-      </div>
+      </ScrollArea>
     </div>
   );
 };

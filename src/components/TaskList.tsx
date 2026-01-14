@@ -50,7 +50,7 @@ const TaskList = () => {
           <Loader2 className="w-6 h-6 animate-spin text-coral" />
         </div>
       ) : (
-        <ul className="space-y-2 overflow-y-auto">
+        <ul className="space-y-2">
           {tasks.map((task) => (
             <li
               key={task.id}

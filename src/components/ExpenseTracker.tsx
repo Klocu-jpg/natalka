@@ -193,7 +193,7 @@ const ExpenseTracker = () => {
           )}
 
           {/* Recent expenses */}
-          <div className="space-y-2 overflow-y-auto">
+          <div className="space-y-2">
             {expenses.slice(0, 5).map(expense => {
               const category = categories.find(c => c.id === expense.category_id);
               return (
