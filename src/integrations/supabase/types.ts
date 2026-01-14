@@ -193,6 +193,36 @@ export type Database = {
           },
         ]
       }
+      meals: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          ingredients: Json | null
+          name: string
+          recipe: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          ingredients?: Json | null
+          name: string
+          recipe?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          ingredients?: Json | null
+          name?: string
+          recipe?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string | null
