@@ -48,7 +48,7 @@ export const useCouple = () => {
       if (!code) throw new Error("Wpisz kod zaproszenia");
 
       // Use a backend function so we don't need public SELECT access on `couples`
-      const { error } = await supabase.rpc("join_couple", { invite_code: code });
+      const { error } = await supabase.rpc("join_couple", { p_invite_code: code });
 
       if (error) {
         // Surface more diagnostic details to the UI layer
