@@ -41,7 +41,11 @@ const Header = () => {
       toast.success("Dołączyłeś/aś do pary! 💕");
       setInviteCode("");
     } catch (error: any) {
-      toast.error(error.message || "Nieprawidłowy kod");
+      // Extra diagnostics in console (useful during testing)
+      // eslint-disable-next-line no-console
+      console.error("[joinCouple] error", error);
+
+      toast.error(error?.message || "Nieprawidłowy kod");
     }
   };
 
