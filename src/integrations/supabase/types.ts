@@ -193,6 +193,33 @@ export type Database = {
           },
         ]
       }
+      favorite_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          ingredients: Json
+          name: string
+          recipe: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredients?: Json
+          name: string
+          recipe: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredients?: Json
+          name?: string
+          recipe?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meals: {
         Row: {
           created_at: string

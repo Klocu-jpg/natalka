@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen } from "lucide-react";
+import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useMeals, Meal } from "@/hooks/useMeals";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
+import { useFavoriteRecipes } from "@/hooks/useFavoriteRecipes";
 import { toast } from "sonner";
 import WidgetWrapper from "./WidgetWrapper";
 
@@ -23,6 +24,7 @@ const DAYS = [
 const MealsPlanner = () => {
   const { meals, isLoading, addMeal, deleteMeal, getMealsForDay } = useMeals();
   const { addItem } = useShoppingItems();
+  const { addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
   const [selectedDay, setSelectedDay] = useState(0);
   const [newMeal, setNewMeal] = useState("");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -57,6 +59,18 @@ const MealsPlanner = () => {
   const openRecipe = (meal: Meal) => {
     setSelectedMeal(meal);
     setRecipeDialogOpen(true);
+  };
+
+  const handleSaveToFavorites = (meal: Meal) => {
+    if (!meal.recipe || !meal.ingredients) {
+      toast.error("Przepis nie jest kompletny");
+      return;
+    }
+    addFavoriteRecipe.mutate({
+      name: meal.name,
+      recipe: meal.recipe,
+      ingredients: meal.ingredients,
+    });
   };
 
   return (
@@ -190,6 +204,20 @@ const MealsPlanner = () => {
               </DialogHeader>
 
               <div className="space-y-6 pt-6">
+                {/* Save to favorites */}
+                <div className="flex gap-2">
+                  <Button
+                    variant={isRecipeFavorite(selectedMeal.name) ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => handleSaveToFavorites(selectedMeal)}
+                    disabled={addFavoriteRecipe.isPending || isRecipeFavorite(selectedMeal.name)}
+                    className="gap-2 flex-1"
+                  >
+                    <Star className={cn("w-4 h-4", isRecipeFavorite(selectedMeal.name) && "fill-amber-500 text-amber-500")} />
+                    {isRecipeFavorite(selectedMeal.name) ? "W ulubionych" : "Zapisz do ulubionych"}
+                  </Button>
+                </div>
+
                 {/* Ingredients */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
