@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen, Star } from "lucide-react";
+import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen, Star, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useMeals, Meal } from "@/hooks/useMeals";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
@@ -22,7 +23,7 @@ const DAYS = [
 ];
 
 const MealsPlanner = () => {
-  const { meals, isLoading, addMeal, deleteMeal, getMealsForDay } = useMeals();
+  const { meals, isLoading, addMeal, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
   const { addItem } = useShoppingItems();
   const { addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
   const [selectedDay, setSelectedDay] = useState(0);
@@ -73,53 +74,85 @@ const MealsPlanner = () => {
     });
   };
 
+  const handleMarkAsEaten = (meal: Meal) => {
+    deleteMeal.mutate(meal.id);
+    toast.success(`${meal.name} oznaczony jako zjedzony! 😋`);
+  };
+
+  const handleClearWeek = () => {
+    clearAllMeals.mutate();
+  };
+
   return (
     <WidgetWrapper
       title="Plan Obiadów"
       icon={<UtensilsCrossed className="w-5 h-5 text-primary-foreground" />}
       iconBg="gradient-primary"
       actions={
-        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="icon" variant="soft" className="h-8 w-8">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-heading flex items-center gap-2">
-                <ChefHat className="w-5 h-5" />
-                Dodaj obiad na {DAYS[selectedDay].full}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <Input
-                placeholder="Np. Spaghetti bolognese..."
-                value={newMeal}
-                onChange={(e) => setNewMeal(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && !addMeal.isPending && handleAddMeal()}
-                className="rounded-xl"
-              />
-              <p className="text-sm text-muted-foreground">
-                AI automatycznie wygeneruje przepis i listę składników 🤖
-              </p>
-              <Button 
-                onClick={handleAddMeal} 
-                className="w-full" 
-                disabled={addMeal.isPending || !newMeal.trim()}
-              >
-                {addMeal.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generuję przepis...
-                  </>
-                ) : (
-                  "Dodaj obiad"
-                )}
+        <div className="flex gap-1">
+          {meals.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="Wyczyść tydzień">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Wyczyścić cały tydzień?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Usunie to wszystkie zaplanowane obiady. Tej akcji nie można cofnąć.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearWeek}>Wyczyść</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="soft" className="h-8 w-8">
+                <Plus className="w-4 h-4" />
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="font-heading flex items-center gap-2">
+                  <ChefHat className="w-5 h-5" />
+                  Dodaj obiad na {DAYS[selectedDay].full}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input
+                  placeholder="Np. Spaghetti bolognese..."
+                  value={newMeal}
+                  onChange={(e) => setNewMeal(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && !addMeal.isPending && handleAddMeal()}
+                  className="rounded-xl"
+                />
+                <p className="text-sm text-muted-foreground">
+                  AI automatycznie wygeneruje przepis i listę składników 🤖
+                </p>
+                <Button 
+                  onClick={handleAddMeal} 
+                  className="w-full" 
+                  disabled={addMeal.isPending || !newMeal.trim()}
+                >
+                  {addMeal.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generuję przepis...
+                    </>
+                  ) : (
+                    "Dodaj obiad"
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       }
     >
       <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))}>
@@ -165,17 +198,27 @@ const MealsPlanner = () => {
                         key={meal.id}
                         className="bg-secondary rounded-xl p-3 group hover:shadow-card transition-all"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => openRecipe(meal)}
-                            className="flex-1 text-left flex items-center gap-2 hover:text-primary transition-colors"
+                            className="flex-1 text-left flex items-center gap-2 hover:text-primary transition-colors min-w-0"
                           >
-                            <BookOpen className="w-4 h-4 text-primary" />
-                            <span className="font-medium">{meal.name}</span>
+                            <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                            <span className="font-medium truncate">{meal.name}</span>
                           </button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-green-500/20 hover:text-green-600"
+                            onClick={() => handleMarkAsEaten(meal)}
+                            title="Oznacz jako zjedzone"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
                           <button
                             onClick={() => deleteMeal.mutate(meal.id)}
-                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0"
+                            title="Usuń"
                           >
                             <X className="w-4 h-4" />
                           </button>

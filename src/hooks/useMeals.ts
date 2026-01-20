@@ -123,21 +123,54 @@ export const useMeals = () => {
     },
   });
 
-  const deleteMeal = useMutation({
+const deleteMeal = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("meals").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Obiad usunięty");
     },
     onError: () => {
       toast.error("Nie udało się usunąć obiadu");
     },
   });
 
-  const getMealsForDay = (dayOfWeek: number) => {
+  const clearDay = useMutation({
+    mutationFn: async (dayOfWeek: number) => {
+      const { error } = await supabase
+        .from("meals")
+        .delete()
+        .eq("day_of_week", dayOfWeek);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+      toast.success("Dzień wyczyszczony! 🧹");
+    },
+    onError: () => {
+      toast.error("Nie udało się wyczyścić dnia");
+    },
+  });
+
+  const clearAllMeals = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("meals")
+        .delete()
+        .gte("day_of_week", 0); // Delete all meals
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+      toast.success("Tydzień wyczyszczony! 🧹");
+    },
+    onError: () => {
+      toast.error("Nie udało się wyczyścić tygodnia");
+    },
+  });
+
+const getMealsForDay = (dayOfWeek: number) => {
     return meals.filter((meal) => meal.day_of_week === dayOfWeek);
   };
 
@@ -147,6 +180,8 @@ export const useMeals = () => {
     addMeal,
     addMealFromFavorite,
     deleteMeal,
+    clearDay,
+    clearAllMeals,
     getMealsForDay,
   };
 };
