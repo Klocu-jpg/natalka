@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, ReactNode } from "react";
+import { useRef, useState, useCallback, useEffect, ReactNode } from "react";
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ interface SwipeableTabsProps {
 
 const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const startXRef = useRef(0);
@@ -17,6 +18,19 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
 
   const tabs = React.Children.toArray(children);
   const totalTabs = tabs.length;
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setIsDragging(true);
@@ -28,9 +42,6 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging) return;
 
-    // Keep the gesture feeling like a horizontal swipe (prevents accidental vertical scroll)
-    e.preventDefault();
-    
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
     
@@ -45,7 +56,8 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const handleTouchEnd = useCallback(() => {
     if (!isDragging) return;
     
-    const velocity = dragOffset / (Date.now() - startTimeRef.current);
+    const elapsed = Date.now() - startTimeRef.current;
+    const velocity = elapsed > 0 ? dragOffset / elapsed : 0;
     const threshold = 50;
     const velocityThreshold = 0.3;
     
@@ -68,18 +80,15 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   }, [isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
 
   // Calculate transform with drag offset
-  const getTransform = () => {
-    const baseOffset = -activeIndex * 100;
-    const dragPercent = containerRef.current 
-      ? (dragOffset / containerRef.current.offsetWidth) * 100 
-      : 0;
-    return `translateX(${baseOffset + dragPercent}%)`;
+  const getTransformX = () => {
+    if (containerWidth === 0) return 0;
+    return -activeIndex * containerWidth + dragOffset;
   };
 
   return (
     <div 
       ref={containerRef}
-      className="relative overflow-hidden flex-1 touch-pan-y"
+      className="relative overflow-hidden flex-1"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -87,19 +96,18 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
       <div
         className={cn(
           "flex h-full will-change-transform",
-          !isDragging && "transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          !isDragging && "transition-transform duration-300 ease-out"
         )}
         style={{
-          transform: getTransform(),
-          width: `${totalTabs * 100}%`,
+          transform: `translateX(${getTransformX()}px)`,
         }}
       >
         {tabs.map((child, index) => (
           <div
             key={index}
-            className="h-full overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4"
+            className="h-full overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 shrink-0"
             style={{ 
-              width: `${100 / totalTabs}%`,
+              width: containerWidth || '100vw',
               WebkitOverflowScrolling: 'touch',
             }}
           >
