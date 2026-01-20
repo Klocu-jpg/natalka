@@ -26,7 +26,7 @@ export const TABS: TabConfig[] = [
     id: "home",
     label: "Główna",
     icon: <Home className="w-5 h-5" />,
-    widgets: ["meals-planner", "days-counter", "period-tracker"],
+    widgets: ["meals-planner", "favorite-recipes", "days-counter", "period-tracker"],
   },
   {
     id: "together",
@@ -38,7 +38,7 @@ export const TABS: TabConfig[] = [
     id: "more",
     label: "Więcej",
     icon: <MoreHorizontal className="w-5 h-5" />,
-    widgets: ["mini-calendar", "favorite-recipes"],
+    widgets: ["mini-calendar"],
   },
 ];
 
