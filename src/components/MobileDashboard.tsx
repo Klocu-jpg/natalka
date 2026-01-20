@@ -47,13 +47,13 @@ const MobileDashboard = () => {
     return TABS.map((tab) => {
       const tabWidgets = tab.widgets
         .filter((widgetId) => visibleWidgets.includes(widgetId))
-        .map((widgetId) => ({
-          id: widgetId,
-          Component: ALL_WIDGETS[widgetId],
-        }))
-        .filter((w) => w.Component);
+        .map((widgetId) => {
+          const Component = ALL_WIDGETS[widgetId];
+          return Component ? { id: widgetId, Component } : null;
+        })
+        .filter((w): w is { id: string; Component: React.FC } => w !== null);
       
-      return { tabId: tab.id, widgets: tabWidgets, icon: tab.icon };
+      return { tabId: tab.id, widgets: tabWidgets, icon: tab.icon, label: tab.label };
     });
   }, [visibleWidgets]);
 
@@ -67,21 +67,21 @@ const MobileDashboard = () => {
       <MobileHeader activeTab={activeTab} />
       
       <SwipeableTabs activeIndex={activeTab} onIndexChange={setActiveTab}>
-        {tabContents.map(({ tabId, widgets, icon }, tabIndex) => (
-          <div key={tabId} className="pb-20 min-h-full">
+        {tabContents.map(({ tabId, widgets, icon, label }) => (
+          <div key={tabId} className="pb-24 min-h-full">
             {widgets.length > 0 ? (
               widgets.map(({ id, Component }) => (
-                <div key={id} className="mb-3">
+                <div key={`${tabId}-${id}`} className="mb-3">
                   <Component />
                 </div>
               ))
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
                   {icon}
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  Brak widgetów w tej kategorii
+                  Brak widgetów w "{label}"
                 </p>
                 <p className="text-muted-foreground/60 text-xs mt-1">
                   Włącz je w ustawieniach
