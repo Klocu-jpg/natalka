@@ -146,12 +146,12 @@ const PhotoAlbums = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {albums.map((album) => (
             <button
               key={album.id}
               onClick={() => setSelectedAlbum(album.id)}
-              className="relative group rounded-xl overflow-hidden aspect-square bg-secondary/50 hover:bg-secondary transition-colors text-left"
+              className="relative group rounded-lg overflow-hidden aspect-square bg-secondary/50 hover:bg-secondary transition-colors text-left"
             >
               {album.cover_url ? (
                 <img 
@@ -161,25 +161,25 @@ const PhotoAlbums = () => {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                  <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <p className="font-medium text-white text-sm truncate">{album.title}</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                <p className="font-medium text-white text-xs truncate">{album.title}</p>
                 {album.location && (
-                  <p className="text-xs text-white/80 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> {album.location}
+                  <p className="text-[10px] text-white/80 flex items-center gap-0.5 truncate">
+                    <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> {album.location}
                   </p>
                 )}
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-0.5 right-0.5 h-5 w-5 bg-black/50 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => handleDeleteAlbum(album.id, e)}
               >
-                <Trash2 className="w-3 h-3 text-white" />
+                <Trash2 className="w-2.5 h-2.5 text-white" />
               </Button>
             </button>
           ))}
