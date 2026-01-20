@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Heart, Calendar, Share2, Droplets, Loader2, Plus, Check, X } from "lucide-react";
+import { Calendar, Share2, Droplets, Loader2, Settings, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { usePeriodTracker } from "@/hooks/usePeriodTracker";
 import { useProfile } from "@/hooks/useProfile";
-import { format, addDays } from "date-fns";
+import { format, differenceInDays, isToday, isBefore, startOfDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import WidgetWrapper from "./WidgetWrapper";
@@ -22,36 +22,44 @@ const PeriodTracker = () => {
     daysUntilNext, 
     averageCycleLength,
     isSharing,
-    latestEntry
+    latestEntry,
+    isPeriodActive,
+    currentDayOfPeriod
   } = usePeriodTracker();
   
-  const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [cycleLength, setCycleLength] = useState("28");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [cycleLength, setCycleLength] = useState(averageCycleLength.toString());
 
   // Only show for female users
   if (profile?.gender !== "female") {
     return null;
   }
 
-  const handleAdd = async () => {
-    if (!startDate) {
-      toast.error("Wybierz datę początku");
-      return;
-    }
-    try {
-      await addEntry.mutateAsync({ 
-        start_date: startDate, 
-        end_date: endDate || undefined,
-        cycle_length: parseInt(cycleLength) || 28
-      });
-      toast.success("Zapisano! 💕");
-      setStartDate("");
-      setEndDate("");
-      setIsOpen(false);
-    } catch {
-      toast.error("Nie udało się zapisać");
+  const handleTogglePeriod = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    
+    if (isPeriodActive && latestEntry) {
+      // End period - set end_date to today
+      try {
+        await updateEntry.mutateAsync({ 
+          id: latestEntry.id, 
+          end_date: today 
+        });
+        toast.success("Koniec okresu zapisany! 💕");
+      } catch {
+        toast.error("Nie udało się zapisać");
+      }
+    } else {
+      // Start new period
+      try {
+        await addEntry.mutateAsync({ 
+          start_date: today,
+          cycle_length: parseInt(cycleLength) || 28
+        });
+        toast.success("Początek okresu zapisany! 💕");
+      } catch {
+        toast.error("Nie udało się zapisać");
+      }
     }
   };
 
@@ -68,42 +76,39 @@ const PeriodTracker = () => {
     }
   };
 
+  const saveCycleLength = async () => {
+    if (!latestEntry) return;
+    try {
+      await updateEntry.mutateAsync({ 
+        id: latestEntry.id, 
+        cycle_length: parseInt(cycleLength) || 28 
+      });
+      toast.success("Zapisano długość cyklu");
+      setIsSettingsOpen(false);
+    } catch {
+      toast.error("Błąd");
+    }
+  };
+
+  const isPending = addEntry.isPending || updateEntry.isPending;
+
   return (
     <WidgetWrapper
       title="Cykl"
       icon={<Droplets className="w-5 h-5 text-primary-foreground" />}
       iconBg="gradient-primary"
       actions={
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Plus className="w-4 h-4" />
+              <Settings className="w-4 h-4" />
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nowy wpis</DialogTitle>
+              <DialogTitle>Ustawienia cyklu</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Początek okresu</label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Koniec okresu (opcjonalne)</label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Długość cyklu (dni)</label>
                 <Input
@@ -113,9 +118,12 @@ const PeriodTracker = () => {
                   min="21"
                   max="40"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Typowa długość to 21-35 dni
+                </p>
               </div>
-              <Button onClick={handleAdd} className="w-full" disabled={addEntry.isPending}>
-                {addEntry.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Zapisz"}
+              <Button onClick={saveCycleLength} className="w-full" disabled={updateEntry.isPending}>
+                {updateEntry.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Zapisz"}
               </Button>
             </div>
           </DialogContent>
@@ -126,19 +134,53 @@ const PeriodTracker = () => {
         <div className="flex justify-center py-4">
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
         </div>
-      ) : entries.length === 0 ? (
-        <div className="text-center py-6">
-          <Calendar className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">
-            Dodaj pierwszy wpis, aby śledzić cykl
-          </p>
-        </div>
       ) : (
         <div className="space-y-4">
-          {/* Main countdown */}
-          {nextPeriodDate && daysUntilNext !== null && (
-            <div className="text-center py-2">
-              <div className="text-4xl font-heading font-bold text-primary">
+          {/* Main action button - Flo style */}
+          <div className="flex flex-col items-center py-2">
+            <button
+              onClick={handleTogglePeriod}
+              disabled={isPending}
+              className={`
+                relative w-24 h-24 rounded-full transition-all duration-300 
+                flex items-center justify-center
+                ${isPeriodActive 
+                  ? "bg-gradient-to-br from-rose-400 to-rose-600 shadow-lg shadow-rose-500/30" 
+                  : "bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 hover:from-pink-200 hover:to-pink-300 dark:hover:from-pink-800/40 dark:hover:to-pink-700/40"
+                }
+                ${isPending ? "opacity-70" : "hover:scale-105 active:scale-95"}
+              `}
+            >
+              {isPending ? (
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              ) : isPeriodActive ? (
+                <div className="text-center text-white">
+                  <div className="text-2xl font-bold">{currentDayOfPeriod}</div>
+                  <div className="text-xs">dzień</div>
+                </div>
+              ) : (
+                <Circle className="w-10 h-10 text-rose-400 dark:text-rose-300" />
+              )}
+              
+              {/* Pulsing ring for active period */}
+              {isPeriodActive && (
+                <span className="absolute inset-0 rounded-full animate-ping bg-rose-400/30" style={{ animationDuration: "2s" }} />
+              )}
+            </button>
+            
+            <p className="mt-3 text-sm font-medium text-center">
+              {isPeriodActive ? (
+                <span className="text-rose-500 dark:text-rose-400">Kliknij aby zakończyć okres</span>
+              ) : (
+                <span className="text-muted-foreground">Kliknij gdy okres się zacznie</span>
+              )}
+            </p>
+          </div>
+
+          {/* Next period prediction */}
+          {!isPeriodActive && nextPeriodDate && daysUntilNext !== null && entries.length > 0 && (
+            <div className="text-center py-2 bg-secondary/50 rounded-xl">
+              <div className="text-3xl font-heading font-bold text-primary">
                 {daysUntilNext}
               </div>
               <p className="text-sm text-muted-foreground">
@@ -151,28 +193,32 @@ const PeriodTracker = () => {
           )}
 
           {/* Cycle info */}
-          <div className="bg-secondary/50 rounded-xl p-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Długość cyklu</span>
-              <span className="font-medium">{averageCycleLength} dni</span>
+          {entries.length > 0 && (
+            <div className="bg-secondary/50 rounded-xl p-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Długość cyklu</span>
+                <span className="font-medium">{averageCycleLength} dni</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Sharing toggle */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50">
-            <div className="flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">Udostępnij partnerowi</span>
+          {entries.length > 0 && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50">
+              <div className="flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">Udostępnij partnerowi</span>
+              </div>
+              <Switch 
+                checked={isSharing} 
+                onCheckedChange={toggleSharing}
+                disabled={updateEntry.isPending}
+              />
             </div>
-            <Switch 
-              checked={isSharing} 
-              onCheckedChange={toggleSharing}
-              disabled={updateEntry.isPending}
-            />
-          </div>
+          )}
 
           {/* Last period info */}
-          {latestEntry && (
+          {latestEntry && !isPeriodActive && (
             <p className="text-xs text-center text-muted-foreground">
               Ostatni okres: {format(new Date(latestEntry.start_date), "d MMMM yyyy", { locale: pl })}
             </p>

@@ -71,6 +71,16 @@ export const usePeriodTracker = () => {
   const latestEntry = entries[0];
   const averageCycleLength = latestEntry?.cycle_length || 28;
   
+  // Check if period is currently active (has start but no end, and started recently)
+  const isPeriodActive = latestEntry 
+    ? !latestEntry.end_date && differenceInDays(new Date(), new Date(latestEntry.start_date)) <= 10
+    : false;
+
+  // Current day of active period
+  const currentDayOfPeriod = isPeriodActive && latestEntry
+    ? differenceInDays(new Date(), new Date(latestEntry.start_date)) + 1
+    : null;
+  
   const nextPeriodDate = latestEntry 
     ? addDays(new Date(latestEntry.start_date), averageCycleLength)
     : null;
@@ -91,6 +101,8 @@ export const usePeriodTracker = () => {
     daysUntilNext,
     averageCycleLength,
     isSharing,
-    latestEntry
+    latestEntry,
+    isPeriodActive,
+    currentDayOfPeriod
   };
 };
