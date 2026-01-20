@@ -124,6 +124,36 @@ export type Database = {
         }
         Relationships: []
       }
+      event_countdowns: {
+        Row: {
+          couple_id: string | null
+          created_at: string
+          date: string
+          emoji: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          couple_id?: string | null
+          created_at?: string
+          date: string
+          emoji?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          couple_id?: string | null
+          created_at?: string
+          date?: string
+          emoji?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           color: string
@@ -271,6 +301,199 @@ export type Database = {
           id?: string
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      period_entries: {
+        Row: {
+          created_at: string
+          cycle_length: number | null
+          end_date: string | null
+          id: string
+          share_with_partner: boolean | null
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_length?: number | null
+          end_date?: string | null
+          id?: string
+          share_with_partner?: boolean | null
+          start_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_length?: number | null
+          end_date?: string | null
+          id?: string
+          share_with_partner?: boolean | null
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      photo_albums: {
+        Row: {
+          couple_id: string
+          cover_url: string | null
+          created_at: string
+          date: string | null
+          description: string | null
+          id: string
+          location: string | null
+          title: string
+        }
+        Insert: {
+          couple_id: string
+          cover_url?: string | null
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title: string
+        }
+        Update: {
+          couple_id?: string
+          cover_url?: string | null
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          album_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          taken_at: string | null
+          uploaded_by: string
+          url: string
+        }
+        Insert: {
+          album_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          taken_at?: string | null
+          uploaded_by: string
+          url: string
+        }
+        Update: {
+          album_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          taken_at?: string | null
+          uploaded_by?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "photo_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          gender: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gender?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gender?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      savings_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          goal_id: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          goal_id: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          goal_id?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_contributions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "savings_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_goals: {
+        Row: {
+          couple_id: string
+          created_at: string
+          current_amount: number
+          deadline: string | null
+          emoji: string | null
+          id: string
+          target_amount: number
+          title: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          emoji?: string | null
+          id?: string
+          target_amount?: number
+          title: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          emoji?: string | null
+          id?: string
+          target_amount?: number
+          title?: string
         }
         Relationships: []
       }

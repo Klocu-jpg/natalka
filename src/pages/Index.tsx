@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Responsive, WidthProvider, Layout, Layouts } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -12,13 +12,17 @@ import ExpenseTracker from "@/components/ExpenseTracker";
 import DaysCounter from "@/components/DaysCounter";
 import MealsPlanner from "@/components/MealsPlanner";
 import FavoriteRecipes from "@/components/FavoriteRecipes";
-
+import EventCountdowns from "@/components/EventCountdowns";
+import PeriodTracker from "@/components/PeriodTracker";
+import SavingsGoals from "@/components/SavingsGoals";
+import PhotoAlbums from "@/components/PhotoAlbums";
+import GenderSelector from "@/components/GenderSelector";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
+import { useProfile } from "@/hooks/useProfile";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Bumped version to reset corrupted layouts
-const STORAGE_KEY = "dashboard-layouts-v4";
+const STORAGE_KEY = "dashboard-layouts-v5";
 
 const defaultLayouts: Layouts = {
   lg: [
@@ -31,6 +35,10 @@ const defaultLayouts: Layouts = {
     { i: "expense-tracker", x: 1, y: 12, w: 1, h: 5, minH: 4 },
     { i: "mini-calendar", x: 2, y: 5, w: 1, h: 5, minH: 4 },
     { i: "favorite-recipes", x: 2, y: 10, w: 1, h: 4, minH: 3 },
+    { i: "event-countdowns", x: 0, y: 18, w: 1, h: 4, minH: 3 },
+    { i: "period-tracker", x: 1, y: 17, w: 1, h: 4, minH: 3 },
+    { i: "savings-goals", x: 2, y: 14, w: 1, h: 5, minH: 4 },
+    { i: "photo-albums", x: 0, y: 22, w: 2, h: 5, minH: 4 },
   ],
   md: [
     { i: "meals-planner", x: 0, y: 0, w: 2, h: 5, minH: 4 },
@@ -42,6 +50,10 @@ const defaultLayouts: Layouts = {
     { i: "expense-tracker", x: 1, y: 12, w: 1, h: 5, minH: 4 },
     { i: "mini-calendar", x: 0, y: 17, w: 2, h: 5, minH: 4 },
     { i: "favorite-recipes", x: 0, y: 22, w: 2, h: 4, minH: 3 },
+    { i: "event-countdowns", x: 0, y: 26, w: 1, h: 4, minH: 3 },
+    { i: "period-tracker", x: 1, y: 26, w: 1, h: 4, minH: 3 },
+    { i: "savings-goals", x: 0, y: 30, w: 2, h: 5, minH: 4 },
+    { i: "photo-albums", x: 0, y: 35, w: 2, h: 5, minH: 4 },
   ],
   sm: [
     { i: "meals-planner", x: 0, y: 0, w: 1, h: 6, minH: 5 },
@@ -53,6 +65,10 @@ const defaultLayouts: Layouts = {
     { i: "expense-tracker", x: 0, y: 25, w: 1, h: 5, minH: 4 },
     { i: "mini-calendar", x: 0, y: 30, w: 1, h: 5, minH: 4 },
     { i: "favorite-recipes", x: 0, y: 35, w: 1, h: 4, minH: 3 },
+    { i: "event-countdowns", x: 0, y: 39, w: 1, h: 4, minH: 3 },
+    { i: "period-tracker", x: 0, y: 43, w: 1, h: 4, minH: 3 },
+    { i: "savings-goals", x: 0, y: 47, w: 1, h: 5, minH: 4 },
+    { i: "photo-albums", x: 0, y: 52, w: 1, h: 5, minH: 4 },
   ],
 };
 
@@ -66,10 +82,20 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "expense-tracker": ExpenseTracker,
   "mini-calendar": MiniCalendar,
   "favorite-recipes": FavoriteRecipes,
+  "event-countdowns": EventCountdowns,
+  "period-tracker": PeriodTracker,
+  "savings-goals": SavingsGoals,
+  "photo-albums": PhotoAlbums,
 };
 
 const Index = () => {
   const { visibleWidgets } = useWidgetVisibility();
+  const { profile, isLoading } = useProfile();
+
+  // Show gender selector if profile doesn't have gender set
+  if (!isLoading && profile === null) {
+    return <GenderSelector onComplete={() => window.location.reload()} />;
+  }
   
   // Get filtered layouts based on visible widgets - always use defaults with minH preserved
   const getLayoutsForVisibleWidgets = useMemo(() => {
