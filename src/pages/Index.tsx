@@ -17,12 +17,12 @@ import PeriodTracker from "@/components/PeriodTracker";
 import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
 import GenderSelector from "@/components/GenderSelector";
+import MobileDashboard from "@/components/MobileDashboard";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
-
-const STORAGE_KEY = "dashboard-layouts-v5";
 
 const defaultLayouts: Layouts = {
   lg: [
@@ -55,21 +55,6 @@ const defaultLayouts: Layouts = {
     { i: "savings-goals", x: 0, y: 30, w: 2, h: 5, minH: 4 },
     { i: "photo-albums", x: 0, y: 35, w: 2, h: 5, minH: 4 },
   ],
-  sm: [
-    { i: "meals-planner", x: 0, y: 0, w: 1, h: 5, minH: 4 },
-    { i: "days-counter", x: 0, y: 5, w: 1, h: 5, minH: 4 },
-    { i: "period-tracker", x: 0, y: 10, w: 1, h: 5, minH: 4 },
-    { i: "task-list", x: 0, y: 15, w: 1, h: 4, minH: 3 },
-    { i: "shopping-list", x: 0, y: 19, w: 1, h: 4, minH: 3 },
-    { i: "date-ideas", x: 0, y: 23, w: 1, h: 3, minH: 2 },
-    { i: "shared-notes", x: 0, y: 26, w: 1, h: 3, minH: 2 },
-    { i: "expense-tracker", x: 0, y: 29, w: 1, h: 5, minH: 4 },
-    { i: "mini-calendar", x: 0, y: 34, w: 1, h: 5, minH: 4 },
-    { i: "favorite-recipes", x: 0, y: 39, w: 1, h: 4, minH: 3 },
-    { i: "event-countdowns", x: 0, y: 43, w: 1, h: 4, minH: 3 },
-    { i: "savings-goals", x: 0, y: 47, w: 1, h: 5, minH: 4 },
-    { i: "photo-albums", x: 0, y: 52, w: 1, h: 5, minH: 4 },
-  ],
 };
 
 const ALL_WIDGETS: Record<string, React.FC> = {
@@ -91,14 +76,14 @@ const ALL_WIDGETS: Record<string, React.FC> = {
 const Index = () => {
   const { visibleWidgets } = useWidgetVisibility();
   const { profile, isLoading } = useProfile();
+  const isMobile = useIsMobile();
   
-  // Get filtered layouts based on visible widgets - always use defaults with minH preserved
+  // Get filtered layouts based on visible widgets
   const getLayoutsForVisibleWidgets = useMemo(() => {
     const result: Layouts = {};
     
     for (const [breakpoint, layout] of Object.entries(defaultLayouts)) {
       const layoutArray = layout as Layout[];
-      // Filter to only visible widgets and preserve all properties including minH
       result[breakpoint] = layoutArray
         .filter((item) => visibleWidgets.includes(item.i))
         .map((item) => ({ ...item }));
@@ -109,31 +94,35 @@ const Index = () => {
 
   // Get visible widget components in correct order
   const widgetComponents = useMemo(() => {
-    // Use the order from defaultLayouts.lg to maintain consistent ordering
     const orderedIds = defaultLayouts.lg.map(l => l.i);
     return orderedIds
       .filter((id) => visibleWidgets.includes(id))
       .map((id) => ({ id, Component: ALL_WIDGETS[id] }));
   }, [visibleWidgets]);
 
-  // Show gender selector if profile doesn't have gender set - AFTER all hooks!
+  // Show gender selector if profile doesn't have gender set
   if (!isLoading && profile === null) {
     return <GenderSelector onComplete={() => window.location.reload()} />;
   }
 
+  // Mobile layout with tabs and swipe
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
+
+  // Desktop layout with grid
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-safe">
-        
+      <main className="container mx-auto px-4 py-8">
         <ResponsiveGridLayout
           className="layout"
           layouts={getLayoutsForVisibleWidgets}
-          breakpoints={{ lg: 1024, md: 768, sm: 0 }}
-          cols={{ lg: 3, md: 2, sm: 1 }}
+          breakpoints={{ lg: 1024, md: 768 }}
+          cols={{ lg: 3, md: 2 }}
           rowHeight={60}
-          margin={[12, 12]}
+          margin={[16, 16]}
           containerPadding={[0, 0]}
           draggableHandle=".drag-handle"
           isResizable={false}
@@ -146,8 +135,7 @@ const Index = () => {
         </ResponsiveGridLayout>
       </main>
 
-      {/* Decorative footer - hidden on mobile for cleaner look */}
-      <footer className="py-6 sm:py-8 text-center hidden sm:block">
+      <footer className="py-8 text-center">
         <p className="text-muted-foreground text-sm">
           Zbudowane z 💕 dla Was
         </p>
