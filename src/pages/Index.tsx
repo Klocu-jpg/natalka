@@ -91,11 +91,6 @@ const ALL_WIDGETS: Record<string, React.FC> = {
 const Index = () => {
   const { visibleWidgets } = useWidgetVisibility();
   const { profile, isLoading } = useProfile();
-
-  // Show gender selector if profile doesn't have gender set
-  if (!isLoading && profile === null) {
-    return <GenderSelector onComplete={() => window.location.reload()} />;
-  }
   
   // Get filtered layouts based on visible widgets - always use defaults with minH preserved
   const getLayoutsForVisibleWidgets = useMemo(() => {
@@ -120,6 +115,11 @@ const Index = () => {
       .filter((id) => visibleWidgets.includes(id))
       .map((id) => ({ id, Component: ALL_WIDGETS[id] }));
   }, [visibleWidgets]);
+
+  // Show gender selector if profile doesn't have gender set - AFTER all hooks!
+  if (!isLoading && profile === null) {
+    return <GenderSelector onComplete={() => window.location.reload()} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
