@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface SwipeableTabsProps {
   activeIndex: number;
   onIndexChange: (index: number) => void;
-  children: ReactNode[];
+  children: ReactNode;
 }
 
 const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsProps) => {
@@ -13,8 +13,9 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const [dragOffset, setDragOffset] = useState(0);
   const startXRef = useRef(0);
   const startTimeRef = useRef(0);
-  
-  const totalTabs = children.length;
+
+  const tabs = (Array.isArray(children) ? children : [children]).flat();
+  const totalTabs = tabs.length;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setIsDragging(true);
@@ -25,6 +26,9 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging) return;
+
+    // Keep the gesture feeling like a horizontal swipe (prevents accidental vertical scroll)
+    e.preventDefault();
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
@@ -82,17 +86,17 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
       <div
         className={cn(
           "flex h-full will-change-transform",
-          !isDragging && "transition-transform duration-300 ease-out"
+          !isDragging && "transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
         )}
         style={{
           transform: getTransform(),
           width: `${totalTabs * 100}%`,
         }}
       >
-        {children.map((child, index) => (
+        {tabs.map((child, index) => (
           <div
             key={index}
-            className="h-full overflow-y-auto overscroll-contain px-3 py-4"
+            className="h-full overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4"
             style={{ 
               width: `${100 / totalTabs}%`,
               WebkitOverflowScrolling: 'touch',
