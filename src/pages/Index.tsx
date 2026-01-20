@@ -45,8 +45,8 @@ const defaultLayouts: Layouts = {
     { i: "favorite-recipes", x: 2, y: 14, w: 1, h: 3, minH: 2 },
     
     // Row 5: Two columns + empty space (h=4)
-    { i: "event-countdowns", x: 0, y: 17, w: 1, h: 4, minH: 3 },
-    { i: "period-tracker", x: 1, y: 17, w: 1, h: 4, minH: 3 },
+    { i: "period-tracker", x: 0, y: 17, w: 1, h: 4, minH: 3 },
+    { i: "event-countdowns", x: 1, y: 17, w: 1, h: 4, minH: 3 },
     
     // Row 6: Full width footer
     { i: "photo-albums", x: 0, y: 21, w: 3, h: 5, minH: 4 },
