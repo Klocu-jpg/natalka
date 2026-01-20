@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useSavingsGoals } from "@/hooks/useSavingsGoals";
 import { useCouple } from "@/hooks/useCouple";
@@ -258,19 +259,37 @@ const SavingsGoals = () => {
                             <Plus className="w-3 h-3 mr-1" /> Wpłać
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (confirm("Czy na pewno chcesz usunąć ten cel?")) {
-                              deleteGoal.mutate(goal.id);
-                              toast.success("Cel usunięty");
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Usunąć cel?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Czy na pewno chcesz usunąć cel "{goal.title}"? Ta akcja jest nieodwracalna.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  deleteGoal.mutate(goal.id);
+                                  toast.success("Cel usunięty");
+                                }}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Usuń
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     
