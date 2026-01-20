@@ -137,12 +137,12 @@ const PeriodTracker = () => {
       ) : (
         <div className="space-y-4">
           {/* Main action button - Flo style */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center py-1">
             <button
               onClick={handleTogglePeriod}
               disabled={isPending}
               className={`
-                relative w-16 h-16 rounded-full transition-all duration-300 flex-shrink-0
+                relative w-16 h-16 rounded-full transition-all duration-300 
                 flex items-center justify-center
                 ${isPeriodActive 
                   ? "bg-gradient-to-br from-rose-400 to-rose-600 shadow-lg shadow-rose-500/30" 
@@ -152,14 +152,14 @@ const PeriodTracker = () => {
               `}
             >
               {isPending ? (
-                <Loader2 className="w-6 h-6 animate-spin text-white" />
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
               ) : isPeriodActive ? (
                 <div className="text-center text-white">
                   <div className="text-lg font-bold">{currentDayOfPeriod}</div>
                   <div className="text-[10px]">dzień</div>
                 </div>
               ) : (
-                <Circle className="w-7 h-7 text-rose-400 dark:text-rose-300" />
+                <Circle className="w-6 h-6 text-rose-400 dark:text-rose-300" />
               )}
               
               {/* Pulsing ring for active period */}
@@ -168,29 +168,29 @@ const PeriodTracker = () => {
               )}
             </button>
             
-            {/* Next period prediction - inline */}
-            {!isPeriodActive && nextPeriodDate && daysUntilNext !== null && entries.length > 0 ? (
-              <div className="flex-1 text-center py-2 px-3 bg-secondary/50 rounded-xl">
-                <div className="text-2xl font-heading font-bold text-primary">
-                  {daysUntilNext}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  dni do następnego
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  ~{format(nextPeriodDate, "d MMMM", { locale: pl })}
-                </p>
-              </div>
-            ) : (
-              <p className="flex-1 text-xs font-medium text-center">
-                {isPeriodActive ? (
-                  <span className="text-rose-500 dark:text-rose-400">Kliknij aby zakończyć</span>
-                ) : (
-                  <span className="text-muted-foreground">Kliknij gdy okres się zacznie</span>
-                )}
-              </p>
-            )}
+            <p className="mt-2 text-xs font-medium text-center">
+              {isPeriodActive ? (
+                <span className="text-rose-500 dark:text-rose-400">Kliknij aby zakończyć okres</span>
+              ) : (
+                <span className="text-muted-foreground">Kliknij gdy okres się zacznie</span>
+              )}
+            </p>
           </div>
+
+          {/* Next period prediction */}
+          {!isPeriodActive && nextPeriodDate && daysUntilNext !== null && entries.length > 0 && (
+            <div className="text-center py-2 bg-secondary/50 rounded-xl">
+              <div className="text-2xl font-heading font-bold text-primary">
+                {daysUntilNext}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                dni do następnego okresu
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                ~{format(nextPeriodDate, "d MMMM", { locale: pl })}
+              </p>
+            </div>
+          )}
 
           {/* Cycle info */}
           {entries.length > 0 && (
