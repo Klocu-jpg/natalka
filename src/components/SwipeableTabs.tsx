@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, ReactNode } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 interface SwipeableTabsProps {
@@ -14,7 +15,7 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const startXRef = useRef(0);
   const startTimeRef = useRef(0);
 
-  const tabs = (Array.isArray(children) ? children : [children]).flat();
+  const tabs = React.Children.toArray(children);
   const totalTabs = tabs.length;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
