@@ -21,26 +21,26 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
   const currentTab = TABS[activeTab];
 
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border/50 pt-safe">
+    <header className="sticky top-0 z-50 bg-card/98 backdrop-blur-xl border-b border-border/30 pt-safe shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Title with tab icon */}
-        <div className="flex items-center gap-2">
-          <div className="text-primary">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             {currentTab?.icon || <Heart className="w-5 h-5" fill="currentColor" />}
           </div>
-          <h1 className="text-lg font-heading font-bold">
+          <h1 className="text-lg font-heading font-bold text-foreground">
             {currentTab?.label || "Nasza Przestrzeń"}
           </h1>
         </div>
         
         {/* Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <CoupleConnectPopover
             trigger={({ isLoading, hasPartner, hasCouple }) => (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-9 w-9 rounded-xl"
                 title={hasPartner ? "Para połączona" : hasCouple ? "Czeka na partnera" : "Połącz się z partnerem"}
               >
                 {isLoading ? (
@@ -56,7 +56,7 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
             )}
           />
           <WidgetSettings />
-          <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-9 w-9 rounded-xl">
             <LogOut className="w-4 h-4" />
           </Button>
         </div>

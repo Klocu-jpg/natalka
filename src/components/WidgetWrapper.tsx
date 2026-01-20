@@ -15,13 +15,13 @@ const WidgetWrapper = ({ title, icon, iconBg = "gradient-primary", children, act
   const isMobile = useIsMobile();
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-4 sm:p-6 h-full flex flex-col overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-card hover:shadow-card-hover transition-shadow duration-300 p-4 sm:p-5 h-full flex flex-col overflow-hidden border border-border/30">
       <div className="flex items-center justify-between mb-3 sm:mb-4 flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
             {icon}
           </div>
-          <h2 className="text-lg sm:text-xl font-heading font-semibold truncate">{title}</h2>
+          <h2 className="text-base sm:text-lg font-heading font-semibold truncate text-foreground">{title}</h2>
         </div>
         <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
           {actions}
