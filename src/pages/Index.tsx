@@ -29,57 +29,57 @@ const defaultLayouts: Layouts = {
     // Row 1: Full width header
     { i: "meals-planner", x: 0, y: 0, w: 3, h: 5, minH: 4 },
     
-    // Row 2: Three equal columns (h=5)
-    { i: "days-counter", x: 0, y: 5, w: 1, h: 5, minH: 4 },
-    { i: "mini-calendar", x: 1, y: 5, w: 1, h: 5, minH: 4 },
-    { i: "expense-tracker", x: 2, y: 5, w: 1, h: 5, minH: 4 },
+    // Row 2: Photo albums (full width)
+    { i: "photo-albums", x: 0, y: 5, w: 3, h: 5, minH: 4 },
     
-    // Row 3: Three equal columns (h=4)
-    { i: "shopping-list", x: 0, y: 10, w: 1, h: 4, minH: 3 },
-    { i: "task-list", x: 1, y: 10, w: 1, h: 4, minH: 3 },
-    { i: "savings-goals", x: 2, y: 10, w: 1, h: 4, minH: 3 },
+    // Row 3: Three equal columns (h=5)
+    { i: "days-counter", x: 0, y: 10, w: 1, h: 5, minH: 4 },
+    { i: "mini-calendar", x: 1, y: 10, w: 1, h: 5, minH: 4 },
+    { i: "expense-tracker", x: 2, y: 10, w: 1, h: 5, minH: 4 },
     
-    // Row 4: Three equal columns (h=3)
-    { i: "date-ideas", x: 0, y: 14, w: 1, h: 3, minH: 2 },
-    { i: "shared-notes", x: 1, y: 14, w: 1, h: 3, minH: 2 },
-    { i: "favorite-recipes", x: 2, y: 14, w: 1, h: 3, minH: 2 },
+    // Row 4: Three equal columns (h=4)
+    { i: "shopping-list", x: 0, y: 15, w: 1, h: 4, minH: 3 },
+    { i: "task-list", x: 1, y: 15, w: 1, h: 4, minH: 3 },
+    { i: "savings-goals", x: 2, y: 15, w: 1, h: 4, minH: 3 },
     
-    // Row 5: Two columns + empty space (h=4)
-    { i: "period-tracker", x: 0, y: 17, w: 1, h: 4, minH: 3 },
-    { i: "event-countdowns", x: 1, y: 17, w: 1, h: 4, minH: 3 },
+    // Row 5: Three equal columns (h=3)
+    { i: "date-ideas", x: 0, y: 19, w: 1, h: 3, minH: 2 },
+    { i: "shared-notes", x: 1, y: 19, w: 1, h: 3, minH: 2 },
+    { i: "favorite-recipes", x: 2, y: 19, w: 1, h: 3, minH: 2 },
     
-    // Row 6: Full width footer
-    { i: "photo-albums", x: 0, y: 21, w: 3, h: 5, minH: 4 },
+    // Row 6: Two columns (h=4)
+    { i: "period-tracker", x: 0, y: 22, w: 1, h: 4, minH: 3 },
+    { i: "event-countdowns", x: 1, y: 22, w: 1, h: 4, minH: 3 },
   ],
   md: [
     // Row 1: Full width header
     { i: "meals-planner", x: 0, y: 0, w: 2, h: 5, minH: 4 },
     
-    // Row 2: Two equal columns (h=5)
-    { i: "days-counter", x: 0, y: 5, w: 1, h: 5, minH: 4 },
-    { i: "mini-calendar", x: 1, y: 5, w: 1, h: 5, minH: 4 },
+    // Row 2: Photo albums (full width)
+    { i: "photo-albums", x: 0, y: 5, w: 2, h: 5, minH: 4 },
     
     // Row 3: Two equal columns (h=5)
-    { i: "expense-tracker", x: 0, y: 10, w: 1, h: 5, minH: 4 },
-    { i: "savings-goals", x: 1, y: 10, w: 1, h: 5, minH: 4 },
+    { i: "days-counter", x: 0, y: 10, w: 1, h: 5, minH: 4 },
+    { i: "mini-calendar", x: 1, y: 10, w: 1, h: 5, minH: 4 },
     
-    // Row 4: Two equal columns (h=4)
-    { i: "shopping-list", x: 0, y: 15, w: 1, h: 4, minH: 3 },
-    { i: "task-list", x: 1, y: 15, w: 1, h: 4, minH: 3 },
+    // Row 4: Two equal columns (h=5)
+    { i: "expense-tracker", x: 0, y: 15, w: 1, h: 5, minH: 4 },
+    { i: "savings-goals", x: 1, y: 15, w: 1, h: 5, minH: 4 },
     
-    // Row 5: Two equal columns (h=3)
-    { i: "date-ideas", x: 0, y: 19, w: 1, h: 3, minH: 2 },
-    { i: "shared-notes", x: 1, y: 19, w: 1, h: 3, minH: 2 },
+    // Row 5: Two equal columns (h=4)
+    { i: "shopping-list", x: 0, y: 20, w: 1, h: 4, minH: 3 },
+    { i: "task-list", x: 1, y: 20, w: 1, h: 4, minH: 3 },
     
-    // Row 6: Two equal columns (h=4)
-    { i: "event-countdowns", x: 0, y: 22, w: 1, h: 4, minH: 3 },
-    { i: "period-tracker", x: 1, y: 22, w: 1, h: 4, minH: 3 },
+    // Row 6: Two equal columns (h=3)
+    { i: "date-ideas", x: 0, y: 24, w: 1, h: 3, minH: 2 },
+    { i: "shared-notes", x: 1, y: 24, w: 1, h: 3, minH: 2 },
     
-    // Row 7: Full width
-    { i: "favorite-recipes", x: 0, y: 26, w: 2, h: 4, minH: 3 },
+    // Row 7: Two equal columns (h=4)
+    { i: "event-countdowns", x: 0, y: 27, w: 1, h: 4, minH: 3 },
+    { i: "period-tracker", x: 1, y: 27, w: 1, h: 4, minH: 3 },
     
-    // Row 8: Full width footer
-    { i: "photo-albums", x: 0, y: 30, w: 2, h: 5, minH: 4 },
+    // Row 8: Full width
+    { i: "favorite-recipes", x: 0, y: 31, w: 2, h: 4, minH: 3 },
   ],
 };
 
