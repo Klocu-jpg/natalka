@@ -16,6 +16,10 @@ const DEFAULT_VISIBILITY: WidgetVisibility = {
   "date-ideas": true,
   "shared-notes": true,
   "favorite-recipes": true,
+  "event-countdowns": true,
+  "period-tracker": true,
+  "savings-goals": true,
+  "photo-albums": true,
 };
 
 export const WIDGET_LABELS: Record<string, string> = {
@@ -28,6 +32,10 @@ export const WIDGET_LABELS: Record<string, string> = {
   "date-ideas": "Pomysły na randki",
   "shared-notes": "Notatki",
   "favorite-recipes": "Ulubione przepisy",
+  "event-countdowns": "Odliczanie",
+  "period-tracker": "Tracker cyklu",
+  "savings-goals": "Oszczędności",
+  "photo-albums": "Wspomnienia",
 };
 
 interface WidgetVisibilityContextType {
