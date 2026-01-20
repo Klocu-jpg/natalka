@@ -63,21 +63,21 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8 animate-slide-up">
+        <div className="text-center mb-6 sm:mb-8 animate-slide-up">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Heart className="w-10 h-10 text-primary animate-heart-beat" fill="currentColor" />
+            <Heart className="w-12 h-12 sm:w-10 sm:h-10 text-primary animate-heart-beat" fill="currentColor" />
           </div>
-          <h1 className="text-3xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
             Nasza Przestrzeń
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             {isLogin ? "Witaj z powrotem! 💕" : "Stwórz wspólne konto 💕"}
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-card p-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+        <div className="bg-card rounded-2xl shadow-card p-6 sm:p-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
@@ -88,8 +88,10 @@ const Auth = () => {
                   placeholder="twoj@email.pl"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 rounded-xl border-2 focus:border-primary"
+                  className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
                   required
+                  autoComplete="email"
+                  inputMode="email"
                 />
               </div>
             </div>
@@ -103,14 +105,15 @@ const Auth = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 rounded-xl border-2 focus:border-primary"
+                  className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
                   required
                   minLength={6}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : isLogin ? (
@@ -124,7 +127,7 @@ const Auth = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors py-2 px-4 inline-touch"
             >
               {isLogin ? (
                 <>Nie masz konta? <span className="text-primary font-medium">Zarejestruj się</span></>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, LogOut, Users, Copy, Check, UserPlus, Loader2, Settings } from "lucide-react";
+import { Heart, LogOut, Users, Copy, Check, UserPlus, Loader2 } from "lucide-react";
 import WidgetSettings from "@/components/WidgetSettings";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,10 +42,7 @@ const Header = () => {
       toast.success("Dołączyłeś/aś do pary! 💕");
       setInviteCode("");
     } catch (error: any) {
-      // Extra diagnostics in console (useful during testing)
-      // eslint-disable-next-line no-console
       console.error("[joinCouple] error", error);
-
       toast.error(error?.message || "Nieprawidłowy kod");
     }
   };
@@ -73,31 +70,26 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-border/50">
-      <div className="container mx-auto px-4 py-4">
+    <header className="sticky top-0 z-50 glass border-b border-border/50 pt-safe">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 mobile-compact-header">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Heart className="w-7 h-7 text-primary animate-heart-beat" fill="currentColor" />
-            <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
+          {/* Logo - compact on mobile */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-primary animate-heart-beat" fill="currentColor" />
+            <h1 className="text-lg sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
               Nasza Przestrzeń
             </h1>
-            <Heart className="w-7 h-7 text-primary animate-heart-beat" fill="currentColor" />
           </div>
           
-          <div className="flex items-center gap-2">
-            {user && (
-              <span className="text-sm text-muted-foreground hidden sm:block mr-2">
-                {user.email}
-              </span>
-            )}
-            
+          {/* Actions - optimized for touch */}
+          <div className="flex items-center gap-1 sm:gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" title={getCoupleTooltip()}>
+                <Button variant="ghost" size="icon" title={getCoupleTooltip()} className="h-10 w-10">
                   {getCoupleIcon()}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
+              <PopoverContent className="w-80 mx-3" align="end">
                 {isLoading ? (
                   <div className="flex justify-center py-4">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -125,11 +117,11 @@ const Header = () => {
                       Podziel się tym kodem ze swoją drugą połówką:
                     </p>
                     <div className="flex gap-2">
-                      <div className="flex-1 bg-secondary rounded-xl p-2 font-mono text-center font-bold tracking-wider">
+                      <div className="flex-1 bg-secondary rounded-xl p-3 font-mono text-center font-bold tracking-wider text-lg">
                         {couple.invite_code.toUpperCase()}
                       </div>
-                      <Button onClick={copyCode} size="icon" variant="ghost">
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <Button onClick={copyCode} size="icon" variant="ghost" className="h-12 w-12">
+                        {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                       </Button>
                     </div>
                     
@@ -147,13 +139,12 @@ const Header = () => {
                         placeholder="Wpisz kod zaproszenia"
                         value={inviteCode}
                         onChange={(e) => setInviteCode(e.target.value)}
-                        className="font-mono uppercase text-sm"
+                        className="font-mono uppercase text-base h-12"
                       />
                       <Button 
                         onClick={handleJoinCouple} 
                         variant="outline" 
-                        className="w-full" 
-                        size="sm"
+                        className="w-full h-12" 
                         disabled={joinCouple.isPending}
                       >
                         {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz do innej pary 💕"}
@@ -172,8 +163,7 @@ const Header = () => {
                     </p>
                     <Button 
                       onClick={handleCreateCouple} 
-                      className="w-full" 
-                      size="sm"
+                      className="w-full h-12" 
                       disabled={createCouple.isPending}
                     >
                       {createCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Utwórz parę"}
@@ -191,13 +181,12 @@ const Header = () => {
                         placeholder="Wpisz kod zaproszenia"
                         value={inviteCode}
                         onChange={(e) => setInviteCode(e.target.value)}
-                        className="font-mono uppercase text-sm"
+                        className="font-mono uppercase text-base h-12"
                       />
                       <Button 
                         onClick={handleJoinCouple} 
                         variant="outline" 
-                        className="w-full" 
-                        size="sm"
+                        className="w-full h-12" 
                         disabled={joinCouple.isPending}
                       >
                         {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz 💕"}
@@ -210,7 +199,7 @@ const Header = () => {
             
             <WidgetSettings />
             
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-10 w-10">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>

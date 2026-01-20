@@ -26,14 +26,14 @@ const GenderSelector = ({ onComplete }: GenderSelectorProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
       <div className="w-full max-w-md text-center">
-        <div className="mb-8 animate-slide-up">
-          <User className="w-16 h-16 mx-auto text-primary mb-4" />
-          <h1 className="text-2xl font-heading font-bold mb-2">
+        <div className="mb-6 sm:mb-8 animate-slide-up">
+          <User className="w-14 h-14 sm:w-16 sm:h-16 mx-auto text-primary mb-4" />
+          <h1 className="text-xl sm:text-2xl font-heading font-bold mb-2">
             Jeszcze jedno pytanie 💕
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             To pomoże nam dostosować aplikację do Twoich potrzeb
           </p>
         </div>
@@ -41,8 +41,7 @@ const GenderSelector = ({ onComplete }: GenderSelectorProps) => {
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <Button
             variant="outline"
-            size="lg"
-            className="w-full text-lg py-6"
+            className="w-full text-lg py-6 h-auto"
             onClick={() => handleSelect("female")}
             disabled={loading}
           >
@@ -50,8 +49,7 @@ const GenderSelector = ({ onComplete }: GenderSelectorProps) => {
           </Button>
           <Button
             variant="outline"
-            size="lg"
-            className="w-full text-lg py-6"
+            className="w-full text-lg py-6 h-auto"
             onClick={() => handleSelect("male")}
             disabled={loading}
           >
@@ -59,8 +57,7 @@ const GenderSelector = ({ onComplete }: GenderSelectorProps) => {
           </Button>
           <Button
             variant="outline"
-            size="lg"
-            className="w-full text-lg py-6"
+            className="w-full text-lg py-6 h-auto"
             onClick={() => handleSelect("other")}
             disabled={loading}
           >
