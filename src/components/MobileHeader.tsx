@@ -1,15 +1,9 @@
-import { useState } from "react";
 import { Heart, LogOut, Users, Loader2 } from "lucide-react";
 import WidgetSettings from "@/components/WidgetSettings";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCouple } from "@/hooks/useCouple";
 import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { TABS } from "@/config/tabs";
 
 interface MobileHeaderProps {
@@ -32,14 +26,18 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
     return null;
   };
 
+  const currentTab = TABS[activeTab];
+
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border/50 pt-safe">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Title with heart */}
+        {/* Title with tab icon */}
         <div className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-primary" fill="currentColor" />
+          <div className="text-primary">
+            {currentTab?.icon || <Heart className="w-5 h-5" fill="currentColor" />}
+          </div>
           <h1 className="text-lg font-heading font-bold">
-            {TABS[activeTab]?.label || "Nasza Przestrzeń"}
+            {currentTab?.label || "Nasza Przestrzeń"}
           </h1>
         </div>
         

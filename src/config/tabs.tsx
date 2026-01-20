@@ -8,24 +8,13 @@ export interface TabConfig {
   widgets: string[];
 }
 
+// Home in center, others around it
 export const TABS: TabConfig[] = [
-  {
-    id: "home",
-    label: "Główna",
-    icon: <Home className="w-5 h-5" />,
-    widgets: ["meals-planner", "days-counter", "period-tracker"],
-  },
   {
     id: "lists",
     label: "Listy",
     icon: <ListTodo className="w-5 h-5" />,
     widgets: ["shopping-list", "task-list", "shared-notes"],
-  },
-  {
-    id: "together",
-    label: "Razem",
-    icon: <Heart className="w-5 h-5" />,
-    widgets: ["date-ideas", "photo-albums", "event-countdowns"],
   },
   {
     id: "finance",
@@ -34,9 +23,24 @@ export const TABS: TabConfig[] = [
     widgets: ["expense-tracker", "savings-goals"],
   },
   {
+    id: "home",
+    label: "Główna",
+    icon: <Home className="w-5 h-5" />,
+    widgets: ["meals-planner", "days-counter", "period-tracker"],
+  },
+  {
+    id: "together",
+    label: "Razem",
+    icon: <Heart className="w-5 h-5" />,
+    widgets: ["date-ideas", "photo-albums", "event-countdowns"],
+  },
+  {
     id: "more",
     label: "Więcej",
     icon: <MoreHorizontal className="w-5 h-5" />,
     widgets: ["mini-calendar", "favorite-recipes"],
   },
 ];
+
+// Default to center tab (index 2 = "home")
+export const DEFAULT_TAB_INDEX = 2;
