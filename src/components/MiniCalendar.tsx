@@ -138,9 +138,9 @@ const MiniCalendar = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
         {weekDays.map(day => (
-          <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+          <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground py-1.5 sm:py-2">
             {day}
           </div>
         ))}
@@ -151,9 +151,9 @@ const MiniCalendar = () => {
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {Array.from({ length: emptyDays }).map((_, i) => (
-            <div key={`empty-${i}`} className="aspect-square" />
+            <div key={`empty-${i}`} className="w-full pb-[100%]" />
           ))}
           {days.map(day => {
             const dayEvents = getEventsForDay(day);
@@ -165,22 +165,24 @@ const MiniCalendar = () => {
               <button
                 key={day.toISOString()}
                 className={cn(
-                  "aspect-square rounded-lg text-sm flex flex-col items-center justify-center transition-all relative",
+                  "inline-touch w-full pb-[100%] relative rounded-md sm:rounded-lg text-xs sm:text-sm transition-all",
                   isToday(day) && "gradient-primary text-primary-foreground font-bold",
                   !isToday(day) && isSameMonth(day, currentMonth) && "hover:bg-secondary",
                   !isSameMonth(day, currentMonth) && "text-muted-foreground/50"
                 )}
               >
-                {format(day, "d")}
-                {hasEvent && (
-                  <div className="absolute bottom-1 flex gap-0.5">
-                    {hasAnniversary || hasDate ? (
-                      <Heart className="w-2 h-2 text-primary" fill="currentColor" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-coral" />
-                    )}
-                  </div>
-                )}
+                <span className="absolute inset-0 flex flex-col items-center justify-center">
+                  {format(day, "d")}
+                  {hasEvent && (
+                    <div className="absolute bottom-0.5 sm:bottom-1 flex gap-0.5">
+                      {hasAnniversary || hasDate ? (
+                        <Heart className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-primary" fill="currentColor" />
+                      ) : (
+                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-coral" />
+                      )}
+                    </div>
+                  )}
+                </span>
               </button>
             );
           })}

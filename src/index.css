@@ -103,6 +103,14 @@
   html {
     /* Prevent pull-to-refresh on mobile */
     overscroll-behavior: none;
+    /* Responsive font scaling - scales between 14px (320px viewport) and 16px (428px viewport) */
+    font-size: clamp(14px, calc(12px + 0.5vw), 16px);
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
   }
 
   body {
@@ -262,18 +270,23 @@
 @media (max-width: 640px) {
   /* Reduce padding on mobile */
   .container {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-left: clamp(0.5rem, 2vw, 0.75rem) !important;
+    padding-right: clamp(0.5rem, 2vw, 0.75rem) !important;
   }
 
   /* Smaller card padding on mobile */
   .widget-card-mobile {
-    padding: 1rem;
+    padding: clamp(0.75rem, 3vw, 1rem);
   }
 
   /* Compact headers on mobile */
   .mobile-compact-header {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding-top: clamp(0.5rem, 2vw, 0.75rem);
+    padding-bottom: clamp(0.5rem, 2vw, 0.75rem);
+  }
+
+  /* Responsive spacing utilities */
+  .gap-responsive {
+    gap: clamp(0.5rem, 2vw, 1rem);
   }
 }
