@@ -155,8 +155,8 @@ const MealsPlanner = () => {
         </div>
       }
     >
-      <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))}>
-        <TabsList className="w-full grid grid-cols-7 mb-4">
+      <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))} className="overflow-visible">
+        <TabsList className="w-full grid grid-cols-7 mb-4 h-auto">
           {DAYS.map((day) => {
             const hasMeals = getMealsForDay(day.id).length > 0;
             return (
@@ -164,7 +164,7 @@ const MealsPlanner = () => {
                 key={day.id}
                 value={String(day.id)}
                 className={cn(
-                  "text-xs px-1",
+                  "text-xs px-1 py-2 min-w-0",
                   hasMeals && "bg-primary/20 text-primary font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 )}
               >

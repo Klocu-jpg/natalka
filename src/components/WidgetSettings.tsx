@@ -91,18 +91,18 @@ const WidgetSettings = () => {
             {widgetIds.map((widgetId) => (
               <div
                 key={widgetId}
-                className="flex items-center justify-between p-3 bg-secondary rounded-xl"
+                className="flex items-center justify-between gap-3 p-3 bg-secondary rounded-xl"
               >
                 <Label
                   htmlFor={widgetId}
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-2 cursor-pointer min-w-0 flex-1"
                 >
                   {visibility[widgetId] ? (
-                    <Eye className="w-4 h-4 text-primary" />
+                    <Eye className="w-4 h-4 text-primary shrink-0" />
                   ) : (
-                    <EyeOff className="w-4 h-4 text-muted-foreground" />
+                    <EyeOff className="w-4 h-4 text-muted-foreground shrink-0" />
                   )}
-                  <span className="font-medium text-sm">
+                  <span className="font-medium text-sm truncate">
                     {WIDGET_LABELS[widgetId]}
                   </span>
                 </Label>
@@ -110,6 +110,7 @@ const WidgetSettings = () => {
                   id={widgetId}
                   checked={visibility[widgetId] ?? true}
                   onCheckedChange={() => toggleWidget(widgetId)}
+                  className="shrink-0"
                 />
               </div>
             ))}
