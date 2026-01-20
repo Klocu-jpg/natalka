@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PiggyBank, Plus, Trash2, TrendingUp, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { PiggyBank, Plus, Trash2, TrendingUp, Loader2, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -219,31 +219,62 @@ const SavingsGoals = () => {
               const goalContributions = getGoalContributions(goal.id);
               const isExpanded = expandedGoal === goal.id;
 
+              const isCompleted = progress >= 100;
+
               return (
                 <Collapsible 
                   key={goal.id} 
                   open={isExpanded}
                   onOpenChange={() => setExpandedGoal(isExpanded ? null : goal.id)}
                 >
-                  <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+                  <div className={`rounded-xl p-3 space-y-2 ${isCompleted ? "bg-green-100 dark:bg-green-900/30 ring-2 ring-green-500" : "bg-secondary/50"}`}>
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{goal.emoji}</span>
+                      {isCompleted ? (
+                        <div className="relative">
+                          <span className="text-2xl">{goal.emoji}</span>
+                          <CheckCircle2 className="w-4 h-4 text-green-600 absolute -bottom-1 -right-1" />
+                        </div>
+                      ) : (
+                        <span className="text-2xl">{goal.emoji}</span>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{goal.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{goal.title}</p>
+                          {isCompleted && (
+                            <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">Ukończono! 🎉</span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {Number(goal.current_amount).toLocaleString()} / {Number(goal.target_amount).toLocaleString()} PLN
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openContribution(goal.id)}
-                      >
-                        <Plus className="w-3 h-3 mr-1" /> Wpłać
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {!isCompleted && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openContribution(goal.id)}
+                          >
+                            <Plus className="w-3 h-3 mr-1" /> Wpłać
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            if (confirm("Czy na pewno chcesz usunąć ten cel?")) {
+                              deleteGoal.mutate(goal.id);
+                              toast.success("Cel usunięty");
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={Math.min(progress, 100)} className={`h-2 ${isCompleted ? "[&>div]:bg-green-500" : ""}`} />
                     
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{Math.round(progress)}% celu</span>
