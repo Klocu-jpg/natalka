@@ -18,7 +18,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import SwipeableTabs from "@/components/SwipeableTabs";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
 import { useProfile } from "@/hooks/useProfile";
-import { TABS } from "@/config/tabs";
+import { TABS, DEFAULT_TAB_INDEX } from "@/config/tabs";
 
 const ALL_WIDGETS: Record<string, React.FC> = {
   "meals-planner": MealsPlanner,
@@ -37,7 +37,8 @@ const ALL_WIDGETS: Record<string, React.FC> = {
 };
 
 const MobileDashboard = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  // Start on center tab (Home)
+  const [activeTab, setActiveTab] = useState(DEFAULT_TAB_INDEX);
   const { visibleWidgets } = useWidgetVisibility();
   const { profile, isLoading } = useProfile();
 
@@ -52,7 +53,7 @@ const MobileDashboard = () => {
         }))
         .filter((w) => w.Component);
       
-      return tabWidgets;
+      return { tabId: tab.id, widgets: tabWidgets, icon: tab.icon };
     });
   }, [visibleWidgets]);
 
@@ -66,8 +67,8 @@ const MobileDashboard = () => {
       <MobileHeader activeTab={activeTab} />
       
       <SwipeableTabs activeIndex={activeTab} onIndexChange={setActiveTab}>
-        {tabContents.map((widgets, tabIndex) => (
-          <div key={tabIndex} className="pb-20">
+        {tabContents.map(({ tabId, widgets, icon }, tabIndex) => (
+          <div key={tabId} className="pb-20 min-h-full">
             {widgets.length > 0 ? (
               widgets.map(({ id, Component }) => (
                 <div key={id} className="mb-3">
@@ -77,7 +78,7 @@ const MobileDashboard = () => {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-                  {TABS[tabIndex].icon}
+                  {icon}
                 </div>
                 <p className="text-muted-foreground text-sm">
                   Brak widgetów w tej kategorii

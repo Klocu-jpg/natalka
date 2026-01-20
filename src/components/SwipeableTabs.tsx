@@ -1,5 +1,4 @@
-import { ReactNode, useRef, useEffect } from "react";
-import { useSwipeable } from "react-swipeable";
+import { useRef, useState, useCallback, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface SwipeableTabsProps {
@@ -10,61 +9,97 @@ interface SwipeableTabsProps {
 
 const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const startXRef = useRef(0);
+  const startTimeRef = useRef(0);
+  
   const totalTabs = children.length;
 
-  const handlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (activeIndex < totalTabs - 1) {
-        onIndexChange(activeIndex + 1);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsDragging(true);
+    startXRef.current = e.touches[0].clientX;
+    startTimeRef.current = Date.now();
+    setDragOffset(0);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startXRef.current;
+    
+    // Add resistance at edges
+    if ((activeIndex === 0 && diff > 0) || (activeIndex === totalTabs - 1 && diff < 0)) {
+      setDragOffset(diff * 0.3);
+    } else {
+      setDragOffset(diff);
+    }
+  }, [isDragging, activeIndex, totalTabs]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging) return;
+    
+    const velocity = dragOffset / (Date.now() - startTimeRef.current);
+    const threshold = 50;
+    const velocityThreshold = 0.3;
+    
+    let newIndex = activeIndex;
+    
+    if (Math.abs(dragOffset) > threshold || Math.abs(velocity) > velocityThreshold) {
+      if (dragOffset > 0 && activeIndex > 0) {
+        newIndex = activeIndex - 1;
+      } else if (dragOffset < 0 && activeIndex < totalTabs - 1) {
+        newIndex = activeIndex + 1;
       }
-    },
-    onSwipedRight: () => {
-      if (activeIndex > 0) {
-        onIndexChange(activeIndex - 1);
-      }
-    },
-    trackMouse: false,
-    trackTouch: true,
-    delta: 50,
-    preventScrollOnSwipe: true,
-  });
+    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+    
+    if (newIndex !== activeIndex) {
+      onIndexChange(newIndex);
+    }
+  }, [isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
+
+  // Calculate transform with drag offset
+  const getTransform = () => {
+    const baseOffset = -activeIndex * 100;
+    const dragPercent = containerRef.current 
+      ? (dragOffset / containerRef.current.offsetWidth) * 100 
+      : 0;
+    return `translateX(${baseOffset + dragPercent}%)`;
+  };
 
   return (
-    <div className="relative overflow-hidden flex-1" {...handlers}>
+    <div 
+      ref={containerRef}
+      className="relative overflow-hidden flex-1 touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div
-        ref={containerRef}
-        className="flex transition-transform duration-300 ease-out h-full"
+        className={cn(
+          "flex h-full will-change-transform",
+          !isDragging && "transition-transform duration-300 ease-out"
+        )}
         style={{
-          transform: `translateX(-${activeIndex * 100}%)`,
+          transform: getTransform(),
           width: `${totalTabs * 100}%`,
         }}
       >
         {children.map((child, index) => (
           <div
             key={index}
-            className={cn(
-              "h-full overflow-y-auto scroll-smooth-mobile scrollbar-hide",
-              "px-3 sm:px-4 py-4"
-            )}
-            style={{ width: `${100 / totalTabs}%` }}
+            className="h-full overflow-y-auto overscroll-contain px-3 py-4"
+            style={{ 
+              width: `${100 / totalTabs}%`,
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
             {child}
           </div>
-        ))}
-      </div>
-      
-      {/* Swipe indicators */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {children.map((_, index) => (
-          <div
-            key={index}
-            className={cn(
-              "w-1.5 h-1.5 rounded-full transition-all duration-300",
-              activeIndex === index
-                ? "bg-primary w-4"
-                : "bg-muted-foreground/30"
-            )}
-          />
         ))}
       </div>
     </div>
