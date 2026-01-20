@@ -183,6 +183,24 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Tab content animation */
+  .tab-content-enter {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  .tab-content-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* React Grid Layout Styles */
