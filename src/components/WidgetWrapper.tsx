@@ -12,22 +12,22 @@ interface WidgetWrapperProps {
 
 const WidgetWrapper = ({ title, icon, iconBg = "gradient-primary", children, actions }: WidgetWrapperProps) => {
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+    <div className="bg-card rounded-2xl shadow-card p-4 sm:p-6 h-full flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
             {icon}
           </div>
-          <h2 className="text-xl font-heading font-semibold">{title}</h2>
+          <h2 className="text-lg sm:text-xl font-heading font-semibold truncate">{title}</h2>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
           {actions}
-          <div className="drag-handle cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-secondary/80 transition-colors">
+          <div className="drag-handle cursor-grab active:cursor-grabbing p-2 rounded-lg hover:bg-secondary/80 transition-colors">
             <GripVertical className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
       </div>
-      <ScrollArea className="flex-1 -mr-3 pr-3">
+      <ScrollArea className="flex-1 -mr-2 pr-2 sm:-mr-3 sm:pr-3">
         {children}
       </ScrollArea>
     </div>
