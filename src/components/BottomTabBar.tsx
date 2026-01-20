@@ -8,19 +8,18 @@ interface BottomTabBarProps {
 
 const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border pb-safe">
-      <div className="flex items-center justify-around h-16 relative">
-        {/* Animated indicator */}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/98 backdrop-blur-xl border-t border-border/30 pb-safe shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)]">
+      <div className="flex items-center justify-around h-[68px] relative max-w-lg mx-auto">
+        {/* Animated pill indicator */}
         <div 
-          className="absolute top-0 h-0.5 bg-primary rounded-full transition-all duration-300 ease-out"
+          className="absolute top-1.5 h-1 bg-gradient-to-r from-primary to-coral rounded-full transition-all duration-300 ease-out"
           style={{
-            width: `${100 / TABS.length}%`,
-            left: `${(activeTab / TABS.length) * 100}%`,
+            width: `${Math.min(100 / TABS.length - 4, 12)}%`,
+            left: `${(activeTab / TABS.length) * 100 + (100 / TABS.length - 12) / 2}%`,
           }}
         />
         
         {TABS.map((tab, index) => {
-          const isCenter = index === 2; // Home is in center
           const isActive = activeTab === index;
           
           return (
@@ -28,25 +27,24 @@ const BottomTabBar = ({ activeTab, onTabChange }: BottomTabBarProps) => {
               key={tab.id}
               onClick={() => onTabChange(index)}
               className={cn(
-                "relative flex flex-col items-center justify-center gap-1 flex-1 h-full",
+                "relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full",
                 "transition-all duration-200 active:scale-95",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <div
                 className={cn(
-                  "transition-all duration-200",
-                  isActive && "scale-110",
-                  isCenter && !isActive && "opacity-70"
+                  "relative p-2 rounded-xl transition-all duration-200",
+                  isActive && "bg-primary/10 scale-110"
                 )}
               >
                 {tab.icon}
               </div>
               <span className={cn(
                 "text-[10px] font-medium transition-all duration-200",
-                isActive && "font-semibold"
+                isActive ? "font-semibold text-primary" : "text-muted-foreground"
               )}>
                 {tab.label}
               </span>

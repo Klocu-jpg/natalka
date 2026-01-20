@@ -122,16 +122,19 @@
     @apply font-heading font-semibold;
   }
 
-  /* Better touch targets */
-  button, a, [role="button"] {
+  /* Better touch targets - only for standalone interactive elements */
+  button:not(.inline-touch), 
+  [role="button"]:not(.inline-touch) {
     min-height: 44px;
     min-width: 44px;
   }
 
-  /* Exception for inline elements */
-  .inline-touch {
-    min-height: auto;
-    min-width: auto;
+  /* Smaller touch targets for inline actions */
+  .inline-touch,
+  button.inline-touch,
+  [role="button"].inline-touch {
+    min-height: auto !important;
+    min-width: auto !important;
   }
 }
 
