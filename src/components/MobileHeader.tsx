@@ -1,10 +1,10 @@
-import { Heart, LogOut, Users, Loader2 } from "lucide-react";
+import { Heart, LogOut, Users, Loader2, UserPlus } from "lucide-react";
 import WidgetSettings from "@/components/WidgetSettings";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCouple } from "@/hooks/useCouple";
 import { toast } from "sonner";
 import { TABS } from "@/config/tabs";
+import CoupleConnectPopover from "@/components/CoupleConnectPopover";
 
 interface MobileHeaderProps {
   activeTab: number;
@@ -12,18 +12,10 @@ interface MobileHeaderProps {
 
 const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
   const { signOut } = useAuth();
-  const { isLoading, hasPartner, couple } = useCouple();
 
   const handleSignOut = async () => {
     await signOut();
     toast.success("Wylogowano! Do zobaczenia 💕");
-  };
-
-  const getCoupleIcon = () => {
-    if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />;
-    if (hasPartner) return <Users className="w-4 h-4 text-primary" />;
-    if (couple) return <Users className="w-4 h-4 text-amber-500" />;
-    return null;
   };
 
   const currentTab = TABS[activeTab];
@@ -43,7 +35,26 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
         
         {/* Actions */}
         <div className="flex items-center gap-1">
-          {getCoupleIcon()}
+          <CoupleConnectPopover
+            trigger={({ isLoading, hasPartner, hasCouple }) => (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                title={hasPartner ? "Para połączona" : hasCouple ? "Czeka na partnera" : "Połącz się z partnerem"}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : hasPartner ? (
+                  <Users className="w-4 h-4 text-primary" />
+                ) : hasCouple ? (
+                  <UserPlus className="w-4 h-4 text-amber-500" />
+                ) : (
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            )}
+          />
           <WidgetSettings />
           <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-9 w-9">
             <LogOut className="w-4 h-4" />

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ShoppingCart, Plus, Trash2, Check, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
+import { Checkbox } from "@/components/ui/checkbox";
 import WidgetWrapper from "./WidgetWrapper";
 
 const ShoppingList = () => {
@@ -50,17 +51,14 @@ const ShoppingList = () => {
                 item.completed ? "bg-muted/50" : "bg-secondary hover:bg-secondary/80"
               )}
             >
-              <button
-                onClick={() => toggleItem.mutate({ id: item.id, completed: !item.completed })}
+              <Checkbox
+                checked={item.completed}
+                onCheckedChange={() => toggleItem.mutate({ id: item.id, completed: !item.completed })}
                 className={cn(
-                  "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                  item.completed
-                    ? "bg-primary border-primary"
-                    : "border-muted-foreground hover:border-primary"
+                  "h-5 w-5 rounded-md",
+                  item.completed ? "border-primary" : "border-muted-foreground"
                 )}
-              >
-                {item.completed && <Check className="w-4 h-4 text-primary-foreground" />}
-              </button>
+              />
               <span className={cn(
                 "flex-1 transition-all",
                 item.completed && "line-through text-muted-foreground"
@@ -69,7 +67,7 @@ const ShoppingList = () => {
               </span>
               <button
                 onClick={() => deleteItem.mutate(item.id)}
-                className="text-muted-foreground hover:text-destructive transition-colors"
+                className="inline-touch text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
