@@ -16,6 +16,7 @@ import EventCountdowns from "@/components/EventCountdowns";
 import PeriodTracker from "@/components/PeriodTracker";
 import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
+import NudgeWidget from "@/components/NudgeWidget";
 import GenderSelector from "@/components/GenderSelector";
 import MobileDashboard from "@/components/MobileDashboard";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
@@ -47,9 +48,10 @@ const defaultLayouts: Layouts = {
     { i: "shared-notes", x: 1, y: 19, w: 1, h: 3, minH: 2 },
     { i: "favorite-recipes", x: 2, y: 19, w: 1, h: 3, minH: 2 },
     
-    // Row 6: Two columns (h=4)
+    // Row 6: Three columns (h=4)
     { i: "period-tracker", x: 0, y: 22, w: 1, h: 4, minH: 3 },
     { i: "event-countdowns", x: 1, y: 22, w: 1, h: 4, minH: 3 },
+    { i: "nudge-widget", x: 2, y: 22, w: 1, h: 4, minH: 3 },
   ],
   md: [
     // Row 1: Full width header
@@ -80,6 +82,9 @@ const defaultLayouts: Layouts = {
     
     // Row 8: Full width
     { i: "favorite-recipes", x: 0, y: 31, w: 2, h: 4, minH: 3 },
+    
+    // Row 9: Nudge widget
+    { i: "nudge-widget", x: 0, y: 35, w: 2, h: 4, minH: 3 },
   ],
 };
 
@@ -97,6 +102,7 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "period-tracker": PeriodTracker,
   "savings-goals": SavingsGoals,
   "photo-albums": PhotoAlbums,
+  "nudge-widget": NudgeWidget,
 };
 
 const Index = () => {

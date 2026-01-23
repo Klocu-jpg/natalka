@@ -12,6 +12,7 @@ import EventCountdowns from "@/components/EventCountdowns";
 import PeriodTracker from "@/components/PeriodTracker";
 import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
+import NudgeWidget from "@/components/NudgeWidget";
 import GenderSelector from "@/components/GenderSelector";
 import MobileHeader from "@/components/MobileHeader";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -34,6 +35,7 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "period-tracker": PeriodTracker,
   "savings-goals": SavingsGoals,
   "photo-albums": PhotoAlbums,
+  "nudge-widget": NudgeWidget,
 };
 
 const MobileDashboard = () => {
