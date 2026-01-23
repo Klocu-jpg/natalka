@@ -20,6 +20,7 @@ const DEFAULT_VISIBILITY: WidgetVisibility = {
   "period-tracker": true,
   "savings-goals": true,
   "photo-albums": true,
+  "nudge-widget": true,
 };
 
 export const WIDGET_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ export const WIDGET_LABELS: Record<string, string> = {
   "period-tracker": "Tracker cyklu",
   "savings-goals": "Oszczędności",
   "photo-albums": "Wspomnienia",
+  "nudge-widget": "Zaczepki",
 };
 
 interface WidgetVisibilityContextType {
