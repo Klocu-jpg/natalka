@@ -13,7 +13,9 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
+  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState<boolean | null>(null);
   const startXRef = useRef(0);
+  const startYRef = useRef(0);
   const startTimeRef = useRef(0);
 
   const tabs = React.Children.toArray(children);
@@ -33,28 +35,60 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true);
     startXRef.current = e.touches[0].clientX;
+    startYRef.current = e.touches[0].clientY;
     startTimeRef.current = Date.now();
+    setIsHorizontalSwipe(null); // Reset direction detection
     setDragOffset(0);
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging) return;
-
     const currentX = e.touches[0].clientX;
-    const diff = currentX - startXRef.current;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - startXRef.current;
+    const diffY = currentY - startYRef.current;
+
+    // Detect direction on first significant movement (threshold: 10px)
+    if (isHorizontalSwipe === null) {
+      const absX = Math.abs(diffX);
+      const absY = Math.abs(diffY);
+      
+      if (absX > 10 || absY > 10) {
+        // If horizontal movement is greater, it's a swipe
+        const isHorizontal = absX > absY;
+        setIsHorizontalSwipe(isHorizontal);
+        
+        if (isHorizontal) {
+          setIsDragging(true);
+        }
+      }
+      return;
+    }
+
+    // If vertical scroll, don't interfere
+    if (!isHorizontalSwipe) {
+      return;
+    }
+
+    // Horizontal swipe - prevent scroll and handle tab change
+    e.preventDefault();
     
     // Add resistance at edges
-    if ((activeIndex === 0 && diff > 0) || (activeIndex === totalTabs - 1 && diff < 0)) {
-      setDragOffset(diff * 0.3);
+    if ((activeIndex === 0 && diffX > 0) || (activeIndex === totalTabs - 1 && diffX < 0)) {
+      setDragOffset(diffX * 0.3);
     } else {
-      setDragOffset(diff);
+      setDragOffset(diffX);
     }
-  }, [isDragging, activeIndex, totalTabs]);
+  }, [isHorizontalSwipe, activeIndex, totalTabs]);
 
   const handleTouchEnd = useCallback(() => {
-    if (!isDragging) return;
+    // If it wasn't a horizontal swipe, just reset
+    if (!isHorizontalSwipe || !isDragging) {
+      setIsDragging(false);
+      setDragOffset(0);
+      setIsHorizontalSwipe(null);
+      return;
+    }
     
     const elapsed = Date.now() - startTimeRef.current;
     const velocity = elapsed > 0 ? dragOffset / elapsed : 0;
@@ -73,11 +107,12 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     
     setIsDragging(false);
     setDragOffset(0);
+    setIsHorizontalSwipe(null);
     
     if (newIndex !== activeIndex) {
       onIndexChange(newIndex);
     }
-  }, [isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
+  }, [isHorizontalSwipe, isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
 
   // Calculate transform with drag offset
   const getTransformX = () => {
