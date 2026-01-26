@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useMeals, Meal } from "@/hooks/useMeals";
@@ -22,19 +23,38 @@ const DAYS = [
   { id: 6, short: "Nd", full: "Niedziela" },
 ];
 
+type AddMode = "ai" | "simple" | "recipe";
+
 const MealsPlanner = () => {
-  const { meals, isLoading, addMeal, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
+  const { meals, isLoading, addMeal, addMealFromFavorite, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
   const { addItem } = useShoppingItems();
-  const { addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
+  const { favoriteRecipes, addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
   const [selectedDay, setSelectedDay] = useState(0);
   const [newMeal, setNewMeal] = useState("");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addMode, setAddMode] = useState<AddMode>("simple");
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
 
   const handleAddMeal = () => {
+    if (addMode === "recipe") {
+      const recipe = favoriteRecipes.find(r => r.id === selectedRecipeId);
+      if (recipe) {
+        addMealFromFavorite.mutate({
+          name: recipe.name,
+          recipe: recipe.recipe,
+          ingredients: recipe.ingredients,
+          dayOfWeek: selectedDay,
+        });
+        setSelectedRecipeId("");
+        setAddDialogOpen(false);
+      }
+      return;
+    }
+    
     if (newMeal.trim()) {
-      addMeal.mutate({ name: newMeal, dayOfWeek: selectedDay });
+      addMeal.mutate({ name: newMeal, dayOfWeek: selectedDay, useAI: addMode === "ai" });
       setNewMeal("");
       setAddDialogOpen(false);
     }
@@ -83,6 +103,8 @@ const MealsPlanner = () => {
     clearAllMeals.mutate();
   };
 
+  const isPending = addMeal.isPending || addMealFromFavorite.isPending;
+
   return (
     <WidgetWrapper
       title="Plan Obiadów"
@@ -125,25 +147,85 @@ const MealsPlanner = () => {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
-                <Input
-                  placeholder="Np. Spaghetti bolognese..."
-                  value={newMeal}
-                  onChange={(e) => setNewMeal(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !addMeal.isPending && handleAddMeal()}
-                  className="rounded-xl"
-                />
-                <p className="text-sm text-muted-foreground">
-                  AI automatycznie wygeneruje przepis i listę składników 🤖
-                </p>
+                {/* Mode selection */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={addMode === "simple" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAddMode("simple")}
+                    className="text-xs"
+                  >
+                    Prosty
+                  </Button>
+                  <Button
+                    variant={addMode === "ai" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAddMode("ai")}
+                    className="text-xs"
+                  >
+                    Z AI 🤖
+                  </Button>
+                  <Button
+                    variant={addMode === "recipe" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAddMode("recipe")}
+                    className="text-xs"
+                  >
+                    Z książki 📖
+                  </Button>
+                </div>
+
+                {addMode === "recipe" ? (
+                  <>
+                    <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Wybierz przepis z książki kucharskiej..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {favoriteRecipes.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            Brak zapisanych przepisów
+                          </SelectItem>
+                        ) : (
+                          favoriteRecipes.map((recipe) => (
+                            <SelectItem key={recipe.id} value={recipe.id}>
+                              {recipe.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Przepis zostanie dodany ze wszystkimi składnikami 📖
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      placeholder="Np. Spaghetti bolognese..."
+                      value={newMeal}
+                      onChange={(e) => setNewMeal(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && !isPending && handleAddMeal()}
+                      className="rounded-xl"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {addMode === "ai" 
+                        ? "AI automatycznie wygeneruje przepis i listę składników 🤖"
+                        : "Obiad zostanie dodany bez przepisu - możesz go uzupełnić później"
+                      }
+                    </p>
+                  </>
+                )}
+
                 <Button 
                   onClick={handleAddMeal} 
                   className="w-full" 
-                  disabled={addMeal.isPending || !newMeal.trim()}
+                  disabled={isPending || (addMode === "recipe" ? !selectedRecipeId : !newMeal.trim())}
                 >
-                  {addMeal.isPending ? (
+                  {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generuję przepis...
+                      {addMode === "ai" ? "Generuję przepis..." : "Dodaję..."}
                     </>
                   ) : (
                     "Dodaj obiad"
@@ -228,6 +310,11 @@ const MealsPlanner = () => {
                             {meal.ingredients.length} składników
                           </p>
                         )}
+                        {!meal.recipe && (
+                          <p className="text-xs text-amber-600 mt-1 ml-6">
+                            Bez przepisu
+                          </p>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -253,85 +340,96 @@ const MealsPlanner = () => {
               </DialogHeader>
 
               <div className="space-y-6 pt-6">
-                {/* Save to favorites */}
-                <div className="flex gap-2">
-                  <Button
-                    variant={isRecipeFavorite(selectedMeal.name) ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => handleSaveToFavorites(selectedMeal)}
-                    disabled={addFavoriteRecipe.isPending || isRecipeFavorite(selectedMeal.name)}
-                    className="gap-2 flex-1"
-                  >
-                    <Star className={cn("w-4 h-4", isRecipeFavorite(selectedMeal.name) && "fill-amber-500 text-amber-500")} />
-                    {isRecipeFavorite(selectedMeal.name) ? "W ulubionych" : "Zapisz do ulubionych"}
-                  </Button>
-                </div>
-
-                {/* Ingredients */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-heading font-semibold text-lg">🧂 Składniki</h4>
+                {/* Save to favorites - only if has recipe */}
+                {selectedMeal.recipe && (
+                  <div className="flex gap-2">
                     <Button
-                      variant="default"
+                      variant={isRecipeFavorite(selectedMeal.name) ? "secondary" : "outline"}
                       size="sm"
-                      onClick={() => handleAddIngredientsToShoppingList(selectedMeal)}
-                      disabled={addItem.isPending}
-                      className="gap-2"
+                      onClick={() => handleSaveToFavorites(selectedMeal)}
+                      disabled={addFavoriteRecipe.isPending || isRecipeFavorite(selectedMeal.name)}
+                      className="gap-2 flex-1"
                     >
-                      <ShoppingCart className="w-4 h-4" />
-                      Dodaj do zakupów
+                      <Star className={cn("w-4 h-4", isRecipeFavorite(selectedMeal.name) && "fill-amber-500 text-amber-500")} />
+                      {isRecipeFavorite(selectedMeal.name) ? "W książce kucharskiej" : "Zapisz do książki"}
                     </Button>
                   </div>
-                  <div className="bg-secondary rounded-2xl p-4">
-                    <ul className="grid grid-cols-1 gap-2">
-                      {selectedMeal.ingredients?.map((ing, idx) => (
-                        <li key={idx} className="flex items-center gap-3 p-2 bg-background/60 rounded-xl group/item">
-                          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary shrink-0">
-                            {idx + 1}
-                          </span>
-                          <span className="flex-1 font-medium text-sm">{ing.name}</span>
-                          <span className="text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-lg shrink-0">{ing.amount}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 shrink-0 opacity-60 hover:opacity-100 hover:bg-primary/20 hover:text-primary"
-                            onClick={() => handleAddSingleIngredient(ing.name, ing.amount)}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                )}
 
-                {/* Recipe */}
-                <div>
-                  <h4 className="font-heading font-semibold text-lg mb-3">👨‍🍳 Przepis krok po kroku</h4>
-                  <div className="bg-gradient-to-br from-rose-light/70 to-coral-light/50 rounded-2xl p-5 border border-primary/10">
-                    <div className="prose prose-sm max-w-none">
-                      {selectedMeal.recipe?.split('\n').map((line, idx) => {
-                        const trimmed = line.trim();
-                        if (!trimmed) return null;
-                        
-                        // Check if line starts with a number (step)
-                        const isStep = /^\d+[\.\)]/.test(trimmed);
-                        
-                        return (
-                          <p 
-                            key={idx} 
-                            className={cn(
-                              "mb-2 last:mb-0",
-                              isStep && "font-medium text-foreground pl-0"
-                            )}
-                          >
-                            {trimmed}
-                          </p>
-                        );
-                      })}
+                {/* Ingredients */}
+                {selectedMeal.ingredients && selectedMeal.ingredients.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-heading font-semibold text-lg">🧂 Składniki</h4>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleAddIngredientsToShoppingList(selectedMeal)}
+                        disabled={addItem.isPending}
+                        className="gap-2"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Dodaj do zakupów
+                      </Button>
+                    </div>
+                    <div className="bg-secondary rounded-2xl p-4">
+                      <ul className="grid grid-cols-1 gap-2">
+                        {selectedMeal.ingredients?.map((ing, idx) => (
+                          <li key={idx} className="flex items-center gap-3 p-2 bg-background/60 rounded-xl group/item">
+                            <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="flex-1 font-medium text-sm">{ing.name}</span>
+                            <span className="text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-lg shrink-0">{ing.amount}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 opacity-60 hover:opacity-100 hover:bg-primary/20 hover:text-primary"
+                              onClick={() => handleAddSingleIngredient(ing.name, ing.amount)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Recipe */}
+                {selectedMeal.recipe ? (
+                  <div>
+                    <h4 className="font-heading font-semibold text-lg mb-3">👨‍🍳 Przepis krok po kroku</h4>
+                    <div className="bg-gradient-to-br from-rose-light/70 to-coral-light/50 rounded-2xl p-5 border border-primary/10">
+                      <div className="prose prose-sm max-w-none">
+                        {selectedMeal.recipe?.split('\n').map((line, idx) => {
+                          const trimmed = line.trim();
+                          if (!trimmed) return null;
+                          
+                          // Check if line starts with a number (step)
+                          const isStep = /^\d+[\.\)]/.test(trimmed);
+                          
+                          return (
+                            <p 
+                              key={idx} 
+                              className={cn(
+                                "mb-2 last:mb-0",
+                                isStep && "font-medium text-foreground pl-0"
+                              )}
+                            >
+                              {trimmed}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p>Ten obiad nie ma przepisu.</p>
+                    <p className="text-sm mt-1">Możesz dodać go do książki kucharskiej i uzupełnić szczegóły.</p>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -32,13 +32,13 @@ export const TABS: TabConfig[] = [
     id: "together",
     label: "Razem",
     icon: <Heart className="w-5 h-5" />,
-    widgets: ["nudge-widget", "date-ideas", "photo-albums", "event-countdowns"],
+    widgets: ["nudge-widget", "date-ideas", "photo-albums"],
   },
   {
     id: "more",
     label: "Więcej",
     icon: <MoreHorizontal className="w-5 h-5" />,
-    widgets: ["mini-calendar", "event-countdowns"],
+    widgets: ["mini-calendar", "event-countdowns", "favorite-recipes"],
   },
 ];
 

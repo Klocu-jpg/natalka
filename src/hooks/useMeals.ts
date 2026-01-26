@@ -44,41 +44,47 @@ export const useMeals = () => {
   });
 
   const addMeal = useMutation({
-    mutationFn: async ({ name, dayOfWeek }: { name: string; dayOfWeek: number }) => {
+    mutationFn: async ({ name, dayOfWeek, useAI = true }: { name: string; dayOfWeek: number; useAI?: boolean }) => {
       if (!user) throw new Error("Nie jesteś zalogowany");
 
-      // First, generate recipe using AI
-      const { data: recipeData, error: recipeError } = await supabase.functions.invoke(
-        "generate-recipe",
-        { body: { mealName: name } }
-      );
+      let recipe: string | null = null;
+      let ingredients: Ingredient[] = [];
 
-      if (recipeError) {
-        console.error("Recipe generation error:", recipeError);
-        throw new Error("Nie udało się wygenerować przepisu");
+      if (useAI) {
+        // Generate recipe using AI
+        const { data: recipeData, error: recipeError } = await supabase.functions.invoke(
+          "generate-recipe",
+          { body: { mealName: name } }
+        );
+
+        if (recipeError) {
+          console.error("Recipe generation error:", recipeError);
+          throw new Error("Nie udało się wygenerować przepisu");
+        }
+
+        recipe = recipeData.recipe;
+        ingredients = recipeData.ingredients;
       }
 
-      const { recipe, ingredients } = recipeData;
-
-      // Then save the meal with recipe
+      // Save the meal
       const { data, error } = await supabase
         .from("meals")
-        .insert({
+        .insert([{
           user_id: user.id,
           day_of_week: dayOfWeek,
           name,
           recipe,
-          ingredients,
-        })
+          ingredients: JSON.parse(JSON.stringify(ingredients)),
+        }])
         .select()
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Obiad dodany z przepisem! 🍽️");
+      toast.success(variables.useAI ? "Obiad dodany z przepisem! 🍽️" : "Obiad dodany! 🍽️");
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać obiadu");

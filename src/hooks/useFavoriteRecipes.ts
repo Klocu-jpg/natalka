@@ -65,10 +65,42 @@ export const useFavoriteRecipes = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["favorite_recipes", user?.id] });
-      toast.success("Przepis dodany do ulubionych! ⭐");
+      toast.success("Przepis dodany do książki kucharskiej! 📖");
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się zapisać przepisu");
+    },
+  });
+
+  const updateFavoriteRecipe = useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      recipe,
+      ingredients,
+    }: {
+      id: string;
+      name: string;
+      recipe: string;
+      ingredients: Ingredient[];
+    }) => {
+      const { error } = await supabase
+        .from("favorite_recipes")
+        .update({
+          name,
+          recipe,
+          ingredients: JSON.parse(JSON.stringify(ingredients)),
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favorite_recipes", user?.id] });
+      toast.success("Przepis zaktualizowany! 📖");
+    },
+    onError: () => {
+      toast.error("Nie udało się zaktualizować przepisu");
     },
   });
 
@@ -97,6 +129,7 @@ export const useFavoriteRecipes = () => {
     favoriteRecipes,
     isLoading,
     addFavoriteRecipe,
+    updateFavoriteRecipe,
     deleteFavoriteRecipe,
     isRecipeFavorite,
   };
