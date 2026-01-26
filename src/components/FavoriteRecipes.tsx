@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Star, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus } from "lucide-react";
+import { BookOpen, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus, Edit, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useFavoriteRecipes, FavoriteRecipe } from "@/hooks/useFavoriteRecipes";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
-import { useMeals } from "@/hooks/useMeals";
+import { useMeals, Ingredient } from "@/hooks/useMeals";
 import WidgetWrapper from "./WidgetWrapper";
 import { toast } from "sonner";
 
@@ -21,19 +23,91 @@ const DAYS = [
 ];
 
 const FavoriteRecipes = () => {
-  const { favoriteRecipes, isLoading, deleteFavoriteRecipe } = useFavoriteRecipes();
+  const { favoriteRecipes, isLoading, addFavoriteRecipe, updateFavoriteRecipe, deleteFavoriteRecipe } = useFavoriteRecipes();
   const { addItem } = useShoppingItems();
   const { addMealFromFavorite } = useMeals();
+  
   const [selectedRecipe, setSelectedRecipe] = useState<FavoriteRecipe | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [addedIngredients, setAddedIngredients] = useState<Set<string>>(new Set());
   const [selectedDay, setSelectedDay] = useState<string>("");
+  
+  // Form state for add/edit
+  const [formName, setFormName] = useState("");
+  const [formRecipe, setFormRecipe] = useState("");
+  const [formIngredients, setFormIngredients] = useState<Ingredient[]>([]);
+  const [newIngredientName, setNewIngredientName] = useState("");
+  const [newIngredientAmount, setNewIngredientAmount] = useState("");
 
   const openRecipe = (recipe: FavoriteRecipe) => {
     setSelectedRecipe(recipe);
     setAddedIngredients(new Set());
     setSelectedDay("");
-    setIsDialogOpen(true);
+    setIsEditMode(false);
+    setIsViewDialogOpen(true);
+  };
+
+  const openAddDialog = () => {
+    setFormName("");
+    setFormRecipe("");
+    setFormIngredients([]);
+    setIsAddDialogOpen(true);
+  };
+
+  const openEditMode = () => {
+    if (!selectedRecipe) return;
+    setFormName(selectedRecipe.name);
+    setFormRecipe(selectedRecipe.recipe);
+    setFormIngredients([...selectedRecipe.ingredients]);
+    setIsEditMode(true);
+  };
+
+  const handleAddIngredient = () => {
+    if (newIngredientName.trim() && newIngredientAmount.trim()) {
+      setFormIngredients([...formIngredients, { name: newIngredientName.trim(), amount: newIngredientAmount.trim() }]);
+      setNewIngredientName("");
+      setNewIngredientAmount("");
+    }
+  };
+
+  const handleRemoveIngredient = (index: number) => {
+    setFormIngredients(formIngredients.filter((_, i) => i !== index));
+  };
+
+  const handleSaveRecipe = () => {
+    if (!formName.trim() || !formRecipe.trim()) {
+      toast.error("Podaj nazwę i przepis");
+      return;
+    }
+    
+    addFavoriteRecipe.mutate({
+      name: formName.trim(),
+      recipe: formRecipe.trim(),
+      ingredients: formIngredients,
+    }, {
+      onSuccess: () => setIsAddDialogOpen(false)
+    });
+  };
+
+  const handleUpdateRecipe = () => {
+    if (!selectedRecipe || !formName.trim() || !formRecipe.trim()) {
+      toast.error("Podaj nazwę i przepis");
+      return;
+    }
+    
+    updateFavoriteRecipe.mutate({
+      id: selectedRecipe.id,
+      name: formName.trim(),
+      recipe: formRecipe.trim(),
+      ingredients: formIngredients,
+    }, {
+      onSuccess: () => {
+        setIsEditMode(false);
+        setIsViewDialogOpen(false);
+      }
+    });
   };
 
   const handleAddAllIngredients = () => {
@@ -61,11 +135,100 @@ const FavoriteRecipes = () => {
     setSelectedDay("");
   };
 
+  const renderIngredientForm = () => (
+    <div className="space-y-3">
+      <h4 className="font-medium text-sm">Składniki</h4>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Nazwa składnika"
+          value={newIngredientName}
+          onChange={(e) => setNewIngredientName(e.target.value)}
+          className="flex-1"
+        />
+        <Input
+          placeholder="Ilość"
+          value={newIngredientAmount}
+          onChange={(e) => setNewIngredientAmount(e.target.value)}
+          className="w-24"
+        />
+        <Button size="icon" variant="outline" onClick={handleAddIngredient}>
+          <Plus className="w-4 h-4" />
+        </Button>
+      </div>
+      {formIngredients.length > 0 && (
+        <ul className="space-y-1">
+          {formIngredients.map((ing, idx) => (
+            <li key={idx} className="flex items-center justify-between text-sm p-2 bg-secondary rounded-lg">
+              <span>• {ing.name} - {ing.amount}</span>
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemoveIngredient(idx)}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
   return (
     <WidgetWrapper
-      title="Ulubione przepisy"
-      icon={<Star className="w-5 h-5 text-foreground" />}
+      title="Książka Kucharska"
+      icon={<BookOpen className="w-5 h-5 text-foreground" />}
       iconBg="bg-amber-100"
+      actions={
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="icon" variant="soft" className="h-8 w-8" onClick={openAddDialog}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ChefHat className="w-5 h-5" />
+                Dodaj własny przepis
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[65vh] pr-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Nazwa dania</label>
+                  <Input
+                    placeholder="Np. Spaghetti bolognese"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                  />
+                </div>
+                
+                {renderIngredientForm()}
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Przepis</label>
+                  <Textarea
+                    placeholder="Opisz krok po kroku jak przygotować danie..."
+                    value={formRecipe}
+                    onChange={(e) => setFormRecipe(e.target.value)}
+                    className="min-h-[150px]"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSaveRecipe} 
+                  className="w-full"
+                  disabled={addFavoriteRecipe.isPending}
+                >
+                  {addFavoriteRecipe.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 mr-2" />
+                  )}
+                  Zapisz przepis
+                </Button>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      }
     >
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -73,7 +236,7 @@ const FavoriteRecipes = () => {
         </div>
       ) : favoriteRecipes.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">
-          Zapisz swoje ulubione przepisy! ⭐
+          Dodaj swoje ulubione przepisy! 📖
         </p>
       ) : (
         <div className="space-y-2">
@@ -109,17 +272,26 @@ const FavoriteRecipes = () => {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md max-h-[80vh]">
+      {/* View/Edit Recipe Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md max-h-[85vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-amber-500" />
-              {selectedRecipe?.name}
+              <BookOpen className="w-5 h-5 text-amber-500" />
+              {isEditMode ? "Edytuj przepis" : selectedRecipe?.name}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            {selectedRecipe && (
+          <ScrollArea className="max-h-[65vh] pr-4">
+            {selectedRecipe && !isEditMode && (
               <div className="space-y-4">
+                {/* Actions row */}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={openEditMode} className="gap-2 flex-1">
+                    <Edit className="w-4 h-4" />
+                    Edytuj
+                  </Button>
+                </div>
+                
                 {/* Add to meal plan */}
                 <div className="p-3 bg-primary/10 rounded-xl space-y-2">
                   <p className="text-sm font-medium flex items-center gap-2">
@@ -153,52 +325,96 @@ const FavoriteRecipes = () => {
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-sm">Składniki:</h4>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleAddAllIngredients}
-                      className="text-xs"
-                    >
-                      Dodaj wszystkie do zakupów
-                    </Button>
-                  </div>
-                  <ul className="space-y-1">
-                    {selectedRecipe.ingredients.map((ing, idx) => {
-                      const isAdded = addedIngredients.has(ing.name);
-                      return (
-                        <li
-                          key={idx}
-                          className="flex items-center justify-between text-sm text-muted-foreground py-1 px-2 rounded hover:bg-secondary/50"
-                        >
-                          <span>
-                            • {ing.name} - {ing.amount}
-                          </span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6"
-                            onClick={() => handleAddSingleIngredient(ing.name, ing.amount)}
-                            disabled={isAdded}
+                {/* Ingredients */}
+                {selectedRecipe.ingredients.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm">Składniki:</h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddAllIngredients}
+                        className="text-xs gap-1"
+                      >
+                        <ShoppingCart className="w-3 h-3" />
+                        Dodaj do zakupów
+                      </Button>
+                    </div>
+                    <ul className="space-y-1">
+                      {selectedRecipe.ingredients.map((ing, idx) => {
+                        const isAdded = addedIngredients.has(ing.name);
+                        return (
+                          <li
+                            key={idx}
+                            className="flex items-center justify-between text-sm text-muted-foreground py-1 px-2 rounded hover:bg-secondary/50"
                           >
-                            {isAdded ? (
-                              <Check className="w-3 h-3 text-green-500" />
-                            ) : (
-                              <Plus className="w-3 h-3" />
-                            )}
-                          </Button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                            <span>
+                              • {ing.name} - {ing.amount}
+                            </span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => handleAddSingleIngredient(ing.name, ing.amount)}
+                              disabled={isAdded}
+                            >
+                              {isAdded ? (
+                                <Check className="w-3 h-3 text-green-500" />
+                              ) : (
+                                <Plus className="w-3 h-3" />
+                              )}
+                            </Button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Recipe */}
                 <div>
                   <h4 className="font-semibold text-sm mb-2">Przygotowanie:</h4>
-                  <div className="text-sm text-muted-foreground whitespace-pre-line">
+                  <div className="text-sm text-muted-foreground whitespace-pre-line bg-secondary p-3 rounded-lg">
                     {selectedRecipe.recipe}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit mode */}
+            {isEditMode && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Nazwa dania</label>
+                  <Input
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                  />
+                </div>
+                
+                {renderIngredientForm()}
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Przepis</label>
+                  <Textarea
+                    value={formRecipe}
+                    onChange={(e) => setFormRecipe(e.target.value)}
+                    className="min-h-[150px]"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsEditMode(false)} className="flex-1">
+                    Anuluj
+                  </Button>
+                  <Button onClick={handleUpdateRecipe} className="flex-1" disabled={updateFavoriteRecipe.isPending}>
+                    {updateFavoriteRecipe.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
+                    Zapisz
+                  </Button>
                 </div>
               </div>
             )}
