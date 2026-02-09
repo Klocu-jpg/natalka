@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WidgetVisibilityProvider } from "@/contexts/WidgetVisibilityContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdmin } from "@/hooks/useAdmin";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -20,8 +21,9 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
 
-  if (loading || subLoading) {
+  if (loading || subLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-primary">Ładowanie...</div>
@@ -33,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/landing" replace />;
   }
 
-  if (!subscribed) {
+  if (!subscribed && !isAdmin) {
     return <Paywall />;
   }
 
