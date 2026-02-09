@@ -1,6 +1,6 @@
 {
-  "name": "Nasza Przestrzeń",
-  "short_name": "Nasza Przestrzeń",
+  "name": "Love App",
+  "short_name": "Love App",
   "description": "Aplikacja dla par - wspólne planowanie, listy zakupów, kalendarz i więcej 💕",
   "start_url": "/",
   "display": "standalone",

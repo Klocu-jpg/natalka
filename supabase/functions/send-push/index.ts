@@ -31,7 +31,7 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
   const payload = {
     aud: audience,
     exp: now + 12 * 3600,
-    sub: "mailto:push@nasza-przestrzen.app",
+    sub: "mailto:push@love-app.app",
   };
 
   const encodedHeader = uint8ArrayToBase64url(new TextEncoder().encode(JSON.stringify(header)));

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCouple } from "./useCouple";
+import { usePartnerPush } from "@/hooks/usePartnerPush";
 
 export interface ExpenseCategory {
   id: string;
@@ -25,6 +26,7 @@ export const useExpenses = () => {
   const { user } = useAuth();
   const { couple } = useCouple();
   const queryClient = useQueryClient();
+  const { notifyPartner } = usePartnerPush();
 
   const { data: categories = [] } = useQuery({
     queryKey: ["expense_categories"],
@@ -60,8 +62,12 @@ export const useExpenses = () => {
           couple_id: couple?.id || null
         });
       if (error) throw error;
+      return expense;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["expenses"] }),
+    onSuccess: (_, expense) => {
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      notifyPartner("expenses", "Love App 💰", `Nowy wydatek: ${expense.description} - ${expense.amount} zł`);
+    },
   });
 
   const deleteExpense = useMutation({

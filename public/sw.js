@@ -14,7 +14,7 @@ self.addEventListener("activate", (event) => {
 
 // Push notification handler
 self.addEventListener("push", (event) => {
-  let data = { title: "Nasza Przestrzeń", body: "Nowa wiadomość! 💕" };
+  let data = { title: "Love App", body: "Nowa wiadomość! 💕" };
 
   try {
     if (event.data) {

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { usePartnerPush } from "@/hooks/usePartnerPush";
 
 export interface Ingredient {
   name: string;
@@ -22,6 +23,7 @@ export interface Meal {
 export const useMeals = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { notifyPartner } = usePartnerPush();
 
   const { data: meals = [], isLoading } = useQuery({
     queryKey: ["meals", user?.id],
@@ -85,6 +87,8 @@ export const useMeals = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
       toast.success(variables.useAI ? "Obiad dodany z przepisem! 🍽️" : "Obiad dodany! 🍽️");
+      const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
+      notifyPartner("meals", "Love App 🍽️", `Dodano obiad: ${variables.name} (${days[variables.dayOfWeek]})`);
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać obiadu");
@@ -120,9 +124,11 @@ export const useMeals = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
       toast.success("Przepis dodany do planu! 🍽️");
+      const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
+      notifyPartner("meals", "Love App 🍽️", `Dodano przepis: ${variables.name} (${days[variables.dayOfWeek]})`);
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać przepisu");

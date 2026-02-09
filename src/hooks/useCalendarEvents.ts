@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePartnerPush } from "@/hooks/usePartnerPush";
 
 export interface CalendarEvent {
   id: string;
@@ -12,6 +13,7 @@ export interface CalendarEvent {
 export const useCalendarEvents = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { notifyPartner } = usePartnerPush();
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["calendar_events", user?.id],
@@ -32,8 +34,12 @@ export const useCalendarEvents = () => {
         .from("calendar_events")
         .insert({ ...event, user_id: user!.id });
       if (error) throw error;
+      return event;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["calendar_events"] }),
+    onSuccess: (_, event) => {
+      queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
+      notifyPartner("calendar", "Love App 📅", `Nowe wydarzenie: ${event.title} (${event.date})`);
+    },
   });
 
   const deleteEvent = useMutation({
