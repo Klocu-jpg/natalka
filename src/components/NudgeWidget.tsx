@@ -26,7 +26,7 @@ const NudgeWidget = () => {
 
   const handleSendQuick = async (emoji: string, message: string) => {
     if (!hasPartner) {
-      toast.error("Najpierw połącz się z partnerem! 💕");
+      toast.error("Najpierw połącz się z partnerem");
       return;
     }
     
@@ -44,14 +44,14 @@ const NudgeWidget = () => {
   const handleSendCustom = async () => {
     if (!customMessage.trim()) return;
     if (!hasPartner) {
-      toast.error("Najpierw połącz się z partnerem! 💕");
+      toast.error("Najpierw połącz się z partnerem");
       return;
     }
 
     setIsSending(true);
     try {
       await sendNudge.mutateAsync({ message: customMessage.trim(), emoji: "💬" });
-      toast.success("Wiadomość wysłana! 💌");
+      toast.success("Wiadomość wysłana!");
       setCustomMessage("");
     } catch (error) {
       toast.error("Nie udało się wysłać wiadomości");
@@ -165,7 +165,7 @@ const NudgeWidget = () => {
 
         {!hasPartner && (
           <p className="text-xs text-center text-muted-foreground">
-            Połącz się z partnerem, aby wysyłać zaczepki 💕
+            Połącz się z partnerem, aby wysyłać zaczepki
           </p>
         )}
       </div>

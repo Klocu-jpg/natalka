@@ -44,7 +44,7 @@ const MiniCalendar = () => {
     });
     setNewEvent({ title: "", date: new Date(), event_type: "other" });
     setDialogOpen(false);
-    toast.success("Wydarzenie dodane! 📅");
+    toast.success("Wydarzenie dodane!");
   };
 
   return (
@@ -104,8 +104,8 @@ const MiniCalendar = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="date">Randka 💕</SelectItem>
-                    <SelectItem value="anniversary">Rocznica ❤️</SelectItem>
+                    <SelectItem value="date">Randka</SelectItem>
+                    <SelectItem value="anniversary">Rocznica</SelectItem>
                     <SelectItem value="task">Zadanie</SelectItem>
                     <SelectItem value="other">Inne</SelectItem>
                   </SelectContent>

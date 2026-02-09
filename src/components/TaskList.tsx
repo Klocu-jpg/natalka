@@ -89,7 +89,7 @@ const TaskList = () => {
 
       {!isLoading && tasks.length === 0 && (
         <p className="text-center text-muted-foreground py-8">
-          Wszystko zrobione! 🎉
+          Brak zadań
         </p>
       )}
     </WidgetWrapper>

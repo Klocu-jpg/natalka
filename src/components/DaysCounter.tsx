@@ -23,7 +23,7 @@ const DaysCounter = () => {
     }
     try {
       await setAnniversary.mutateAsync({ startDate: dateInput, name: nameInput || "Razem od" });
-      toast.success("Data zapisana! 💕");
+      toast.success("Data zapisana!");
       setIsEditing(false);
     } catch (error) {
       toast.error("Nie udało się zapisać daty");
@@ -99,7 +99,7 @@ const DaysCounter = () => {
         iconBg="bg-rose-light"
       >
         <p className="text-sm text-muted-foreground text-center py-4">
-          Najpierw połącz się z partnerem 💕
+          Najpierw połącz się z partnerem
         </p>
       </WidgetWrapper>
     );
@@ -166,7 +166,7 @@ const DaysCounter = () => {
                 <div className="text-5xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
                   {stats.totalDays}
                 </div>
-                <p className="text-muted-foreground mt-1">dni razem 💕</p>
+                <p className="text-muted-foreground mt-1">dni razem</p>
               </div>
 
               {/* Breakdown */}
@@ -193,7 +193,7 @@ const DaysCounter = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Za <span className="font-bold text-foreground">{stats.daysToAnniversary}</span> dni obchodzicie{" "}
-                  <span className="font-bold text-foreground">{stats.nextAnniversaryYears}</span>. rocznicę! 🎉
+                  <span className="font-bold text-foreground">{stats.nextAnniversaryYears}</span>. rocznicę!
                 </p>
               </div>
 

@@ -78,7 +78,7 @@ const ShoppingList = () => {
 
       {!isLoading && items.length === 0 && (
         <p className="text-center text-muted-foreground py-8">
-          Lista jest pusta! Dodaj coś 🛒
+          Lista jest pusta
         </p>
       )}
     </WidgetWrapper>

@@ -86,9 +86,9 @@ export const useMeals = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success(variables.useAI ? "Obiad dodany z przepisem! 🍽️" : "Obiad dodany! 🍽️");
+      toast.success(variables.useAI ? "Obiad dodany z przepisem!" : "Obiad dodany!");
       const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
-      notifyPartner("meals", "Love App 🍽️", `Dodano obiad: ${variables.name} (${days[variables.dayOfWeek]})`);
+      notifyPartner("meals", "Love App", `Dodano obiad: ${variables.name} (${days[variables.dayOfWeek]})`);
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać obiadu");
@@ -126,9 +126,9 @@ export const useMeals = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Przepis dodany do planu! 🍽️");
+      toast.success("Przepis dodany do planu!");
       const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
-      notifyPartner("meals", "Love App 🍽️", `Dodano przepis: ${variables.name} (${days[variables.dayOfWeek]})`);
+      notifyPartner("meals", "Love App", `Dodano przepis: ${variables.name} (${days[variables.dayOfWeek]})`);
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać przepisu");
@@ -158,7 +158,7 @@ const deleteMeal = useMutation({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Dzień wyczyszczony! 🧹");
+      toast.success("Dzień wyczyszczony!");
     },
     onError: () => {
       toast.error("Nie udało się wyczyścić dnia");
@@ -175,7 +175,7 @@ const deleteMeal = useMutation({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Tydzień wyczyszczony! 🧹");
+      toast.success("Tydzień wyczyszczony!");
     },
     onError: () => {
       toast.error("Nie udało się wyczyścić tygodnia");

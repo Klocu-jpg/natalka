@@ -169,7 +169,7 @@ const Index = () => {
 
       <footer className="py-8 text-center">
         <p className="text-muted-foreground text-sm">
-          Zbudowane z 💕 dla Was
+          Love App
         </p>
       </footer>
     </div>
