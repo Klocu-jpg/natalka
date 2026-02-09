@@ -22,7 +22,7 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
     } else {
       const success = await subscribe();
       if (success) {
-        toast.success("Powiadomienia włączone! 🔔");
+        toast.success("Powiadomienia włączone!");
       } else if (permission === "denied") {
         toast.error("Powiadomienia są zablokowane w ustawieniach przeglądarki");
       }
@@ -31,7 +31,7 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Wylogowano! Do zobaczenia 💕");
+    toast.success("Wylogowano!");
   };
 
   const currentTab = TABS[activeTab];

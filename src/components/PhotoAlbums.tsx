@@ -64,7 +64,7 @@ const PhotoAlbums = () => {
         iconBg="bg-rose-light"
       >
         <p className="text-sm text-muted-foreground text-center py-4">
-          Najpierw połącz się z partnerem 💕
+          Najpierw połącz się z partnerem
         </p>
       </WidgetWrapper>
     );

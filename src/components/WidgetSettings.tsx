@@ -22,11 +22,11 @@ const GENDER_OPTIONS = [
 ];
 
 const NOTIFICATION_CATEGORIES = [
-  { key: "nudges" as const, label: "💌 Zaczepki", desc: "Gdy partner wyśle zaczepkę" },
-  { key: "shopping" as const, label: "🛒 Lista zakupów", desc: "Gdy partner doda produkt" },
-  { key: "meals" as const, label: "🍽️ Obiady", desc: "Gdy partner doda obiad" },
-  { key: "expenses" as const, label: "💰 Wydatki", desc: "Gdy partner doda wydatek" },
-  { key: "calendar" as const, label: "📅 Kalendarz", desc: "Gdy partner doda wydarzenie" },
+  { key: "nudges" as const, label: "Zaczepki", desc: "Gdy partner wyśle zaczepkę" },
+  { key: "shopping" as const, label: "Lista zakupów", desc: "Gdy partner doda produkt" },
+  { key: "meals" as const, label: "Obiady", desc: "Gdy partner doda obiad" },
+  { key: "expenses" as const, label: "Wydatki", desc: "Gdy partner doda wydatek" },
+  { key: "calendar" as const, label: "Kalendarz", desc: "Gdy partner doda wydarzenie" },
 ];
 
 const WidgetSettings = () => {

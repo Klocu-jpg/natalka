@@ -31,7 +31,7 @@ const GenderSelector = ({ onComplete }: GenderSelectorProps) => {
         <div className="mb-6 sm:mb-8 animate-slide-up">
           <User className="w-14 h-14 sm:w-16 sm:h-16 mx-auto text-primary mb-4" />
           <h1 className="text-xl sm:text-2xl font-heading font-bold mb-2">
-            Jeszcze jedno pytanie 💕
+            Jeszcze jedno pytanie
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             To pomoże nam dostosować aplikację do Twoich potrzeb

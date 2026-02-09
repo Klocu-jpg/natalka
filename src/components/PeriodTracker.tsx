@@ -45,7 +45,7 @@ const PeriodTracker = () => {
           id: latestEntry.id, 
           end_date: today 
         });
-        toast.success("Koniec okresu zapisany! 💕");
+        toast.success("Koniec okresu zapisany!");
       } catch {
         toast.error("Nie udało się zapisać");
       }
@@ -56,7 +56,7 @@ const PeriodTracker = () => {
           start_date: today,
           cycle_length: parseInt(cycleLength) || 28
         });
-        toast.success("Początek okresu zapisany! 💕");
+        toast.success("Początek okresu zapisany!");
       } catch {
         toast.error("Nie udało się zapisać");
       }

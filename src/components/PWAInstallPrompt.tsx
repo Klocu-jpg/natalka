@@ -158,7 +158,7 @@ const PWAInstallPrompt = () => {
             </Button>
           ) : (
             <Button className="flex-1 h-12" onClick={handleDismiss}>
-              Rozumiem, zrobię to! 💕
+              Rozumiem, zrobię to!
             </Button>
           )}
         </div>

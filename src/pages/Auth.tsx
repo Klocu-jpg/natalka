@@ -41,7 +41,7 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Zalogowano pomyślnie! 💕");
+          toast.success("Zalogowano!");
           navigate("/");
         }
       } else {
@@ -53,7 +53,7 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Konto utworzone! Możesz się zalogować 💕");
+          toast.success("Konto utworzone! Możesz się zalogować");
           setIsLogin(true);
         }
       }
@@ -73,7 +73,7 @@ const Auth = () => {
             Love App
           </h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            {isLogin ? "Witaj z powrotem! 💕" : "Stwórz wspólne konto 💕"}
+            {isLogin ? "Witaj z powrotem!" : "Stwórz wspólne konto"}
           </p>
         </div>
 

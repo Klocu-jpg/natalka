@@ -70,12 +70,12 @@ const MealsPlanner = () => {
       (ing) => `${ing.name} (${ing.amount})`
     );
     await addItems.mutateAsync(names);
-    toast.success(`Dodano ${meal.ingredients.length} składników do listy zakupów! 🛒`);
+    toast.success(`Dodano ${meal.ingredients.length} składników do listy zakupów`);
   };
 
   const handleAddSingleIngredient = async (ingredientName: string, ingredientAmount: string) => {
     await addItem.mutateAsync(`${ingredientName} (${ingredientAmount})`);
-    toast.success(`Dodano "${ingredientName}" do listy zakupów! 🛒`);
+    toast.success(`Dodano "${ingredientName}" do listy zakupów`);
   };
 
   const openRecipe = (meal: Meal) => {
@@ -97,7 +97,7 @@ const MealsPlanner = () => {
 
   const handleMarkAsEaten = (meal: Meal) => {
     deleteMeal.mutate(meal.id);
-    toast.success(`${meal.name} oznaczony jako zjedzony! 😋`);
+    toast.success(`${meal.name} oznaczony jako zjedzony`);
   };
 
   const handleClearWeek = () => {
@@ -164,7 +164,7 @@ const MealsPlanner = () => {
                     onClick={() => setAddMode("ai")}
                     className="text-xs"
                   >
-                    Z AI 🤖
+                    Z AI
                   </Button>
                   <Button
                     variant={addMode === "recipe" ? "default" : "outline"}
@@ -172,7 +172,7 @@ const MealsPlanner = () => {
                     onClick={() => setAddMode("recipe")}
                     className="text-xs"
                   >
-                    Z książki 📖
+                    Z książki
                   </Button>
                 </div>
 
@@ -197,7 +197,7 @@ const MealsPlanner = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-muted-foreground">
-                      Przepis zostanie dodany ze wszystkimi składnikami 📖
+                      Przepis zostanie dodany ze wszystkimi składnikami
                     </p>
                   </>
                 ) : (
@@ -211,7 +211,7 @@ const MealsPlanner = () => {
                     />
                     <p className="text-sm text-muted-foreground">
                       {addMode === "ai" 
-                        ? "AI automatycznie wygeneruje przepis i listę składników 🤖"
+                        ? "AI wygeneruje przepis i listę składników"
                         : "Obiad zostanie dodany bez przepisu - możesz go uzupełnić później"
                       }
                     </p>
@@ -272,7 +272,7 @@ const MealsPlanner = () => {
                   </div>
                 ) : dayMeals.length === 0 ? (
                   <p className="text-center text-muted-foreground py-6 text-sm">
-                    Brak zaplanowanych obiadów 🍽️
+                    Brak zaplanowanych obiadów
                   </p>
                 ) : (
                   <ul className="space-y-2">

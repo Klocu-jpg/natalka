@@ -25,7 +25,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
   const handleCreateCouple = async () => {
     try {
       await createCouple.mutateAsync();
-      toast.success("Para utworzona! Podziel się kodem 💕");
+      toast.success("Para utworzona! Podziel się kodem");
     } catch {
       toast.error("Nie udało się utworzyć pary");
     }
@@ -38,7 +38,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
     }
     try {
       await joinCouple.mutateAsync(inviteCode);
-      toast.success("Dołączyłeś/aś do pary! 💕");
+      toast.success("Dołączono do pary!");
       setInviteCode("");
     } catch (error: any) {
       console.error("[joinCouple] error", error);
@@ -77,7 +77,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
                 <Users className="w-5 h-5 text-coral" />
               </div>
             </div>
-            <p className="text-sm font-medium">Para połączona! 💕</p>
+            <p className="text-sm font-medium">Para połączona!</p>
             <p className="text-xs text-muted-foreground mt-1">Wszystkie dane są współdzielone</p>
           </div>
         ) : couple ? (
@@ -118,7 +118,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
                 {joinCouple.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  "Dołącz do innej pary 💕"
+                  "Dołącz do innej pary"
                 )}
               </Button>
             </div>
@@ -162,7 +162,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
                 className="w-full h-12"
                 disabled={joinCouple.isPending}
               >
-                {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz 💕"}
+                {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz"}
               </Button>
             </div>
           </div>
