@@ -1,5 +1,6 @@
-import { Settings, Eye, EyeOff, User, Loader2, Bell } from "lucide-react";
+import { Settings, Eye, EyeOff, User, Loader2, Bell, Shield, FileText, Scale, Cookie, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -29,10 +30,18 @@ const NOTIFICATION_CATEGORIES = [
   { key: "calendar" as const, label: "Kalendarz", desc: "Gdy partner doda wydarzenie" },
 ];
 
+const LEGAL_LINKS = [
+  { slug: "polityka-prywatnosci", label: "Polityka prywatności", icon: Shield },
+  { slug: "regulamin", label: "Regulamin", icon: FileText },
+  { slug: "rodo", label: "Klauzula RODO", icon: Scale },
+  { slug: "cookies", label: "Polityka cookies", icon: Cookie },
+];
+
 const WidgetSettings = () => {
   const { visibility, toggleWidget } = useWidgetVisibility();
   const { profile, createOrUpdateProfile } = useProfile();
   const { preferences, togglePreference } = useNotificationPreferences();
+  const navigate = useNavigate();
 
   const widgetIds = Object.keys(WIDGET_LABELS);
 
@@ -158,6 +167,31 @@ const WidgetSettings = () => {
                   className="shrink-0"
                 />
               </div>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Legal Section */}
+        <div className="space-y-3 py-4">
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" />
+            <span className="font-medium text-sm">Dokumenty prawne</span>
+          </div>
+          <div className="space-y-1">
+            {LEGAL_LINKS.map(({ slug, label, icon: Icon }) => (
+              <button
+                key={slug}
+                onClick={() => navigate(`/prawne/${slug}`)}
+                className="w-full flex items-center justify-between gap-3 p-3 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors text-left"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="font-medium text-sm truncate">{label}</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
             ))}
           </div>
         </div>
