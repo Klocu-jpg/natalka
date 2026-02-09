@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCouple } from "@/hooks/useCouple";
 import { useEffect } from "react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export interface Nudge {
   id: string;
@@ -18,6 +19,7 @@ export const useNudges = () => {
   const { user } = useAuth();
   const { couple, hasPartner } = useCouple();
   const queryClient = useQueryClient();
+  const { sendPushToPartner } = usePushNotifications();
 
   // Get partner ID
   const getPartnerId = () => {
@@ -55,6 +57,9 @@ export const useNudges = () => {
         emoji,
       });
       if (error) throw error;
+
+      // Send push notification to partner
+      sendPushToPartner(partnerId, "Zaczepka! 💕", `${emoji || ""} ${message}`, emoji);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["nudges"] }),
   });
