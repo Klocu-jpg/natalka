@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+const STRIPE_TEST_MODE_KEY = "stripe_test_mode";
+
 interface SubscriptionState {
   subscribed: boolean;
   isTrial: boolean;
@@ -11,12 +13,20 @@ interface SubscriptionState {
 
 export const useSubscription = () => {
   const { user, session } = useAuth();
+  const [testMode, setTestMode] = useState(() => {
+    return localStorage.getItem(STRIPE_TEST_MODE_KEY) === "true";
+  });
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
     isTrial: false,
     subscriptionEnd: null,
     loading: true,
   });
+
+  const toggleTestMode = useCallback((enabled: boolean) => {
+    setTestMode(enabled);
+    localStorage.setItem(STRIPE_TEST_MODE_KEY, String(enabled));
+  }, []);
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
@@ -25,7 +35,9 @@ export const useSubscription = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
+      const { data, error } = await supabase.functions.invoke("check-subscription", {
+        body: { testMode },
+      });
       if (error) throw error;
 
       setState({
@@ -37,19 +49,17 @@ export const useSubscription = () => {
     } catch {
       setState((prev) => ({ ...prev, loading: false }));
     }
-  }, [session]);
+  }, [session, testMode]);
 
   useEffect(() => {
     checkSubscription();
-
-    // Refresh every 60s
     const interval = setInterval(checkSubscription, 60_000);
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
   const startCheckout = async (priceId?: string) => {
     const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: { priceId },
+      body: { priceId, testMode },
     });
     if (error) throw error;
     if (data?.url) {
@@ -58,7 +68,9 @@ export const useSubscription = () => {
   };
 
   const openPortal = async () => {
-    const { data, error } = await supabase.functions.invoke("customer-portal");
+    const { data, error } = await supabase.functions.invoke("customer-portal", {
+      body: { testMode },
+    });
     if (error) throw error;
     if (data?.url) {
       window.open(data.url, "_blank");
@@ -67,6 +79,8 @@ export const useSubscription = () => {
 
   return {
     ...state,
+    testMode,
+    toggleTestMode,
     checkSubscription,
     startCheckout,
     openPortal,

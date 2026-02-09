@@ -32,12 +32,18 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const priceId = body.priceId || VALID_PRICES[0];
+    const testMode = body.testMode === true;
 
     if (!VALID_PRICES.includes(priceId)) {
       throw new Error("Invalid price ID");
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeKey = testMode
+      ? Deno.env.get("STRIPE_TEST_SECRET_KEY")
+      : Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error(testMode ? "STRIPE_TEST_SECRET_KEY is not set" : "STRIPE_SECRET_KEY is not set");
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
 
