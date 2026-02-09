@@ -14,7 +14,9 @@ interface SubscriptionState {
 export const useSubscription = () => {
   const { user, session } = useAuth();
   const [testMode, setTestMode] = useState(() => {
-    return localStorage.getItem(STRIPE_TEST_MODE_KEY) === "true";
+    const stored = localStorage.getItem(STRIPE_TEST_MODE_KEY);
+    if (stored === null) return true; // default to test mode
+    return stored === "true";
   });
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
