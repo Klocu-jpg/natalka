@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Legal from "./pages/Legal";
 import Landing from "./pages/Landing";
 import Paywall from "./pages/Paywall";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
     <Route path="/prawne/:slug" element={<Legal />} />
     <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
