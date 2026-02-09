@@ -7,6 +7,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const VALID_PRICES = [
+  "price_1Sywb9GiLeHcQYBNBSg0kYRP",  // monthly 5 PLN
+  "price_1SywevGiLeHcQYBNzF2gpcNt",  // 6 months 55 PLN
+  "price_1SywgIGiLeHcQYBN5Ad1ffwQ",  // yearly 50 PLN
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,6 +30,13 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    const body = await req.json().catch(() => ({}));
+    const priceId = body.priceId || VALID_PRICES[0];
+
+    if (!VALID_PRICES.includes(priceId)) {
+      throw new Error("Invalid price ID");
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
@@ -37,17 +50,10 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: "price_1Sywb9GiLeHcQYBNBSg0kYRP",
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       allow_promotion_codes: true,
-      subscription_data: {
-        trial_period_days: 7,
-      },
+      subscription_data: { trial_period_days: 7 },
       success_url: `${req.headers.get("origin")}/?subscription=success`,
       cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
     });

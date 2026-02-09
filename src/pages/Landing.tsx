@@ -1,6 +1,7 @@
 import { Heart, ShoppingCart, Calendar, UtensilsCrossed, Camera, PiggyBank, MessageCircleHeart, ListTodo, Sparkles, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { PLANS } from "@/config/plans";
 
 const FEATURES = [
   { icon: UtensilsCrossed, title: "Planer obiadów", desc: "Wspólnie planujcie posiłki na cały tydzień" },
@@ -77,48 +78,63 @@ const Landing = () => {
 
       {/* Pricing */}
       <section id="pricing" className="px-4 py-16 sm:py-20">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-heading font-bold text-center mb-4">
-            Prosty cennik
+            Wybierz swój plan
           </h2>
           <p className="text-center text-muted-foreground mb-8">
-            Jedna cena, wszystkie funkcje
+            Wszystkie plany zawierają pełny dostęp + 7 dni za darmo
           </p>
 
-          <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-card border-2 border-primary">
-            <div className="text-center space-y-2 mb-6">
-              <span className="inline-block bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
-                7 dni za darmo
-              </span>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-heading font-bold">5 zł</span>
-                <span className="text-muted-foreground">/ miesiąc</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.id}
+                className={`bg-card rounded-2xl p-6 shadow-card transition-shadow hover:shadow-card-hover relative ${
+                  plan.badge ? "border-2 border-primary" : "border border-border"
+                }`}
+              >
+                {plan.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                    {plan.badge}
+                  </span>
+                )}
+                <div className="text-center space-y-1 mb-4 pt-1">
+                  <h3 className="font-heading font-semibold">{plan.name}</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-3xl font-heading font-bold">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{plan.perMonth}</p>
+                </div>
+
+                <ul className="space-y-2 mb-6">
+                  {[
+                    "Wszystkie funkcje",
+                    "Planer obiadów z AI",
+                    "Albumy zdjęć",
+                    "Sync z partnerem",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className="w-full"
+                  variant={plan.badge ? "default" : "outline"}
+                  onClick={() => navigate("/auth")}
+                >
+                  Wypróbuj za darmo
+                </Button>
               </div>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {[
-                "Wszystkie widgety i funkcje",
-                "Planer obiadów z AI",
-                "Wspólne albumy zdjęć",
-                "Cele oszczędnościowe",
-                "Powiadomienia push",
-                "Synchronizacja z partnerem",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-primary shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button className="w-full" size="lg" onClick={() => navigate("/auth")}>
-              Wypróbuj za darmo
-            </Button>
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              Anuluj w dowolnym momencie
-            </p>
+            ))}
           </div>
+          <p className="text-xs text-center text-muted-foreground mt-4">
+            Anuluj w dowolnym momencie · 7 dni za darmo
+          </p>
         </div>
       </section>
 
