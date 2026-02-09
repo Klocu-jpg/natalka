@@ -44,8 +44,8 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             {currentTab?.icon || <Heart className="w-5 h-5" fill="currentColor" />}
           </div>
-          <h1 className="text-lg font-heading font-bold text-foreground">
-            {currentTab?.label || "Nasza Przestrzeń"}
+           <h1 className="text-lg font-heading font-bold text-foreground">
+            {currentTab?.label || "Love App"}
           </h1>
         </div>
         

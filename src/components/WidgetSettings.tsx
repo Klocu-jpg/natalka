@@ -1,4 +1,4 @@
-import { Settings, Eye, EyeOff, User, Loader2 } from "lucide-react";
+import { Settings, Eye, EyeOff, User, Loader2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useWidgetVisibility, WIDGET_LABELS } from "@/contexts/WidgetVisibilityContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 import { toast } from "sonner";
 
 const GENDER_OPTIONS = [
@@ -20,9 +21,18 @@ const GENDER_OPTIONS = [
   { value: "other" as const, label: "🌈 Inna" },
 ];
 
+const NOTIFICATION_CATEGORIES = [
+  { key: "nudges" as const, label: "💌 Zaczepki", desc: "Gdy partner wyśle zaczepkę" },
+  { key: "shopping" as const, label: "🛒 Lista zakupów", desc: "Gdy partner doda produkt" },
+  { key: "meals" as const, label: "🍽️ Obiady", desc: "Gdy partner doda obiad" },
+  { key: "expenses" as const, label: "💰 Wydatki", desc: "Gdy partner doda wydatek" },
+  { key: "calendar" as const, label: "📅 Kalendarz", desc: "Gdy partner doda wydarzenie" },
+];
+
 const WidgetSettings = () => {
   const { visibility, toggleWidget } = useWidgetVisibility();
   const { profile, createOrUpdateProfile } = useProfile();
+  const { preferences, togglePreference } = useNotificationPreferences();
 
   const widgetIds = Object.keys(WIDGET_LABELS);
 
@@ -72,6 +82,41 @@ const WidgetSettings = () => {
                   option.label
                 )}
               </Button>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Notification Preferences */}
+        <div className="space-y-4 py-4">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-primary" />
+            <span className="font-medium text-sm">Powiadomienia push</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Wybierz, z czego chcesz dostawać powiadomienia.
+          </p>
+          <div className="space-y-3">
+            {NOTIFICATION_CATEGORIES.map(({ key, label, desc }) => (
+              <div
+                key={key}
+                className="flex items-center justify-between gap-3 p-3 bg-secondary rounded-xl"
+              >
+                <Label
+                  htmlFor={`notif-${key}`}
+                  className="flex flex-col cursor-pointer min-w-0 flex-1"
+                >
+                  <span className="font-medium text-sm">{label}</span>
+                  <span className="text-xs text-muted-foreground">{desc}</span>
+                </Label>
+                <Switch
+                  id={`notif-${key}`}
+                  checked={preferences[key]}
+                  onCheckedChange={() => togglePreference(key)}
+                  className="shrink-0"
+                />
+              </div>
             ))}
           </div>
         </div>

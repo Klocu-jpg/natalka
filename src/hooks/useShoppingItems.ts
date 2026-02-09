@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePartnerPush } from "@/hooks/usePartnerPush";
 
 export interface ShoppingItem {
   id: string;
@@ -12,6 +13,7 @@ export interface ShoppingItem {
 export const useShoppingItems = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { notifyPartner } = usePartnerPush();
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["shopping_items", user?.id],
@@ -33,7 +35,10 @@ export const useShoppingItems = () => {
         .insert({ name, user_id: user!.id });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping_items"] }),
+    onSuccess: (_, name) => {
+      queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
+      notifyPartner("shopping", "Love App 🛒", `Dodano do listy zakupów: ${name}`);
+    },
   });
 
   const toggleItem = useMutation({
