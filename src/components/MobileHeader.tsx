@@ -1,10 +1,11 @@
-import { Heart, LogOut, Users, Loader2, UserPlus } from "lucide-react";
+import { Heart, LogOut, Users, Loader2, UserPlus, Bell, BellOff } from "lucide-react";
 import WidgetSettings from "@/components/WidgetSettings";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { TABS } from "@/config/tabs";
 import CoupleConnectPopover from "@/components/CoupleConnectPopover";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface MobileHeaderProps {
   activeTab: number;
@@ -12,6 +13,21 @@ interface MobileHeaderProps {
 
 const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
   const { signOut } = useAuth();
+  const { isSupported, isSubscribed, subscribe, unsubscribe, permission } = usePushNotifications();
+
+  const handleTogglePush = async () => {
+    if (isSubscribed) {
+      await unsubscribe();
+      toast.success("Powiadomienia wyłączone");
+    } else {
+      const success = await subscribe();
+      if (success) {
+        toast.success("Powiadomienia włączone! 🔔");
+      } else if (permission === "denied") {
+        toast.error("Powiadomienia są zablokowane w ustawieniach przeglądarki");
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -55,6 +71,21 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
               </Button>
             )}
           />
+          {isSupported && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleTogglePush}
+              className="h-9 w-9 rounded-xl"
+              title={isSubscribed ? "Wyłącz powiadomienia" : "Włącz powiadomienia"}
+            >
+              {isSubscribed ? (
+                <Bell className="w-4 h-4 text-primary" />
+              ) : (
+                <BellOff className="w-4 h-4 text-muted-foreground" />
+              )}
+            </Button>
+          )}
           <WidgetSettings />
           <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-9 w-9 rounded-xl">
             <LogOut className="w-4 h-4" />
