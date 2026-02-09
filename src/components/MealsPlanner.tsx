@@ -27,7 +27,7 @@ type AddMode = "ai" | "simple" | "recipe";
 
 const MealsPlanner = () => {
   const { meals, isLoading, addMeal, addMealFromFavorite, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
-  const { addItem } = useShoppingItems();
+  const { addItem, addItems } = useShoppingItems();
   const { favoriteRecipes, addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
   const [selectedDay, setSelectedDay] = useState(0);
   const [newMeal, setNewMeal] = useState("");
@@ -66,9 +66,10 @@ const MealsPlanner = () => {
       return;
     }
 
-    for (const ingredient of meal.ingredients) {
-      await addItem.mutateAsync(`${ingredient.name} (${ingredient.amount})`);
-    }
+    const names = meal.ingredients.map(
+      (ing) => `${ing.name} (${ing.amount})`
+    );
+    await addItems.mutateAsync(names);
     toast.success(`Dodano ${meal.ingredients.length} składników do listy zakupów! 🛒`);
   };
 
@@ -365,7 +366,7 @@ const MealsPlanner = () => {
                         variant="default"
                         size="sm"
                         onClick={() => handleAddIngredientsToShoppingList(selectedMeal)}
-                        disabled={addItem.isPending}
+                        disabled={addItems.isPending}
                         className="gap-2"
                       >
                         <ShoppingCart className="w-4 h-4" />

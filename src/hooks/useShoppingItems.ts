@@ -41,6 +41,24 @@ export const useShoppingItems = () => {
     },
   });
 
+  // Bulk add - sends only ONE push notification
+  const addItems = useMutation({
+    mutationFn: async (names: string[]) => {
+      const rows = names.map((name) => ({ name, user_id: user!.id }));
+      const { error } = await supabase.from("shopping_items").insert(rows);
+      if (error) throw error;
+      return names;
+    },
+    onSuccess: (names) => {
+      queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
+      notifyPartner(
+        "shopping",
+        "Love App 🛒",
+        `Dodano ${names.length} produktów do listy zakupów`
+      );
+    },
+  });
+
   const toggleItem = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       const { error } = await supabase
@@ -63,5 +81,5 @@ export const useShoppingItems = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping_items"] }),
   });
 
-  return { items, isLoading, addItem, toggleItem, deleteItem };
+  return { items, isLoading, addItem, addItems, toggleItem, deleteItem };
 };
