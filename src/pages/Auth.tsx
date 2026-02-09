@@ -70,7 +70,7 @@ const Auth = () => {
             <Heart className="w-12 h-12 sm:w-10 sm:h-10 text-primary animate-heart-beat" fill="currentColor" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
-            Nasza Przestrzeń
+            Love App
           </h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             {isLogin ? "Witaj z powrotem! 💕" : "Stwórz wspólne konto 💕"}
