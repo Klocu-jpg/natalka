@@ -15,7 +15,7 @@ export const useSubscription = () => {
   const { user, session } = useAuth();
   const [testMode, setTestMode] = useState(() => {
     const stored = localStorage.getItem(STRIPE_TEST_MODE_KEY);
-    if (stored === null) return true; // default to test mode
+    if (stored === null) return false; // default to live mode
     return stored === "true";
   });
   const [state, setState] = useState<SubscriptionState>({
