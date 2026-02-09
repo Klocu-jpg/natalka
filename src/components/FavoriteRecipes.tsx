@@ -24,7 +24,7 @@ const DAYS = [
 
 const FavoriteRecipes = () => {
   const { favoriteRecipes, isLoading, addFavoriteRecipe, updateFavoriteRecipe, deleteFavoriteRecipe } = useFavoriteRecipes();
-  const { addItem } = useShoppingItems();
+  const { addItem, addItems } = useShoppingItems();
   const { addMealFromFavorite } = useMeals();
   
   const [selectedRecipe, setSelectedRecipe] = useState<FavoriteRecipe | null>(null);
@@ -112,9 +112,10 @@ const FavoriteRecipes = () => {
 
   const handleAddAllIngredients = () => {
     if (!selectedRecipe) return;
-    selectedRecipe.ingredients.forEach((ingredient) => {
-      addItem.mutate(`${ingredient.name} (${ingredient.amount})`);
-    });
+    const names = selectedRecipe.ingredients.map(
+      (ing) => `${ing.name} (${ing.amount})`
+    );
+    addItems.mutate(names);
     toast.success("Wszystkie składniki dodane do listy zakupów! 🛒");
   };
 
