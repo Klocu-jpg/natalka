@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Heart, Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -17,6 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -26,6 +28,11 @@ const Auth = () => {
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    if (!isLogin && !accepted) {
+      toast.error("Musisz zaakceptować regulamin i politykę prywatności");
       return;
     }
 
@@ -113,7 +120,24 @@ const Auth = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
+            {!isLogin && (
+              <div className="flex items-start gap-3 p-3 bg-secondary rounded-xl">
+                <Checkbox
+                  id="accept-terms"
+                  checked={accepted}
+                  onCheckedChange={(v) => setAccepted(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="accept-terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                  Akceptuję{" "}
+                  <Link to="/prawne/regulamin" className="text-primary underline underline-offset-2">regulamin</Link>
+                  {" "}oraz{" "}
+                  <Link to="/prawne/polityka-prywatnosci" className="text-primary underline underline-offset-2">politykę prywatności</Link>
+                </label>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full h-12 text-base" disabled={loading || (!isLogin && !accepted)}>
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : isLogin ? (
