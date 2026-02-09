@@ -1,4 +1,4 @@
-import { Settings, Eye, EyeOff, User, Loader2, Bell, Shield, FileText, Scale, Cookie, ChevronRight, Crown } from "lucide-react";
+import { Settings, Eye, EyeOff, User, Loader2, Bell, Shield, FileText, Scale, Cookie, ChevronRight, Crown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +15,8 @@ import { useWidgetVisibility, WIDGET_LABELS } from "@/contexts/WidgetVisibilityC
 import { useProfile } from "@/hooks/useProfile";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdmin } from "@/hooks/useAdmin";
+import BugReportDialog from "@/components/BugReportDialog";
 import { toast } from "sonner";
 
 const GENDER_OPTIONS = [
@@ -43,6 +45,7 @@ const WidgetSettings = () => {
   const { profile, createOrUpdateProfile } = useProfile();
   const { preferences, togglePreference } = useNotificationPreferences();
   const { subscribed, isTrial, subscriptionEnd, openPortal } = useSubscription();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
   const widgetIds = Object.keys(WIDGET_LABELS);
@@ -206,6 +209,25 @@ const WidgetSettings = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <Separator />
+
+        {/* Bug Report & Admin */}
+        <div className="space-y-3 py-4">
+          <BugReportDialog />
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="w-full flex items-center justify-between gap-3 p-3 bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors text-left"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                <span className="font-medium text-sm truncate text-primary">Panel Admina</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-primary shrink-0" />
+            </button>
+          )}
         </div>
 
         <Separator />
