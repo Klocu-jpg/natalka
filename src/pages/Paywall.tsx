@@ -7,9 +7,12 @@ import { toast } from "sonner";
 import { useState } from "react";
 
 const Paywall = () => {
-  const { startCheckout } = useSubscription();
+  const { startCheckout, testMode } = useSubscription();
   const { signOut } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+
+  const getPriceId = (plan: typeof PLANS[number]) =>
+    testMode ? plan.testPriceId : plan.priceId;
 
   const handleCheckout = async (priceId: string) => {
     setLoading(priceId);
@@ -76,10 +79,10 @@ const Paywall = () => {
                 className="w-full"
                 size="sm"
                 variant={plan.badge ? "default" : "outline"}
-                onClick={() => handleCheckout(plan.priceId)}
+                onClick={() => handleCheckout(getPriceId(plan))}
                 disabled={loading !== null}
               >
-                {loading === plan.priceId ? (
+                {loading === getPriceId(plan) ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "Subskrybuj"
