@@ -1,4 +1,4 @@
-import { Settings, Eye, EyeOff, User, Loader2, Bell, Shield, FileText, Scale, Cookie, ChevronRight } from "lucide-react";
+import { Settings, Eye, EyeOff, User, Loader2, Bell, Shield, FileText, Scale, Cookie, ChevronRight, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useWidgetVisibility, WIDGET_LABELS } from "@/contexts/WidgetVisibilityContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 
 const GENDER_OPTIONS = [
@@ -41,6 +42,7 @@ const WidgetSettings = () => {
   const { visibility, toggleWidget } = useWidgetVisibility();
   const { profile, createOrUpdateProfile } = useProfile();
   const { preferences, togglePreference } = useNotificationPreferences();
+  const { subscribed, isTrial, subscriptionEnd, openPortal } = useSubscription();
   const navigate = useNavigate();
 
   const widgetIds = Object.keys(WIDGET_LABELS);
@@ -69,6 +71,41 @@ const WidgetSettings = () => {
           </DialogTitle>
         </DialogHeader>
         
+        {/* Subscription Section */}
+        <div className="space-y-3 py-4">
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 text-primary" />
+            <span className="font-medium text-sm">Subskrypcja</span>
+          </div>
+          <div className="p-3 bg-secondary rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {isTrial ? "Okres próbny" : "Premium"}
+              </span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                {subscribed ? "Aktywna" : "Nieaktywna"}
+              </span>
+            </div>
+            {subscriptionEnd && (
+              <p className="text-xs text-muted-foreground">
+                {isTrial ? "Trial do" : "Odnawia się"}: {new Date(subscriptionEnd).toLocaleDateString("pl-PL")}
+              </p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={async () => {
+                try { await openPortal(); } catch { toast.error("Nie udało się otworzyć portalu"); }
+              }}
+            >
+              Zarządzaj subskrypcją
+            </Button>
+          </div>
+        </div>
+
+        <Separator />
+
         {/* Gender Section */}
         <div className="space-y-3 py-4">
           <div className="flex items-center gap-2">
