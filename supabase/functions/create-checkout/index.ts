@@ -7,10 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VALID_PRICES = [
+const LIVE_PRICES = [
   "price_1Sywb9GiLeHcQYBNBSg0kYRP",  // monthly 5 PLN
-  "price_1SywevGiLeHcQYBNzF2gpcNt",  // 6 months 55 PLN
+  "price_1SywevGiLeHcQYBNzF2gpcNt",  // 6 months 25 PLN
   "price_1SywgIGiLeHcQYBN5Ad1ffwQ",  // yearly 50 PLN
+];
+
+const TEST_PRICES = [
+  "price_1SywqWGiLeHcQYBNZXo0GC0K",  // monthly 5 PLN (test)
+  "price_1SywuTGiLeHcQYBNjDz7dmbc",  // 6 months 25 PLN (test)
+  "price_1SywuHGiLeHcQYBNZFskrLPn",  // yearly 50 PLN (test)
 ];
 
 serve(async (req) => {
@@ -31,10 +37,13 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
 
     const body = await req.json().catch(() => ({}));
-    const priceId = body.priceId || VALID_PRICES[0];
+    const priceId = body.priceId;
     const testMode = body.testMode === true;
 
-    if (!VALID_PRICES.includes(priceId)) {
+    const validPrices = testMode ? TEST_PRICES : LIVE_PRICES;
+    const resolvedPriceId = priceId || validPrices[0];
+
+    if (!validPrices.includes(resolvedPriceId)) {
       throw new Error("Invalid price ID");
     }
 
@@ -56,7 +65,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: resolvedPriceId, quantity: 1 }],
       mode: "subscription",
       allow_promotion_codes: true,
       subscription_data: { trial_period_days: 7 },
