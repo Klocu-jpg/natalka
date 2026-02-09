@@ -1,14 +1,26 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Plus, Trash2, MapPin, Calendar, Loader2, X, FolderOpen, Upload, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { usePhotoAlbums, usePhotos } from "@/hooks/usePhotoAlbums";
 import { useCouple } from "@/hooks/useCouple";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import WidgetWrapper from "./WidgetWrapper";
+
+// Helper to get signed URL for a storage path
+const getSignedUrl = async (path: string): Promise<string> => {
+  // If it's already a full URL (legacy data), return as-is
+  if (path.startsWith("http")) return path;
+  const { data, error } = await supabase.storage
+    .from("photos")
+    .createSignedUrl(path, 3600); // 1 hour expiry
+  if (error || !data?.signedUrl) return "";
+  return data.signedUrl;
+};
 
 const PhotoAlbums = () => {
   const { couple } = useCouple();
@@ -148,44 +160,83 @@ const PhotoAlbums = () => {
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-1.5">
           {albums.map((album) => (
-            <button
-              key={album.id}
-              onClick={() => setSelectedAlbum(album.id)}
-              className="relative group rounded-lg overflow-hidden aspect-square bg-secondary/50 hover:bg-secondary transition-colors text-left"
-            >
-              {album.cover_url ? (
-                <img 
-                  src={album.cover_url} 
-                  alt={album.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                <p className="font-medium text-white text-xs truncate">{album.title}</p>
-                {album.location && (
-                  <p className="text-[10px] text-white/80 flex items-center gap-0.5 truncate">
-                    <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> {album.location}
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-0.5 right-0.5 h-5 w-5 bg-black/50 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => handleDeleteAlbum(album.id, e)}
-              >
-                <Trash2 className="w-2.5 h-2.5 text-white" />
-              </Button>
-            </button>
+            <AlbumThumbnail key={album.id} album={album} onClick={() => setSelectedAlbum(album.id)} onDelete={handleDeleteAlbum} />
           ))}
         </div>
       )}
     </WidgetWrapper>
+  );
+};
+
+// Album thumbnail with signed URL support
+const AlbumThumbnail = ({ album, onClick, onDelete }: { album: any; onClick: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) => {
+  const [coverSrc, setCoverSrc] = useState<string>("");
+
+  useEffect(() => {
+    if (album.cover_url) {
+      getSignedUrl(album.cover_url).then(setCoverSrc);
+    }
+  }, [album.cover_url]);
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative group rounded-lg overflow-hidden aspect-square bg-secondary/50 hover:bg-secondary transition-colors text-left"
+    >
+      {coverSrc ? (
+        <img src={coverSrc} alt={album.title} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-1.5">
+        <p className="font-medium text-white text-xs truncate">{album.title}</p>
+        {album.location && (
+          <p className="text-[10px] text-white/80 flex items-center gap-0.5 truncate">
+            <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> {album.location}
+          </p>
+        )}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-0.5 right-0.5 h-5 w-5 bg-black/50 hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => onDelete(album.id, e)}
+      >
+        <Trash2 className="w-2.5 h-2.5 text-white" />
+      </Button>
+    </button>
+  );
+};
+
+// Photo item with signed URL
+const PhotoItem = ({ photo, onDelete }: { photo: any; onDelete: (id: string) => void }) => {
+  const [src, setSrc] = useState<string>("");
+
+  useEffect(() => {
+    getSignedUrl(photo.url).then(setSrc);
+  }, [photo.url]);
+
+  return (
+    <div className="relative group aspect-square rounded-lg overflow-hidden">
+      {src ? (
+        <img src={src} alt={photo.caption || ""} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-secondary/50 flex items-center justify-center">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => onDelete(photo.id)}
+      >
+        <Trash2 className="w-3 h-3 text-white" />
+      </Button>
+    </div>
   );
 };
 
@@ -256,7 +307,6 @@ const AlbumDetailView = ({
         onChange={handleFileChange}
       />
 
-      {/* Album info */}
       {album && (
         <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
           {album.location && (
@@ -272,7 +322,6 @@ const AlbumDetailView = ({
         </div>
       )}
 
-      {/* Upload button */}
       <Button
         variant="outline"
         className="w-full mb-4"
@@ -301,24 +350,7 @@ const AlbumDetailView = ({
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {photos.map((photo) => (
-            <div 
-              key={photo.id} 
-              className="relative group aspect-square rounded-lg overflow-hidden"
-            >
-              <img 
-                src={photo.url} 
-                alt={photo.caption || ""} 
-                className="w-full h-full object-cover"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => handleDeletePhoto(photo.id)}
-              >
-                <Trash2 className="w-3 h-3 text-white" />
-              </Button>
-            </div>
+            <PhotoItem key={photo.id} photo={photo} onDelete={handleDeletePhoto} />
           ))}
         </div>
       )}

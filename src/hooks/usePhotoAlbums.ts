@@ -116,25 +116,23 @@ export const usePhotos = (albumId: string | null) => {
       
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("photos")
-        .getPublicUrl(fileName);
+      // Store the storage path (not a public URL) since bucket is private
+      const storagePath = fileName;
 
-      // Insert photo record
+      // Insert photo record with storage path
       const { error } = await supabase
         .from("photos")
         .insert({
           album_id: albumId!,
           uploaded_by: user!.id,
-          url: publicUrl,
+          url: storagePath,
           caption: caption || null,
           taken_at: taken_at || null
         });
       
       if (error) throw error;
       
-      return publicUrl;
+      return storagePath;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["photos", albumId] }),
   });
