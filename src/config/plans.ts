@@ -12,9 +12,9 @@ export const PLANS = [
     id: "semiannual",
     priceId: "price_1SywevGiLeHcQYBNzF2gpcNt",
     name: "6 miesięcy",
-    price: "55 zł",
+    price: "25 zł",
     period: "/ 6 miesięcy",
-    perMonth: "~9,17 zł/mies.",
+    perMonth: "~4,17 zł/mies.",
     badge: null,
   },
   {
