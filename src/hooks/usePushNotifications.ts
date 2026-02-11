@@ -67,54 +67,45 @@ export const usePushNotifications = () => {
     localStorage.setItem(VAPID_PUBLIC_KEY_STORAGE, key);
   };
 
-  const subscribe = async () => {
-    if (!user) return false;
+  const subscribe = async (): Promise<{ success: boolean; reason?: string }> => {
+    if (!user) return { success: false, reason: "no_user" };
 
-    // Check basic support
     if (!("serviceWorker" in navigator) || !("Notification" in window)) {
-      console.warn("Push not supported on this device/browser");
-      return false;
+      return { success: false, reason: "not_supported" };
     }
 
     try {
-      // Request permission - use callback style as fallback for older Safari
+      // Request permission
       let perm: NotificationPermission;
       try {
         perm = await Notification.requestPermission();
       } catch {
-        // Safari <16.4 uses callback style
         perm = await new Promise<NotificationPermission>((resolve) => {
           Notification.requestPermission((p) => resolve(p));
         });
       }
       setPermission(perm);
-      if (perm !== "granted") return false;
+      if (perm !== "granted") return { success: false, reason: "denied" };
 
       // Register service worker
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
 
-      // Check if PushManager is available (iOS 16.4+ in standalone mode)
+      // Check PushManager - on iOS < 16.4 this won't exist
       if (!(registration as any).pushManager) {
-        console.warn("PushManager not available");
-        return false;
+        return { success: false, reason: "no_push_manager" };
       }
 
       let key = getVapidKey();
       if (!key) {
-        // Try to fetch it
         const { data } = await supabase.functions.invoke("get-vapid-key");
         if (data?.vapidPublicKey) {
           setVapidKey(data.vapidPublicKey);
           key = data.vapidPublicKey;
         }
       }
-      if (!key) {
-        console.error("No VAPID public key available");
-        return false;
-      }
+      if (!key) return { success: false, reason: "no_vapid" };
 
-      // Subscribe to push
       const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key).buffer as ArrayBuffer,
@@ -122,7 +113,6 @@ export const usePushNotifications = () => {
 
       const subJson = subscription.toJSON();
 
-      // Save to database
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
@@ -136,10 +126,10 @@ export const usePushNotifications = () => {
       if (error) throw error;
 
       setIsSubscribed(true);
-      return true;
+      return { success: true };
     } catch (err) {
       console.error("Push subscription failed:", err);
-      return false;
+      return { success: false, reason: "error" };
     }
   };
 
