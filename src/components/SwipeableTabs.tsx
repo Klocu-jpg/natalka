@@ -110,6 +110,11 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     setIsHorizontalSwipe(null);
     
     if (newIndex !== activeIndex) {
+      // Scroll the target tab to top
+      const tabElements = containerRef.current?.querySelectorAll(':scope > div > div');
+      if (tabElements && tabElements[newIndex]) {
+        tabElements[newIndex].scrollTop = 0;
+      }
       onIndexChange(newIndex);
     }
   }, [isHorizontalSwipe, isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
