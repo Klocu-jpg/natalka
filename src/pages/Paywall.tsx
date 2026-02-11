@@ -106,6 +106,16 @@ const Paywall = () => {
 
         <p className="text-xs text-muted-foreground">🎁 14-dniowy darmowy okres próbny • Anuluj w dowolnym momencie</p>
 
+        <div className="flex flex-col items-center gap-1.5">
+          <p className="text-xs text-muted-foreground font-medium">Akceptowane metody płatności</p>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <span className="text-xs bg-muted px-2.5 py-1 rounded-md">💳 Karta</span>
+            <span className="text-xs bg-muted px-2.5 py-1 rounded-md">Google Pay</span>
+            <span className="text-xs bg-muted px-2.5 py-1 rounded-md line-through opacity-50" title="Chwilowo niedostępne">Apple Pay</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60">Apple Pay chwilowo niedostępne</p>
+        </div>
+
         <button
           onClick={() => signOut()}
           className="text-sm text-muted-foreground hover:text-primary transition-colors"
