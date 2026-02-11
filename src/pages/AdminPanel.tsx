@@ -3,13 +3,20 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { useAdminBugReports } from "@/hooks/useBugReports";
 import { useAdminStripeData } from "@/hooks/useAdminStripeData";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
+import { useAdminGrowth } from "@/hooks/useAdminGrowth";
 import { PLANS } from "@/config/plans";
-import { ArrowLeft, Users, Heart, DollarSign, Bug, CheckCircle, Clock, CreditCard, TrendingUp, UserCheck, UserX, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Users, Heart, TrendingUp, CreditCard, Bug, CheckCircle, Clock, UserCheck, UserX, AlertTriangle, Send, Search, Loader2, Bell, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   new: { label: "Nowe", variant: "destructive" },
@@ -27,7 +34,7 @@ const SUB_STATUS_MAP: Record<string, { label: string; variant: "default" | "seco
 const formatDate = (ts: number) => new Date(ts * 1000).toLocaleDateString("pl-PL", { day: "2-digit", month: "short", year: "numeric" });
 const formatAmount = (amount: number, currency: string) => `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`;
 
-type Tab = "overview" | "subscriptions" | "payments" | "bugs";
+type Tab = "overview" | "charts" | "users" | "subscriptions" | "payments" | "bugs" | "push";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -35,7 +42,74 @@ const AdminPanel = () => {
   const { userCount, coupleCount, isLoading: statsLoading } = useAdminStats();
   const { reports, isLoading: reportsLoading, updateStatus } = useAdminBugReports();
   const { data: stripeData, isLoading: stripeLoading } = useAdminStripeData();
+  const { data: users, isLoading: usersLoading } = useAdminUsers();
+  const { userGrowth, coupleGrowth } = useAdminGrowth(60);
   const [tab, setTab] = useState<Tab>("overview");
+  const [userSearch, setUserSearch] = useState("");
+  const [pushTitle, setPushTitle] = useState("");
+  const [pushBody, setPushBody] = useState("");
+  const [pushSending, setPushSending] = useState(false);
+
+  // Build a map of subscription status by email
+  const subStatusByEmail = useMemo(() => {
+    const map = new Map<string, string>();
+    if (stripeData?.subscription_details) {
+      for (const sub of stripeData.subscription_details) {
+        if (sub.customer_email) {
+          const existing = map.get(sub.customer_email);
+          // Prioritize active > trialing > past_due > canceled
+          if (!existing || sub.status === "active" || (sub.status === "trialing" && existing !== "active")) {
+            map.set(sub.customer_email, sub.status);
+          }
+        }
+      }
+    }
+    return map;
+  }, [stripeData]);
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    if (!userSearch.trim()) return users;
+    const q = userSearch.toLowerCase();
+    return users.filter((u: any) => u.email?.toLowerCase().includes(q));
+  }, [users, userSearch]);
+
+  // Merge growth data for chart
+  const chartData = useMemo(() => {
+    const userMap = new Map<string, number>();
+    const coupleMap = new Map<string, number>();
+    userGrowth.data?.forEach((p: any) => userMap.set(p.day, Number(p.count)));
+    coupleGrowth.data?.forEach((p: any) => coupleMap.set(p.day, Number(p.count)));
+    const allDays = new Set([...userMap.keys(), ...coupleMap.keys()]);
+    return Array.from(allDays)
+      .sort()
+      .map((day) => ({
+        day: new Date(day).toLocaleDateString("pl-PL", { day: "2-digit", month: "short" }),
+        Użytkownicy: userMap.get(day) || 0,
+        Pary: coupleMap.get(day) || 0,
+      }));
+  }, [userGrowth.data, coupleGrowth.data]);
+
+  const handleBroadcast = async () => {
+    if (!pushTitle.trim() || !pushBody.trim()) {
+      toast.error("Wypełnij tytuł i treść");
+      return;
+    }
+    setPushSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-broadcast-push", {
+        body: { title: pushTitle.trim(), body: pushBody.trim() },
+      });
+      if (error) throw error;
+      toast.success(`Wysłano do ${data.sent}/${data.total} urządzeń${data.cleaned ? ` (wyczyszczono ${data.cleaned})` : ""}`);
+      setPushTitle("");
+      setPushBody("");
+    } catch {
+      toast.error("Nie udało się wysłać powiadomień");
+    } finally {
+      setPushSending(false);
+    }
+  };
 
   if (adminLoading) {
     return (
@@ -51,8 +125,11 @@ const AdminPanel = () => {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Przegląd" },
+    { id: "charts", label: "Wykresy" },
+    { id: "users", label: "Użytkownicy" },
     { id: "subscriptions", label: "Subskrypcje" },
     { id: "payments", label: "Płatności" },
+    { id: "push", label: "Push" },
     { id: "bugs", label: "Błędy" },
   ];
 
@@ -65,13 +142,13 @@ const AdminPanel = () => {
         <h1 className="text-xl font-bold">Panel Admina</h1>
       </div>
 
-      {/* Tab navigation */}
-      <div className="flex gap-1 bg-secondary rounded-xl p-1">
+      {/* Tab navigation - scrollable */}
+      <div className="flex gap-1 bg-secondary rounded-xl p-1 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 text-xs font-medium py-2 px-3 rounded-lg transition-all ${
+            className={`whitespace-nowrap text-xs font-medium py-2 px-3 rounded-lg transition-all ${
               tab === t.id
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -82,9 +159,9 @@ const AdminPanel = () => {
         ))}
       </div>
 
+      {/* OVERVIEW */}
       {tab === "overview" && (
         <div className="space-y-4">
-          {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
             <Card>
               <CardContent className="p-4 flex items-center gap-3">
@@ -136,7 +213,6 @@ const AdminPanel = () => {
             </Card>
           </div>
 
-          {/* Subscription breakdown */}
           {stripeData && (
             <Card>
               <CardHeader className="pb-2">
@@ -165,7 +241,6 @@ const AdminPanel = () => {
             </Card>
           )}
 
-          {/* Plans overview */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Plany cenowe</CardTitle>
@@ -182,6 +257,139 @@ const AdminPanel = () => {
         </div>
       )}
 
+      {/* CHARTS */}
+      {tab === "charts" && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Wzrost użytkowników i par (ostatnie 60 dni)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userGrowth.isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : chartData.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Brak danych</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorCouples" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--coral, 0 80% 65%))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--coral, 0 80% 65%))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Area type="monotone" dataKey="Użytkownicy" stroke="hsl(var(--primary))" fill="url(#colorUsers)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="Pary" stroke="hsl(var(--coral, 0 80% 65%))" fill="url(#colorCouples)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Subscription chart from Stripe data */}
+          {stripeData && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Podsumowanie subskrypcji</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  {[
+                    { label: "Aktywne", value: stripeData.subscriptions.active, color: "text-emerald-500" },
+                    { label: "Trial", value: stripeData.subscriptions.trialing, color: "text-blue-500" },
+                    { label: "Zaległe", value: stripeData.subscriptions.past_due, color: "text-destructive" },
+                    { label: "Anulowane", value: stripeData.subscriptions.canceled, color: "text-muted-foreground" },
+                  ].map((item) => (
+                    <div key={item.label} className="p-3 bg-secondary rounded-lg">
+                      <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* USERS */}
+      {tab === "users" && (
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Szukaj po emailu..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {usersLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Brak użytkowników</p>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">{filteredUsers.length} użytkowników</p>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                {filteredUsers.map((user: any) => {
+                  const subStatus = subStatusByEmail.get(user.email);
+                  return (
+                    <Card key={user.id}>
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString("pl-PL", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                        {subStatus ? (
+                          <Badge variant={SUB_STATUS_MAP[subStatus]?.variant || "outline"} className="text-[10px] ml-2">
+                            {SUB_STATUS_MAP[subStatus]?.label || subStatus}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] ml-2 opacity-50">
+                            Brak sub.
+                          </Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* SUBSCRIPTIONS */}
       {tab === "subscriptions" && (
         <div className="space-y-3">
           {stripeLoading ? (
@@ -222,6 +430,7 @@ const AdminPanel = () => {
         </div>
       )}
 
+      {/* PAYMENTS */}
       {tab === "payments" && (
         <div className="space-y-3">
           {stripeLoading ? (
@@ -254,6 +463,49 @@ const AdminPanel = () => {
         </div>
       )}
 
+      {/* PUSH BROADCAST */}
+      {tab === "push" && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                Wyślij powiadomienie do wszystkich
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                placeholder="Tytuł powiadomienia..."
+                value={pushTitle}
+                onChange={(e) => setPushTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Treść powiadomienia..."
+                value={pushBody}
+                onChange={(e) => setPushBody(e.target.value)}
+                rows={3}
+              />
+              <Button
+                onClick={handleBroadcast}
+                disabled={pushSending || !pushTitle.trim() || !pushBody.trim()}
+                className="w-full"
+              >
+                {pushSending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Wyślij do wszystkich
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Powiadomienie zostanie wysłane do wszystkich urządzeń z aktywną subskrypcją push.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* BUGS */}
       {tab === "bugs" && (
         <div className="space-y-3">
           {reportsLoading ? (
