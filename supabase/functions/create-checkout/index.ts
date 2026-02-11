@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const LIVE_PRICES = [
   "price_1Sywb9GiLeHcQYBNBSg0kYRP",  // monthly 5 PLN
-  "price_1SywevGiLeHcQYBNzF2gpcNt",  // 6 months 25 PLN
+  "price_1SywquGiLeHcQYBNjFjfgsmG",  // 6 months 25 PLN
   "price_1SywgIGiLeHcQYBN5Ad1ffwQ",  // yearly 50 PLN
 ];
 
