@@ -68,7 +68,7 @@ serve(async (req) => {
       line_items: [{ price: resolvedPriceId, quantity: 1 }],
       mode: "subscription",
       allow_promotion_codes: true,
-      subscription_data: { trial_period_days: 7 },
+      subscription_data: { trial_period_days: 14 },
       success_url: `${req.headers.get("origin")}/?subscription=success`,
       cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
     });

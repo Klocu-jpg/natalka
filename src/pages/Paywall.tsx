@@ -37,10 +37,10 @@ const Paywall = () => {
 
         <div>
           <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
-            Twój okres próbny się skończył
+            Wybierz swój plan
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Wybierz plan, aby kontynuować korzystanie z Love App
+            Każdy plan zawiera wszystkie funkcje aplikacji
           </p>
         </div>
 
@@ -67,7 +67,19 @@ const Paywall = () => {
               </div>
 
               <ul className="space-y-1.5 mb-4">
-                {["Wszystkie funkcje", "Planer AI", "Albumy", "Sync"].map((item) => (
+                {[
+                  "Wspólne listy zadań",
+                  "Planer posiłków z AI",
+                  "Śledzenie wydatków",
+                  "Cele oszczędnościowe",
+                  "Lista zakupów",
+                  "Albumy zdjęć",
+                  "Pomysły na randki",
+                  "Odliczanie wydarzeń",
+                  "Wspólne notatki",
+                  "Kalendarz",
+                  "Synchronizacja z partnerem",
+                ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs">
                     <Check className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span>{item}</span>
@@ -92,7 +104,7 @@ const Paywall = () => {
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground">Anuluj w dowolnym momencie</p>
+        <p className="text-xs text-muted-foreground">🎁 14-dniowy darmowy okres próbny • Anuluj w dowolnym momencie</p>
 
         <button
           onClick={() => signOut()}
