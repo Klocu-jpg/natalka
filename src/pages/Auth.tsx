@@ -16,13 +16,17 @@ const authSchema = z.object({
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
@@ -31,6 +35,28 @@ const Auth = () => {
     });
     if (error) {
       toast.error("Nie udało się zalogować przez Google");
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validation = authSchema.pick({ email: true }).safeParse({ email: forgotEmail });
+    if (!validation.success) {
+      toast.error("Podaj prawidłowy adres email");
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const { error } = await resetPassword(forgotEmail);
+      if (error) {
+        toast.error("Nie udało się wysłać linku resetującego");
+      } else {
+        setResetSent(true);
+      }
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -86,6 +112,97 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Show password reset confirmation
+  if (resetSent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-card rounded-2xl shadow-card p-8 animate-slide-up">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-heading font-bold mb-2">Sprawdź swoją skrzynkę!</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Wysłaliśmy link do resetowania hasła na <span className="font-medium text-foreground">{forgotEmail}</span>. 
+              Kliknij w link, aby ustawić nowe hasło.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full h-12"
+              onClick={() => {
+                setResetSent(false);
+                setShowForgotPassword(false);
+                setForgotEmail("");
+              }}
+            >
+              Wróć do logowania
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show forgot password form
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6 sm:mb-8 animate-slide-up">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Heart className="w-12 h-12 sm:w-10 sm:h-10 text-primary animate-heart-beat" fill="currentColor" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
+              Love App
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+              Resetuj swoje hasło
+            </p>
+          </div>
+
+          <div className="bg-card rounded-2xl shadow-card p-6 sm:p-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="twoj@email.pl"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full h-12 text-base" disabled={forgotLoading}>
+                {forgotLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "Wyślij link resetowania"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotEmail("");
+                }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors py-2 px-4 inline-touch"
+              >
+                Wróć do logowania
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show email confirmation screen after signup
   if (showEmailConfirmation) {
@@ -201,6 +318,18 @@ const Auth = () => {
                   {" "}oraz{" "}
                   <Link to="/prawne/polityka-prywatnosci" className="text-primary underline underline-offset-2">politykę prywatności</Link>
                 </label>
+              </div>
+            )}
+
+            {isLogin && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Zapomniałem hasła
+                </button>
               </div>
             )}
 
