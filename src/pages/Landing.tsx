@@ -15,7 +15,7 @@ const FEATURES = [
 ];
 
 const FAQ = [
-  { q: "Czy mogę wypróbować za darmo?", a: "Tak! Oferujemy 7-dniowy darmowy okres próbny. Nie pobieramy opłat do końca okresu próbnego." },
+  { q: "Czy mogę wypróbować za darmo?", a: "Tak! Oferujemy 14-dniowy darmowy okres próbny. Nie pobieramy opłat do końca okresu próbnego." },
   { q: "Jak połączyć się z partnerem?", a: "Po rejestracji otrzymasz unikalny kod zaproszenia. Wystarczy, że partner wpisze go w aplikacji." },
   { q: "Czy mogę anulować subskrypcję?", a: "Oczywiście! Możesz anulować w dowolnym momencie z poziomu ustawień." },
   { q: "Czy moje dane są bezpieczne?", a: "Tak. Wszystkie dane są szyfrowane i chronione. Szczegóły znajdziesz w naszej polityce prywatności." },
@@ -49,7 +49,7 @@ const Landing = () => {
               Zobacz cennik
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">7 dni za darmo · Bez karty kredytowej</p>
+          <p className="text-sm text-muted-foreground">14 dni za darmo · Bez karty kredytowej</p>
         </div>
       </section>
 
@@ -83,7 +83,7 @@ const Landing = () => {
             Wybierz swój plan
           </h2>
           <p className="text-center text-muted-foreground mb-8">
-            Wszystkie plany zawierają pełny dostęp + 7 dni za darmo
+            Wszystkie plany zawierają pełny dostęp + 14 dni za darmo
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -133,7 +133,7 @@ const Landing = () => {
             ))}
           </div>
           <p className="text-xs text-center text-muted-foreground mt-4">
-            Anuluj w dowolnym momencie · 7 dni za darmo
+            Anuluj w dowolnym momencie · 14 dni za darmo
           </p>
         </div>
       </section>
