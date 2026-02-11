@@ -667,8 +667,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_couple_growth: {
+        Args: { days_back?: number }
+        Returns: {
+          count: number
+          day: string
+        }[]
+      }
       admin_get_couple_count: { Args: never; Returns: number }
       admin_get_user_count: { Args: never; Returns: number }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+        }[]
+      }
+      admin_user_growth: {
+        Args: { days_back?: number }
+        Returns: {
+          count: number
+          day: string
+        }[]
+      }
       get_partner_id: { Args: { p_user_id: string }; Returns: string }
       has_role: {
         Args: {
