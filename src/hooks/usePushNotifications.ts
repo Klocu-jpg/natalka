@@ -26,9 +26,14 @@ export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    // On iOS standalone PWA, PushManager may exist even if window.PushManager isn't directly on window
     const supported = "serviceWorker" in navigator && "Notification" in window;
     setIsSupported(supported);
+
+    // Clear any stale/invalid cached VAPID key
+    const cached = getVapidKey();
+    if (cached && cached.length < 20) {
+      localStorage.removeItem(VAPID_PUBLIC_KEY_STORAGE);
+    }
 
     if (supported && user) {
       checkSubscription();
