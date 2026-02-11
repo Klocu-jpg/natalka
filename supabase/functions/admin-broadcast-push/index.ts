@@ -6,10 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Base64url helpers ──────────────────────────────────────────────
+
 function base64urlToUint8Array(base64url: string): Uint8Array {
-  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = base64.length % 4 === 0 ? "" : "=".repeat(4 - (base64.length % 4));
-  const raw = atob(base64 + pad);
+  const cleaned = base64url.replace(/[\s=]/g, "").replace(/-/g, "+").replace(/_/g, "/");
+  const pad = cleaned.length % 4 === 0 ? "" : "=".repeat(4 - (cleaned.length % 4));
+  const raw = atob(cleaned + pad);
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
@@ -19,9 +21,38 @@ function uint8ArrayToBase64url(arr: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function importVapidKey(privateKeyBase64url: string): Promise<CryptoKey> {
-  const raw = base64urlToUint8Array(privateKeyBase64url);
-  return crypto.subtle.importKey("raw", raw, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+function concatUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
+  const totalLen = arrays.reduce((sum, a) => sum + a.length, 0);
+  const result = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const a of arrays) {
+    result.set(a, offset);
+    offset += a.length;
+  }
+  return result;
+}
+
+// ── VAPID JWT ──────────────────────────────────────────────────────
+
+async function importVapidKeyPair(privateKeyBase64url: string, publicKeyBase64url: string): Promise<CryptoKey> {
+  const rawPrivate = base64urlToUint8Array(privateKeyBase64url);
+  const rawPublic = base64urlToUint8Array(publicKeyBase64url);
+
+  if (rawPublic.length !== 65 || rawPublic[0] !== 0x04) {
+    throw new Error(`Invalid public key length: ${rawPublic.length}`);
+  }
+
+  const x = uint8ArrayToBase64url(rawPublic.slice(1, 33));
+  const y = uint8ArrayToBase64url(rawPublic.slice(33, 65));
+  const d = uint8ArrayToBase64url(rawPrivate);
+
+  return crypto.subtle.importKey(
+    "jwk",
+    { kty: "EC", crv: "P-256", d, x, y },
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
 }
 
 async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audience: string): Promise<string> {
@@ -33,7 +64,7 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
   const encodedPayload = uint8ArrayToBase64url(new TextEncoder().encode(JSON.stringify(payload)));
   const unsignedToken = `${encodedHeader}.${encodedPayload}`;
 
-  const key = await importVapidKey(vapidPrivateKey);
+  const key = await importVapidKeyPair(vapidPrivateKey, vapidPublicKey);
   const signature = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
     key,
@@ -56,6 +87,109 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
   return `${unsignedToken}.${uint8ArrayToBase64url(rawSig)}`;
 }
 
+// ── RFC 8291 Web Push Encryption ───────────────────────────────────
+
+async function encryptPayload(
+  payloadText: string,
+  subscriberP256dh: string,
+  subscriberAuth: string
+): Promise<Uint8Array> {
+  const subscriberPubKeyBytes = base64urlToUint8Array(subscriberP256dh);
+  const authSecret = base64urlToUint8Array(subscriberAuth);
+
+  const localKeyPair = await crypto.subtle.generateKey(
+    { name: "ECDH", namedCurve: "P-256" },
+    true,
+    ["deriveBits"]
+  );
+
+  const subscriberCryptoKey = await crypto.subtle.importKey(
+    "raw",
+    subscriberPubKeyBytes,
+    { name: "ECDH", namedCurve: "P-256" },
+    false,
+    []
+  );
+
+  const sharedSecret = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      { name: "ECDH", public: subscriberCryptoKey },
+      localKeyPair.privateKey,
+      256
+    )
+  );
+
+  const localPubKeyRaw = new Uint8Array(
+    await crypto.subtle.exportKey("raw", localKeyPair.publicKey)
+  );
+
+  const encoder = new TextEncoder();
+  const webpushInfo = concatUint8Arrays(
+    encoder.encode("WebPush: info\0"),
+    subscriberPubKeyBytes,
+    localPubKeyRaw
+  );
+
+  const sharedSecretKey = await crypto.subtle.importKey(
+    "raw", sharedSecret, "HKDF", false, ["deriveBits"]
+  );
+
+  const ikm = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      { name: "HKDF", hash: "SHA-256", salt: authSecret, info: webpushInfo },
+      sharedSecretKey,
+      256
+    )
+  );
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  const ikmKey = await crypto.subtle.importKey(
+    "raw", ikm, "HKDF", false, ["deriveBits"]
+  );
+
+  const cekBits = await crypto.subtle.deriveBits(
+    { name: "HKDF", hash: "SHA-256", salt, info: encoder.encode("Content-Encoding: aes128gcm\0") },
+    ikmKey, 128
+  );
+
+  const nonceBits = await crypto.subtle.deriveBits(
+    { name: "HKDF", hash: "SHA-256", salt, info: encoder.encode("Content-Encoding: nonce\0") },
+    ikmKey, 96
+  );
+
+  const payloadBytes = encoder.encode(payloadText);
+  const paddedPayload = new Uint8Array(payloadBytes.length + 1);
+  paddedPayload.set(payloadBytes);
+  paddedPayload[payloadBytes.length] = 2;
+
+  const encryptKey = await crypto.subtle.importKey(
+    "raw", cekBits, "AES-GCM", false, ["encrypt"]
+  );
+
+  const encrypted = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: new Uint8Array(nonceBits), tagLength: 128 },
+      encryptKey,
+      paddedPayload
+    )
+  );
+
+  const rs = 4096;
+  const header = new Uint8Array(86);
+  header.set(salt, 0);
+  header[16] = (rs >> 24) & 0xff;
+  header[17] = (rs >> 16) & 0xff;
+  header[18] = (rs >> 8) & 0xff;
+  header[19] = rs & 0xff;
+  header[20] = 65;
+  header.set(localPubKeyRaw, 21);
+
+  return concatUint8Arrays(header, encrypted);
+}
+
+// ── Send Web Push ──────────────────────────────────────────────────
+
 async function sendWebPush(
   subscription: { endpoint: string; p256dh: string; auth: string },
   payload: string,
@@ -66,6 +200,8 @@ async function sendWebPush(
   const audience = `${url.protocol}//${url.host}`;
   const jwt = await createJWT(vapidPrivateKey, vapidPublicKey, audience);
 
+  const encryptedBody = await encryptPayload(payload, subscription.p256dh, subscription.auth);
+
   const response = await fetch(subscription.endpoint, {
     method: "POST",
     headers: {
@@ -73,8 +209,9 @@ async function sendWebPush(
       "Content-Encoding": "aes128gcm",
       Authorization: `vapid t=${jwt}, k=${vapidPublicKey}`,
       TTL: "86400",
+      "Content-Length": String(encryptedBody.byteLength),
     },
-    body: new TextEncoder().encode(payload),
+    body: encryptedBody,
   });
 
   if (!response.ok) {
@@ -86,6 +223,8 @@ async function sendWebPush(
   }
   return { gone: false };
 }
+
+// ── Main handler ───────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -115,7 +254,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify admin
     const { data: isAdmin } = await adminClient.rpc("has_role", {
       _user_id: userData.user.id,
       _role: "admin",
@@ -135,7 +273,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get ALL push subscriptions
     const { data: subscriptions, error: subError } = await adminClient
       .from("push_subscriptions")
       .select("*");

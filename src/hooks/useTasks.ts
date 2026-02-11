@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePartnerPush } from "@/hooks/usePartnerPush";
 
 export interface Task {
   id: string;
@@ -13,6 +14,7 @@ export interface Task {
 export const useTasks = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { notifyPartner } = usePartnerPush();
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks", user?.id],
@@ -34,7 +36,10 @@ export const useTasks = () => {
         .insert({ title, user_id: user!.id });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: (_, title) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      notifyPartner("tasks", "Love App", `Nowe zadanie: ${title}`, "📝");
+    },
   });
 
   const toggleTask = useMutation({
