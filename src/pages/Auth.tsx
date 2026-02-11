@@ -26,7 +26,10 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const { signIn, signUp, resetPassword } = useAuth();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [settingNewPassword, setSettingNewPassword] = useState(false);
+  const { signIn, signUp, signOut, resetPassword, updatePassword, isPasswordRecovery, clearPasswordRecovery } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
@@ -37,6 +40,101 @@ const Auth = () => {
       toast.error("Nie udało się zalogować przez Google");
     }
   };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("Hasło musi mieć minimum 6 znaków");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Hasła nie są identyczne");
+      return;
+    }
+    setSettingNewPassword(true);
+    try {
+      const { error } = await updatePassword(newPassword);
+      if (error) {
+        toast.error("Nie udało się ustawić nowego hasła: " + error.message);
+      } else {
+        toast.success("Hasło zostało zmienione! Zaloguj się nowym hasłem.");
+        clearPasswordRecovery();
+        await signOut();
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setIsLogin(true);
+      }
+    } finally {
+      setSettingNewPassword(false);
+    }
+  };
+
+  // Show set new password form (after clicking reset link in email)
+  if (isPasswordRecovery) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6 sm:mb-8 animate-slide-up">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Heart className="w-12 h-12 sm:w-10 sm:h-10 text-primary animate-heart-beat" fill="currentColor" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
+              Love App
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+              Ustaw nowe hasło
+            </p>
+          </div>
+
+          <div className="bg-card rounded-2xl shadow-card p-6 sm:p-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            <form onSubmit={handleSetNewPassword} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nowe hasło</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Powtórz nowe hasło</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full h-12 text-base" disabled={settingNewPassword}>
+                {settingNewPassword ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "Ustaw nowe hasło"
+                )}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
