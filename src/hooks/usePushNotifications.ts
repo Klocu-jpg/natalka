@@ -75,6 +75,9 @@ export const usePushNotifications = () => {
     }
 
     try {
+      console.log("[PUSH DEBUG] Starting subscribe flow...");
+      console.log("[PUSH DEBUG] Notification.permission:", Notification.permission);
+      
       // Request permission
       let perm: NotificationPermission;
       try {
@@ -84,21 +87,26 @@ export const usePushNotifications = () => {
           Notification.requestPermission((p) => resolve(p));
         });
       }
+      console.log("[PUSH DEBUG] Permission result:", perm);
       setPermission(perm);
       if (perm !== "granted") return { success: false, reason: "denied" };
 
       // Register service worker
+      console.log("[PUSH DEBUG] Registering service worker...");
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
+      console.log("[PUSH DEBUG] SW ready. pushManager exists:", !!(registration as any).pushManager);
 
-      // Check PushManager - on iOS < 16.4 this won't exist
       if (!(registration as any).pushManager) {
         return { success: false, reason: "no_push_manager" };
       }
 
       let key = getVapidKey();
+      console.log("[PUSH DEBUG] Cached VAPID key:", key ? "yes" : "no");
       if (!key) {
-        const { data } = await supabase.functions.invoke("get-vapid-key");
+        console.log("[PUSH DEBUG] Fetching VAPID key from server...");
+        const { data, error: fnError } = await supabase.functions.invoke("get-vapid-key");
+        console.log("[PUSH DEBUG] VAPID response:", JSON.stringify(data), "error:", fnError);
         if (data?.vapidPublicKey) {
           setVapidKey(data.vapidPublicKey);
           key = data.vapidPublicKey;
@@ -106,13 +114,16 @@ export const usePushNotifications = () => {
       }
       if (!key) return { success: false, reason: "no_vapid" };
 
+      console.log("[PUSH DEBUG] Subscribing to push...");
       const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key).buffer as ArrayBuffer,
       });
+      console.log("[PUSH DEBUG] Push subscription created:", subscription.endpoint);
 
       const subJson = subscription.toJSON();
 
+      console.log("[PUSH DEBUG] Saving to database...");
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
@@ -123,12 +134,16 @@ export const usePushNotifications = () => {
         { onConflict: "user_id,endpoint" }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("[PUSH DEBUG] DB error:", error);
+        throw error;
+      }
 
+      console.log("[PUSH DEBUG] Success!");
       setIsSubscribed(true);
       return { success: true };
     } catch (err) {
-      console.error("Push subscription failed:", err);
+      console.error("[PUSH DEBUG] Failed at step:", err);
       return { success: false, reason: "error" };
     }
   };
