@@ -26,10 +26,11 @@ export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    // On iOS standalone PWA, PushManager may exist even if window.PushManager isn't directly on window
+    const supported = "serviceWorker" in navigator && "Notification" in window;
     setIsSupported(supported);
 
-    if (supported) {
+    if (supported && user) {
       checkSubscription();
       fetchVapidKey();
     }
@@ -67,17 +68,37 @@ export const usePushNotifications = () => {
   };
 
   const subscribe = async () => {
-    if (!user || !isSupported) return false;
+    if (!user) return false;
+
+    // Check basic support
+    if (!("serviceWorker" in navigator) || !("Notification" in window)) {
+      console.warn("Push not supported on this device/browser");
+      return false;
+    }
 
     try {
-      // Request permission
-      const perm = await Notification.requestPermission();
+      // Request permission - use callback style as fallback for older Safari
+      let perm: NotificationPermission;
+      try {
+        perm = await Notification.requestPermission();
+      } catch {
+        // Safari <16.4 uses callback style
+        perm = await new Promise<NotificationPermission>((resolve) => {
+          Notification.requestPermission((p) => resolve(p));
+        });
+      }
       setPermission(perm);
       if (perm !== "granted") return false;
 
       // Register service worker
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
+
+      // Check if PushManager is available (iOS 16.4+ in standalone mode)
+      if (!(registration as any).pushManager) {
+        console.warn("PushManager not available");
+        return false;
+      }
 
       let key = getVapidKey();
       if (!key) {
