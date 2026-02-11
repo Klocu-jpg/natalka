@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Heart, Mail, Lock, Loader2 } from "lucide-react";
+import { Heart, Mail, Lock, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,8 +17,10 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -28,6 +30,11 @@ const Auth = () => {
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    if (!isLogin && password !== confirmPassword) {
+      toast.error("Hasła nie są identyczne");
       return;
     }
 
@@ -44,6 +51,8 @@ const Auth = () => {
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast.error("Nieprawidłowy email lub hasło");
+          } else if (error.message.includes("Email not confirmed")) {
+            toast.error("Potwierdź swój email przed zalogowaniem");
           } else {
             toast.error(error.message);
           }
@@ -60,14 +69,43 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Konto utworzone! Możesz się zalogować");
-          setIsLogin(true);
+          setShowEmailConfirmation(true);
         }
       }
     } finally {
       setLoading(false);
     }
   };
+
+  // Show email confirmation screen after signup
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-card rounded-2xl shadow-card p-8 animate-slide-up">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-heading font-bold mb-2">Sprawdź swoją skrzynkę!</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Wysłaliśmy link potwierdzający na <span className="font-medium text-foreground">{email}</span>. 
+              Kliknij w link, aby aktywować konto i przejść do aplikacji.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full h-12"
+              onClick={() => {
+                setShowEmailConfirmation(false);
+                setIsLogin(true);
+                setPassword("");
+                setConfirmPassword("");
+              }}
+            >
+              Wróć do logowania
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-safe pb-safe">
@@ -121,6 +159,25 @@ const Auth = () => {
             </div>
 
             {!isLogin && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Powtórz hasło</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 rounded-xl border-2 focus:border-primary h-12 text-base"
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+            )}
+
+            {!isLogin && (
               <div className="flex items-start gap-3 p-3 bg-secondary rounded-xl">
                 <Checkbox
                   id="accept-terms"
@@ -150,7 +207,10 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setConfirmPassword("");
+              }}
               className="text-sm text-muted-foreground hover:text-primary transition-colors py-2 px-4 inline-touch"
             >
               {isLogin ? (
