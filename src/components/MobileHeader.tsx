@@ -24,13 +24,17 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
         toast.error("Powiadomienia są zablokowane w ustawieniach przeglądarki/telefonu. Odblokuj je w ustawieniach.");
         return;
       }
-      const success = await subscribe();
-      if (success) {
+      const result = await subscribe();
+      if (result.success) {
         toast.success("Powiadomienia włączone! 🔔");
-      } else if (typeof Notification !== "undefined" && Notification.permission === "denied") {
-        toast.error("Powiadomienia są zablokowane. Zmień uprawnienia w ustawieniach.");
+      } else if (result.reason === "denied") {
+        toast.error("Powiadomienia są zablokowane. Zmień uprawnienia w Ustawieniach > Safari > Powiadomienia.");
+      } else if (result.reason === "no_push_manager") {
+        toast.error("Twoje urządzenie nie obsługuje powiadomień push. Wymagany iOS 16.4+ lub nowszy Android.");
+      } else if (result.reason === "no_vapid") {
+        toast.error("Błąd konfiguracji serwera. Spróbuj ponownie później.");
       } else {
-        toast.error("Nie udało się włączyć powiadomień. Upewnij się, że aplikacja jest dodana do ekranu głównego.");
+        toast.error("Nie udało się włączyć powiadomień. Spróbuj ponownie.");
       }
     }
   };
