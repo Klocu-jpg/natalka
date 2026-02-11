@@ -119,6 +119,14 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     }
   }, [isHorizontalSwipe, isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
 
+  // Reset scroll position when active tab changes (e.g. via bottom tab bar)
+  useEffect(() => {
+    const tabElements = containerRef.current?.querySelectorAll(':scope > div > div');
+    if (tabElements && tabElements[activeIndex]) {
+      tabElements[activeIndex].scrollTop = 0;
+    }
+  }, [activeIndex]);
+
   // Calculate transform with drag offset
   const getTransformX = () => {
     if (containerWidth === 0) return 0;
