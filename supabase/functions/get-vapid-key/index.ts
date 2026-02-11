@@ -4,14 +4,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Generated VAPID public key - this is safe to expose publicly
+const VAPID_PUBLIC_KEY = "BNO3_Z_8yEf1abBnZfC5bxYwdpvswXiCJwugmLZD9hVXplKhNVXL3EvWHjFZKMI4C7KdJN_mAomyC11zLwmm7WU";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-
-  return new Response(JSON.stringify({ vapidPublicKey }), {
+  return new Response(JSON.stringify({ vapidPublicKey: VAPID_PUBLIC_KEY }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
