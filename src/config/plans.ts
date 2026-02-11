@@ -14,9 +14,9 @@ export const PLANS = [
     priceId: "price_1SywevGiLeHcQYBNzF2gpcNt",
     testPriceId: "price_1SywuTGiLeHcQYBNjDz7dmbc",
     name: "6 miesięcy",
-    price: "25 zł",
+    price: "55 zł",
     period: "/ 6 miesięcy",
-    perMonth: "~4,17 zł/mies.",
+    perMonth: "~9,17 zł/mies.",
     badge: null,
   },
   {
