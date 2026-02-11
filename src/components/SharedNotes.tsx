@@ -87,7 +87,7 @@ const SharedNotes = () => {
                 <X className="w-4 h-4" />
               </button>
               <h3 className="font-heading font-semibold text-sm mb-1 pr-4">{note.title}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-3">{note.content}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">{note.content}</p>
             </div>
           ))}
         </div>
