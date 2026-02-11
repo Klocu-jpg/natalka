@@ -98,6 +98,13 @@
   * {
     @apply border-border;
     -webkit-tap-highlight-color: transparent;
+    /* Hide scrollbar globally */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
   }
 
   html {

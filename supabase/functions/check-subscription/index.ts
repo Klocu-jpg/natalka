@@ -29,11 +29,6 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const testMode = body?.testMode === true;
 
-    const stripeKey = testMode
-      ? Deno.env.get("STRIPE_TEST_SECRET_KEY")
-      : Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error(testMode ? "STRIPE_TEST_SECRET_KEY is not set" : "STRIPE_SECRET_KEY is not set");
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
 
@@ -43,6 +38,56 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { email: user.email });
+
+    // Check if user is admin
+    const { data: isAdmin } = await supabaseClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (isAdmin) {
+      logStep("User is admin - bypassing subscription check");
+      return new Response(JSON.stringify({
+        subscribed: true,
+        subscription_end: null,
+        is_trial: false,
+        is_admin: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Check if user's partner is admin
+    const { data: partnerId } = await supabaseClient.rpc("get_partner_id", {
+      p_user_id: user.id,
+    });
+
+    if (partnerId) {
+      const { data: partnerIsAdmin } = await supabaseClient.rpc("has_role", {
+        _user_id: partnerId,
+        _role: "admin",
+      });
+
+      if (partnerIsAdmin) {
+        logStep("Partner is admin - bypassing subscription check");
+        return new Response(JSON.stringify({
+          subscribed: true,
+          subscription_end: null,
+          is_trial: false,
+          is_admin_partner: true,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+
+    // Normal Stripe check
+    const stripeKey = testMode
+      ? Deno.env.get("STRIPE_TEST_SECRET_KEY")
+      : Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error(testMode ? "STRIPE_TEST_SECRET_KEY is not set" : "STRIPE_SECRET_KEY is not set");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -70,7 +115,6 @@ serve(async (req) => {
     let isTrial = false;
 
     if (!hasActiveSub) {
-      // Also check trialing
       const trialSubs = await stripe.subscriptions.list({
         customer: customerId,
         status: "trialing",

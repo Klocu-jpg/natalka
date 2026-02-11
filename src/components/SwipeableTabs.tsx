@@ -144,6 +144,7 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
             style={{ 
               width: containerWidth || '100vw',
               WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
             }}
           >
             {child}
