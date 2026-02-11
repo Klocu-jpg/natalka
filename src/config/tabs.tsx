@@ -38,7 +38,7 @@ export const TABS: TabConfig[] = [
     id: "more",
     label: "Więcej",
     icon: <MoreHorizontal className="w-5 h-5" />,
-    widgets: ["mini-calendar", "event-countdowns", "favorite-recipes"],
+    widgets: ["mini-calendar", "event-countdowns"],
   },
 ];
 

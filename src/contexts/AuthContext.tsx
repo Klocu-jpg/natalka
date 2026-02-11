@@ -54,7 +54,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Force clear state even if signOut fails (iOS PWA issue)
+    }
+    setSession(null);
+    setUser(null);
   };
 
   return (
