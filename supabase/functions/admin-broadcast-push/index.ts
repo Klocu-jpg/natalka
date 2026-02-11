@@ -148,8 +148,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const vapidPublicKey = "BNO3_Z_8yEf1abBnZfC5bxYwdpvswXiCJwugmLZD9hVXplKhNVXL3EvWHjFZKMI4C7KdJN_mAomyC11zLwmm7WU";
-    const vapidPrivateKey = "_dNOtkSFTMtqcUdselBtH5RZ8u9S_EuPvVDO_zFowK4";
+    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
     const payload = JSON.stringify({ title: "Love App", body: `${title}: ${body}`, url: "/" });
 
     let sent = 0;
