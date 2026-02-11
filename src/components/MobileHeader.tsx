@@ -20,11 +20,17 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
       await unsubscribe();
       toast.success("Powiadomienia wyłączone");
     } else {
+      if (permission === "denied") {
+        toast.error("Powiadomienia są zablokowane w ustawieniach przeglądarki/telefonu. Odblokuj je w ustawieniach.");
+        return;
+      }
       const success = await subscribe();
       if (success) {
-        toast.success("Powiadomienia włączone!");
-      } else if (permission === "denied") {
-        toast.error("Powiadomienia są zablokowane w ustawieniach przeglądarki");
+        toast.success("Powiadomienia włączone! 🔔");
+      } else if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+        toast.error("Powiadomienia są zablokowane. Zmień uprawnienia w ustawieniach.");
+      } else {
+        toast.error("Nie udało się włączyć powiadomień. Upewnij się, że aplikacja jest dodana do ekranu głównego.");
       }
     }
   };
