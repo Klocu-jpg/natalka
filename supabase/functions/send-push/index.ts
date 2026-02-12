@@ -9,10 +9,14 @@ const corsHeaders = {
 // ── Base64url helpers ──────────────────────────────────────────────
 
 function base64urlToUint8Array(base64url: string): Uint8Array {
-  // Strip whitespace, ensure valid base64url chars
-  const cleaned = base64url.replace(/[\s=]/g, "").replace(/-/g, "+").replace(/_/g, "/");
-  const pad = cleaned.length % 4 === 0 ? "" : "=".repeat(4 - (cleaned.length % 4));
-  const raw = atob(cleaned + pad);
+  // 1. Strip whitespace
+  let s = base64url.replace(/\s/g, "");
+  // 2. Convert base64url → standard base64 chars
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  // 3. Strip existing padding, then re-add correct padding
+  s = s.replace(/=+$/, "");
+  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+  const raw = atob(s + pad);
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
@@ -35,34 +39,13 @@ function concatUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
 
 // ── VAPID JWT ──────────────────────────────────────────────────────
 
-async function importVapidKey(privateKeyBase64url: string): Promise<CryptoKey> {
-  const raw = base64urlToUint8Array(privateKeyBase64url);
-  // ECDSA P-256 private keys are 32 bytes raw, but Web Crypto needs PKCS8 or JWK
-  // Convert raw 32-byte scalar to JWK
-  const d = uint8ArrayToBase64url(raw);
-  
-  // We need the public key too, but for signing we can use JWK with just d
-  // Actually importKey("raw") doesn't work for ECDSA. Use JWK format.
-  return crypto.subtle.importKey(
-    "jwk",
-    {
-      kty: "EC",
-      crv: "P-256",
-      d: d,
-      // x and y are required but we can derive them... 
-      // Actually for sign-only we need full JWK. Let's compute from env.
-      x: "", // Will be filled from public key
-      y: "",
-    },
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign"]
-  );
-}
-
 async function importVapidKeyPair(privateKeyBase64url: string, publicKeyBase64url: string): Promise<CryptoKey> {
+  console.log("[VAPID DEBUG] Private key length:", privateKeyBase64url.length, "chars:", privateKeyBase64url.substring(0, 10) + "...");
+  console.log("[VAPID DEBUG] Public key length:", publicKeyBase64url.length, "chars:", publicKeyBase64url.substring(0, 10) + "...");
   const rawPrivate = base64urlToUint8Array(privateKeyBase64url);
+  console.log("[VAPID DEBUG] rawPrivate length:", rawPrivate.length);
   const rawPublic = base64urlToUint8Array(publicKeyBase64url);
+  console.log("[VAPID DEBUG] rawPublic length:", rawPublic.length);
   
   // Public key should be 65 bytes (uncompressed P-256: 0x04 || x || y)
   if (rawPublic.length !== 65 || rawPublic[0] !== 0x04) {

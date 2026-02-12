@@ -9,9 +9,11 @@ const corsHeaders = {
 // ── Base64url helpers ──────────────────────────────────────────────
 
 function base64urlToUint8Array(base64url: string): Uint8Array {
-  const cleaned = base64url.replace(/[\s=]/g, "").replace(/-/g, "+").replace(/_/g, "/");
-  const pad = cleaned.length % 4 === 0 ? "" : "=".repeat(4 - (cleaned.length % 4));
-  const raw = atob(cleaned + pad);
+  let s = base64url.replace(/\s/g, "");
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  s = s.replace(/=+$/, "");
+  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+  const raw = atob(s + pad);
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
