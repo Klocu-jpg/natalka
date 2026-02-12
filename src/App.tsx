@@ -8,6 +8,8 @@ import { WidgetVisibilityProvider } from "@/contexts/WidgetVisibilityContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Legal from "./pages/Legal";
@@ -97,8 +99,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <WidgetVisibilityProvider>
-            <PWAInstallPrompt />
-            <AppRoutes />
+            <LoadingProvider>
+              <LoadingOverlay />
+              <PWAInstallPrompt />
+              <AppRoutes />
+            </LoadingProvider>
           </WidgetVisibilityProvider>
         </AuthProvider>
       </BrowserRouter>
