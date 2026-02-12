@@ -6,7 +6,7 @@ import { useAdminStripeData } from "@/hooks/useAdminStripeData";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAdminGrowth } from "@/hooks/useAdminGrowth";
 import { PLANS } from "@/config/plans";
-import { ArrowLeft, Users, Heart, TrendingUp, CreditCard, Bug, CheckCircle, Clock, UserCheck, UserX, AlertTriangle, Send, Search, Loader2, Bell, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, Heart, TrendingUp, CreditCard, Bug, CheckCircle, Clock, UserCheck, UserX, AlertTriangle, Send, Search, Loader2, Bell, BarChart3, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ const SUB_STATUS_MAP: Record<string, { label: string; variant: "default" | "seco
 const formatDate = (ts: number) => new Date(ts * 1000).toLocaleDateString("pl-PL", { day: "2-digit", month: "short", year: "numeric" });
 const formatAmount = (amount: number, currency: string) => `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`;
 
-type Tab = "overview" | "charts" | "users" | "subscriptions" | "payments" | "bugs" | "push";
+type Tab = "overview" | "charts" | "users" | "subscriptions" | "payments" | "bugs" | "push" | "costs";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -126,6 +126,7 @@ const AdminPanel = () => {
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Przegląd" },
     { id: "charts", label: "Wykresy" },
+    { id: "costs", label: "Koszty" },
     { id: "users", label: "Użytkownicy" },
     { id: "subscriptions", label: "Subskrypcje" },
     { id: "payments", label: "Płatności" },
@@ -500,6 +501,105 @@ const AdminPanel = () => {
               <p className="text-xs text-muted-foreground text-center">
                 Powiadomienie zostanie wysłane do wszystkich urządzeń z aktywną subskrypcją push.
               </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* COSTS */}
+      {tab === "costs" && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Szacunkowe koszty miesięczne
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(() => {
+                const activeUsers = userCount || 0;
+                const activeSubs = stripeData?.subscriptions?.active || 0;
+                
+                // AI costs: Gemini 2.5 Flash
+                // ~200 input tokens + ~500 output tokens per recipe
+                // Input: $0.15/1M, Output: $0.60/1M
+                // Assume ~15 recipes/user/month
+                const recipesPerUser = 15;
+                const aiCostPerRecipe = (200 * 0.15 + 500 * 0.60) / 1_000_000; // ~$0.00033
+                const totalAiCost = activeUsers * recipesPerUser * aiCostPerRecipe;
+                
+                // Email costs: Supabase includes 2 per user free tier, ~$0.001 per email after
+                // Assume ~3 emails/user/month (signup confirm, reset, etc.)
+                const emailsPerUser = 3;
+                const emailCostPer = 0.001; // ~$0.001 per email
+                const totalEmailCost = activeUsers * emailsPerUser * emailCostPer;
+                
+                const totalCost = totalAiCost + totalEmailCost;
+                const costPerUser = activeUsers > 0 ? totalCost / activeUsers : 0;
+                
+                // MRR in PLN (from cents)
+                const mrrPln = (stripeData?.mrr || 0) / 100;
+                const profit = mrrPln - totalCost * 4.2; // approx USD to PLN
+                
+                return (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-secondary rounded-lg">
+                        <p className="text-xs text-muted-foreground">🤖 AI (przepisy)</p>
+                        <p className="text-lg font-bold">${totalAiCost.toFixed(3)}</p>
+                        <p className="text-[10px] text-muted-foreground">~{recipesPerUser} przepisów/user × {activeUsers} users</p>
+                      </div>
+                      <div className="p-3 bg-secondary rounded-lg">
+                        <p className="text-xs text-muted-foreground">📧 Maile (auth)</p>
+                        <p className="text-lg font-bold">${totalEmailCost.toFixed(3)}</p>
+                        <p className="text-[10px] text-muted-foreground">~{emailsPerUser} maili/user × {activeUsers} users</p>
+                      </div>
+                      <div className="p-3 bg-secondary rounded-lg">
+                        <p className="text-xs text-muted-foreground">💰 Łącznie/mies.</p>
+                        <p className="text-lg font-bold">${totalCost.toFixed(3)}</p>
+                        <p className="text-[10px] text-muted-foreground">~{(totalCost * 4.2).toFixed(2)} PLN</p>
+                      </div>
+                      <div className="p-3 bg-secondary rounded-lg">
+                        <p className="text-xs text-muted-foreground">👤 Koszt/user</p>
+                        <p className="text-lg font-bold">${costPerUser.toFixed(4)}</p>
+                        <p className="text-[10px] text-muted-foreground">~{(costPerUser * 4.2).toFixed(3)} PLN</p>
+                      </div>
+                    </div>
+                    
+                    <Card className="border-primary/20">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Przychód (MRR)</p>
+                            <p className="text-lg font-bold">{mrrPln.toFixed(2)} PLN</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Koszty</p>
+                            <p className="text-lg font-bold">~{(totalCost * 4.2).toFixed(2)} PLN</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Zysk</p>
+                            <p className={`text-lg font-bold ${profit >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+                              {profit.toFixed(2)} PLN
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <div className="text-xs text-muted-foreground space-y-1 p-3 bg-secondary/50 rounded-lg">
+                      <p className="font-medium">📊 Szczegóły kalkulacji:</p>
+                      <p>• AI (Gemini 2.5 Flash): $0.15/1M input + $0.60/1M output tokens</p>
+                      <p>• ~200 tokenów wejście + ~500 wyjście na przepis</p>
+                      <p>• Maile auth: ~$0.001/mail (rejestracja, reset hasła)</p>
+                      <p>• Push notifications: darmowe (Web Push)</p>
+                      <p>• Stripe: 1.5% + 0.50 PLN/transakcja (nie uwzględnione)</p>
+                      <p>• Kurs USD/PLN: ~4.20 (szacunkowy)</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
