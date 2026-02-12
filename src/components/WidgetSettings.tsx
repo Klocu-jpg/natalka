@@ -99,7 +99,17 @@ const WidgetSettings = () => {
               size="sm"
               className="w-full"
               onClick={async () => {
-                try { await openPortal(); } catch { toast.error("Nie udało się otworzyć portalu"); }
+                try {
+                  const url = await openPortal();
+                  if (url) {
+                    window.location.href = url;
+                  } else {
+                    toast.error("Nie udało się otworzyć portalu subskrypcji");
+                  }
+                } catch (err) {
+                  console.error("Portal error:", err);
+                  toast.error("Nie udało się otworzyć portalu");
+                }
               }}
             >
               Zarządzaj subskrypcją
