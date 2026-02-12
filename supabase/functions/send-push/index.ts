@@ -40,12 +40,8 @@ function concatUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
 // ── VAPID JWT ──────────────────────────────────────────────────────
 
 async function importVapidKeyPair(privateKeyBase64url: string, publicKeyBase64url: string): Promise<CryptoKey> {
-  console.log("[VAPID DEBUG] Private key length:", privateKeyBase64url.length, "chars:", privateKeyBase64url.substring(0, 10) + "...");
-  console.log("[VAPID DEBUG] Public key length:", publicKeyBase64url.length, "chars:", publicKeyBase64url.substring(0, 10) + "...");
   const rawPrivate = base64urlToUint8Array(privateKeyBase64url);
-  console.log("[VAPID DEBUG] rawPrivate length:", rawPrivate.length);
   const rawPublic = base64urlToUint8Array(publicKeyBase64url);
-  console.log("[VAPID DEBUG] rawPublic length:", rawPublic.length);
   
   // Public key should be 65 bytes (uncompressed P-256: 0x04 || x || y)
   if (rawPublic.length !== 65 || rawPublic[0] !== 0x04) {
