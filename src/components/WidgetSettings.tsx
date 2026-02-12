@@ -18,6 +18,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import BugReportDialog from "@/components/BugReportDialog";
 import { toast } from "sonner";
+import { useLoading } from "@/contexts/LoadingContext";
 
 const GENDER_OPTIONS = [
   { value: "female" as const, label: "👩 Kobieta" },
@@ -47,6 +48,7 @@ const WidgetSettings = () => {
   const { subscribed, isTrial, subscriptionEnd, openPortal } = useSubscription();
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
+  const { withLoading } = useLoading();
 
   const widgetIds = Object.keys(WIDGET_LABELS);
 
@@ -100,7 +102,10 @@ const WidgetSettings = () => {
               className="w-full"
               onClick={async () => {
                 try {
-                  const url = await openPortal();
+                  const url = await withLoading(
+                    () => openPortal(),
+                    "Otwieranie portalu..."
+                  );
                   if (url) {
                     window.location.href = url;
                   } else {

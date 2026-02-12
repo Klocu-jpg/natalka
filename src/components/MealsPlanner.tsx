@@ -12,6 +12,7 @@ import { useShoppingItems } from "@/hooks/useShoppingItems";
 import { useFavoriteRecipes } from "@/hooks/useFavoriteRecipes";
 import { toast } from "sonner";
 import WidgetWrapper from "./WidgetWrapper";
+import { useLoading } from "@/contexts/LoadingContext";
 
 const DAYS = [
   { id: 0, short: "Pn", full: "Poniedziałek" },
@@ -29,6 +30,7 @@ const MealsPlanner = () => {
   const { meals, isLoading, addMeal, addMealFromFavorite, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
   const { addItem, addItems } = useShoppingItems();
   const { favoriteRecipes, addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
+  const { withLoading } = useLoading();
   const [selectedDay, setSelectedDay] = useState(0);
   const [newMeal, setNewMeal] = useState("");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -37,16 +39,19 @@ const MealsPlanner = () => {
   const [addMode, setAddMode] = useState<AddMode>("simple");
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
 
-  const handleAddMeal = () => {
+  const handleAddMeal = async () => {
     if (addMode === "recipe") {
       const recipe = favoriteRecipes.find(r => r.id === selectedRecipeId);
       if (recipe) {
-        addMealFromFavorite.mutate({
-          name: recipe.name,
-          recipe: recipe.recipe,
-          ingredients: recipe.ingredients,
-          dayOfWeek: selectedDay,
-        });
+        await withLoading(
+          () => addMealFromFavorite.mutateAsync({
+            name: recipe.name,
+            recipe: recipe.recipe,
+            ingredients: recipe.ingredients,
+            dayOfWeek: selectedDay,
+          }),
+          "Dodaję przepis..."
+        );
         setSelectedRecipeId("");
         setAddDialogOpen(false);
       }
@@ -54,7 +59,11 @@ const MealsPlanner = () => {
     }
     
     if (newMeal.trim()) {
-      addMeal.mutate({ name: newMeal, dayOfWeek: selectedDay, useAI: addMode === "ai" });
+      const msg = addMode === "ai" ? "AI generuje przepis..." : "Dodaję obiad...";
+      await withLoading(
+        () => addMeal.mutateAsync({ name: newMeal, dayOfWeek: selectedDay, useAI: addMode === "ai" }),
+        msg
+      );
       setNewMeal("");
       setAddDialogOpen(false);
     }
