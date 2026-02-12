@@ -29,11 +29,8 @@ export const usePushNotifications = () => {
     const supported = "serviceWorker" in navigator && "Notification" in window;
     setIsSupported(supported);
 
-    // Clear any stale/invalid cached VAPID key
-    const cached = getVapidKey();
-    if (cached && cached.length < 20) {
-      localStorage.removeItem(VAPID_PUBLIC_KEY_STORAGE);
-    }
+    // Always clear cached VAPID key to ensure fresh key from server
+    localStorage.removeItem(VAPID_PUBLIC_KEY_STORAGE);
 
     if (supported && user) {
       checkSubscription();
