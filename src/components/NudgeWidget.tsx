@@ -13,7 +13,7 @@ const QUICK_NUDGES = [
   { emoji: "🥰", message: "Myślę o Tobie" },
   { emoji: "☕", message: "Kawa?" },
   { emoji: "🌙", message: "Dobranoc kochanie" },
-  { emoji: "☀️", message: "Dzień Dobry" },
+  { emoji: "☀️", message: "Dzień dobry słonko!" },
   { emoji: "🤗", message: "Przytulas!" },
   { emoji: "💋", message: "Całuski!" },
 ];
@@ -134,7 +134,7 @@ const NudgeWidget = () => {
             >
               <span className="text-2xl">{emoji}</span>
               <span className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
-                {message.split(" ")[0]}
+                {message.split(" ").slice(0, 2).join(" ")}
               </span>
             </button>
           ))}
