@@ -1,15 +1,117 @@
 import { useState } from "react";
-import { Calendar, Share2, Droplets, Loader2, Settings, Circle } from "lucide-react";
+import { Share2, Droplets, Loader2, Settings, Circle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { usePeriodTracker } from "@/hooks/usePeriodTracker";
 import { useProfile } from "@/hooks/useProfile";
-import { format, differenceInDays, isToday, isBefore, startOfDay } from "date-fns";
+import { format, differenceInDays, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import WidgetWrapper from "./WidgetWrapper";
+import { cn } from "@/lib/utils";
+
+const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
+
+const CycleCalendar = ({ cycleEvents }: { cycleEvents: { date: Date; type: "period" | "fertile" | "ovulation" | "predicted-period" }[] }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+  const days: Date[] = [];
+  let day = calStart;
+  while (day <= calEnd) {
+    days.push(day);
+    day = addDays(day, 1);
+  }
+
+  const getEventType = (date: Date) => {
+    for (const ev of cycleEvents) {
+      if (isSameDay(ev.date, date)) return ev.type;
+    }
+    return null;
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Month nav */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <span className="text-sm font-heading font-semibold capitalize">
+          {format(currentMonth, "LLLL yyyy", { locale: pl })}
+        </span>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {WEEKDAYS.map((wd) => (
+          <div key={wd} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+            {wd}
+          </div>
+        ))}
+      </div>
+
+      {/* Days grid */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {days.map((d, i) => {
+          const inMonth = isSameMonth(d, currentMonth);
+          const today = isToday(d);
+          const eventType = getEventType(d);
+
+          return (
+            <div
+              key={i}
+              className={cn(
+                "relative flex items-center justify-center h-9 rounded-lg text-xs transition-all",
+                !inMonth && "opacity-30",
+                today && "ring-1 ring-foreground/30",
+                eventType === "period" && "bg-rose-500 text-white font-bold",
+                eventType === "predicted-period" && "bg-rose-300/40 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-dashed border-rose-400/50",
+                eventType === "ovulation" && "bg-violet-500 text-white font-bold",
+                eventType === "fertile" && "bg-emerald-400/30 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+                !eventType && inMonth && "text-foreground",
+              )}
+            >
+              {format(d, "d")}
+              {eventType === "ovulation" && (
+                <span className="absolute -top-0.5 -right-0.5 text-[8px]">🥚</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 justify-center pt-1">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+          <span className="text-[10px] text-muted-foreground">Okres</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-rose-300/60 border border-dashed border-rose-400" />
+          <span className="text-[10px] text-muted-foreground">Prognoza</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400/50" />
+          <span className="text-[10px] text-muted-foreground">Płodne</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-violet-500" />
+          <span className="text-[10px] text-muted-foreground">Owulacja</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PeriodTracker = () => {
   const { profile } = useProfile();
@@ -24,11 +126,13 @@ const PeriodTracker = () => {
     isSharing,
     latestEntry,
     isPeriodActive,
-    currentDayOfPeriod
+    currentDayOfPeriod,
+    cycleEvents,
   } = usePeriodTracker();
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cycleLength, setCycleLength] = useState(averageCycleLength.toString());
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Only show for female users
   if (profile?.gender !== "female") {
@@ -39,7 +143,6 @@ const PeriodTracker = () => {
     const today = new Date().toISOString().split("T")[0];
     
     if (isPeriodActive && latestEntry) {
-      // End period - set end_date to today
       try {
         await updateEntry.mutateAsync({ 
           id: latestEntry.id, 
@@ -50,7 +153,6 @@ const PeriodTracker = () => {
         toast.error("Nie udało się zapisać");
       }
     } else {
-      // Start new period
       try {
         await addEntry.mutateAsync({ 
           start_date: today,
@@ -162,7 +264,6 @@ const PeriodTracker = () => {
                 <Circle className="w-6 h-6 text-rose-400 dark:text-rose-300" />
               )}
               
-              {/* Pulsing ring for active period */}
               {isPeriodActive && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-rose-400/30" style={{ animationDuration: "2s" }} />
               )}
@@ -190,6 +291,24 @@ const PeriodTracker = () => {
                 ~{format(nextPeriodDate, "d MMMM", { locale: pl })}
               </p>
             </div>
+          )}
+
+          {/* Calendar toggle & calendar */}
+          {entries.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors py-1"
+              >
+                {showCalendar ? "Ukryj kalendarz" : "📅 Pokaż kalendarz cyklu"}
+              </button>
+
+              {showCalendar && (
+                <div className="bg-secondary/30 rounded-xl p-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <CycleCalendar cycleEvents={cycleEvents} />
+                </div>
+              )}
+            </>
           )}
 
           {/* Cycle info */}
