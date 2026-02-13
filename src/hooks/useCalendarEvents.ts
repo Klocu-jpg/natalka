@@ -38,7 +38,7 @@ export const useCalendarEvents = () => {
     },
     onSuccess: (_, event) => {
       queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
-      notifyPartner("calendar", "📅 Kalendarz", `${event.title} — ${event.date}`, "📅");
+      notifyPartner("calendar", "Love App", `📅 Nowe wydarzenie: ${event.title} — ${event.date}`, "📅");
     },
   });
 
