@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const APP_NAME = "Love App";
-const APP_URL = "natalka.lovable.app";
+const APP_URL = "loversapp.lovable.app";
 const CONTACT_EMAIL = "kontakt@loveapp.pl";
-const LAST_UPDATED = "9 lutego 2026";
+const LAST_UPDATED = "13 lutego 2026";
+const PAYMENT_PROVIDER = "Stripe, Inc.";
 
 /* ── Reusable styled components for legal content ── */
 
@@ -86,7 +87,8 @@ const PrivacyPolicy = () => (
           <><strong>Dane profilu</strong> — płeć (opcjonalnie), do personalizacji funkcji.</>,
           <><strong>Dane o parze</strong> — kod zaproszenia i identyfikator pary.</>,
           <><strong>Treści użytkownika</strong> — listy zakupów, zadania, notatki, plany posiłków, przepisy, wydarzenia, wydatki, cele oszczędnościowe, zdjęcia, odliczania, zaczepki, dane cyklu.</>,
-          <><strong>Dane techniczne</strong> — subskrypcje powiadomień push.</>,
+          <><strong>Dane płatności</strong> — informacje o subskrypcji (plan, status, data zakończenia). Dane karty płatniczej są przetwarzane wyłącznie przez {PAYMENT_PROVIDER} i nie są przechowywane przez {APP_NAME}.</>,
+          <><strong>Dane techniczne</strong> — subskrypcje powiadomień push, dane o przeglądarce i urządzeniu w zakresie niezbędnym do działania aplikacji.</>,
         ]} />
       </Section>
     </Card>
@@ -95,6 +97,7 @@ const PrivacyPolicy = () => (
       <Section title="3. Cel przetwarzania danych">
         <BulletList items={[
           "Świadczenie usług — zarządzanie kontem, synchronizacja danych między partnerami.",
+          "Obsługa płatności — przetwarzanie subskrypcji, wystawianie rachunków, zarządzanie okresem próbnym.",
           "Personalizacja — dostosowanie widgetów i funkcji do preferencji.",
           "Komunikacja — powiadomienia push o aktywnościach partnera (za Twoją zgodą).",
           "Bezpieczeństwo — ochrona konta i zapobieganie nieautoryzowanemu dostępowi.",
@@ -107,9 +110,10 @@ const PrivacyPolicy = () => (
         <InfoTable
           headers={["Podstawa", "Zakres"]}
           rows={[
-            ["Art. 6 ust. 1 lit. b) RODO", "Wykonanie umowy — świadczenie usług aplikacji"],
+            ["Art. 6 ust. 1 lit. b) RODO", "Wykonanie umowy — świadczenie usług aplikacji, obsługa subskrypcji"],
             ["Art. 6 ust. 1 lit. a) RODO", "Zgoda — powiadomienia push, udostępnianie danych cyklu"],
-            ["Art. 6 ust. 1 lit. f) RODO", "Uzasadniony interes — bezpieczeństwo, analityka"],
+            ["Art. 6 ust. 1 lit. c) RODO", "Obowiązek prawny — przechowywanie danych transakcyjnych wymaganych przez prawo podatkowe"],
+            ["Art. 6 ust. 1 lit. f) RODO", "Uzasadniony interes — bezpieczeństwo, zapobieganie nadużyciom"],
           ]}
         />
       </Section>
@@ -118,8 +122,9 @@ const PrivacyPolicy = () => (
     <Card>
       <Section title="5. Udostępnianie danych">
         <BulletList items={[
-          "Twojemu połączonemu partnerowi — współdzielone treści.",
-          "Dostawcom usług technicznych — hosting i przechowywanie plików.",
+          "Twojemu połączonemu partnerowi — współdzielone treści w ramach pary.",
+          <>Operatorowi płatności — {PAYMENT_PROVIDER} (polityka prywatności: stripe.com/privacy) w zakresie niezbędnym do realizacji płatności.</>,
+          "Dostawcom usług technicznych — hosting, baza danych, przechowywanie plików.",
         ]} />
         <p className="font-medium text-foreground text-xs mt-2">
           Nie sprzedajemy ani nie udostępniamy danych podmiotom trzecim w celach marketingowych.
@@ -128,39 +133,70 @@ const PrivacyPolicy = () => (
     </Card>
 
     <Card>
-      <Section title="6. Okres przechowywania">
+      <Section title="6. Przekazywanie danych poza EOG">
         <p>
-          Dane przechowujemy tak długo, jak korzystasz z aplikacji. Po usunięciu konta dane zostaną
-          trwale usunięte w ciągu 30 dni.
+          Dane mogą być przekazywane do podmiotów mających siedzibę poza Europejskim Obszarem Gospodarczym
+          (np. {PAYMENT_PROVIDER} z siedzibą w USA). W takim przypadku stosujemy odpowiednie zabezpieczenia:
+          standardowe klauzule umowne zatwierdzone przez Komisję Europejską lub decyzje o adekwatności
+          poziomu ochrony danych.
         </p>
       </Section>
     </Card>
 
     <Card>
-      <Section title="7. Twoje prawa">
+      <Section title="7. Okres przechowywania">
+        <InfoTable
+          headers={["Dane", "Okres"]}
+          rows={[
+            ["Dane konta i profilu", "Do usunięcia konta + 30 dni na trwałe usunięcie"],
+            ["Treści użytkownika", "Do usunięcia przez użytkownika lub usunięcia konta"],
+            ["Dane transakcji płatniczych", "5 lat od końca roku podatkowego (obowiązek prawny)"],
+            ["Logi techniczne", "Do 90 dni"],
+          ]}
+        />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="8. Twoje prawa">
         <BulletList items={[
           "Dostęp do swoich danych i uzyskanie ich kopii.",
           "Sprostowanie nieprawidłowych danych.",
           "Usunięcie danych (\"prawo do bycia zapomnianym\").",
           "Ograniczenie przetwarzania.",
-          "Przenoszenie danych.",
-          "Wycofanie zgody w dowolnym momencie.",
-          "Wniesienie skargi do Prezesa UODO.",
+          "Przenoszenie danych w formacie nadającym się do odczytu maszynowego.",
+          "Sprzeciw wobec przetwarzania opartego na uzasadnionym interesie.",
+          "Wycofanie zgody w dowolnym momencie (bez wpływu na wcześniejsze przetwarzanie).",
+          "Wniesienie skargi do Prezesa UODO (ul. Stawki 2, 00-193 Warszawa).",
         ]} />
+        <p className="text-xs mt-2">
+          Aby skorzystać z powyższych praw, skontaktuj się z nami: {CONTACT_EMAIL}.
+        </p>
       </Section>
     </Card>
 
     <Card>
-      <Section title="8. Bezpieczeństwo">
+      <Section title="9. Bezpieczeństwo">
         <p>
-          Stosujemy szyfrowanie haseł, połączenia HTTPS, polityki dostępu (RLS) na poziomie bazy danych
-          oraz regularne kopie zapasowe.
+          Stosujemy szyfrowanie haseł (bcrypt), połączenia HTTPS/TLS, polityki dostępu (RLS) na poziomie bazy danych,
+          szyfrowanie danych w spoczynku oraz regularne kopie zapasowe. Dane płatnicze (numery kart) nigdy nie przechodzą
+          przez nasze serwery — są obsługiwane bezpośrednio przez {PAYMENT_PROVIDER} zgodnie ze standardem PCI DSS.
+        </p>
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="10. Zmiany polityki prywatności">
+        <p>
+          Zastrzegamy sobie prawo do zmiany niniejszej polityki. O istotnych zmianach poinformujemy 
+          użytkowników za pośrednictwem aplikacji lub e-mail z co najmniej 14-dniowym wyprzedzeniem.
+          Dalsze korzystanie z aplikacji po wejściu zmian oznacza ich akceptację.
         </p>
       </Section>
     </Card>
 
     <Card className="bg-secondary/50 border-primary/20">
-      <Section title="9. Kontakt">
+      <Section title="11. Kontakt">
         <p>W sprawach dotyczących prywatności: <strong>{CONTACT_EMAIL}</strong></p>
       </Section>
     </Card>
@@ -175,10 +211,12 @@ const TermsOfService = () => (
 
     <Card>
       <Section title="1. Postanowienia ogólne">
-        <p>
-          Regulamin określa zasady korzystania z aplikacji {APP_NAME} ({APP_URL}).
-          Korzystanie z aplikacji oznacza akceptację regulaminu.
-        </p>
+        <BulletList items={[
+          <>Regulamin określa zasady korzystania z aplikacji {APP_NAME} dostępnej pod adresem {APP_URL}.</>,
+          "Korzystanie z aplikacji oznacza akceptację niniejszego regulaminu w całości.",
+          <>Usługodawcą jest {APP_NAME}. Kontakt: {CONTACT_EMAIL}.</>,
+          "Regulamin stanowi umowę o świadczenie usług drogą elektroniczną w rozumieniu ustawy z dnia 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną.",
+        ]} />
       </Section>
     </Card>
 
@@ -186,8 +224,11 @@ const TermsOfService = () => (
       <Section title="2. Definicje">
         <BulletList items={[
           <><strong>Aplikacja</strong> — serwis {APP_NAME} dostępny jako progresywna aplikacja webowa (PWA).</>,
-          <><strong>Użytkownik</strong> — osoba korzystająca z aplikacji po utworzeniu konta.</>,
+          <><strong>Użytkownik</strong> — osoba fizyczna korzystająca z aplikacji po utworzeniu konta.</>,
+          <><strong>Konsument</strong> — użytkownik będący osobą fizyczną dokonującą czynności prawnej niezwiązanej bezpośrednio z działalnością gospodarczą lub zawodową.</>,
           <><strong>Para</strong> — dwóch użytkowników połączonych kodem zaproszenia.</>,
+          <><strong>Subskrypcja</strong> — odpłatna usługa dostępu do funkcji aplikacji na czas określony.</>,
+          <><strong>Okres próbny</strong> — bezpłatny 14-dniowy okres testowania pełnej funkcjonalności aplikacji.</>,
         ]} />
       </Section>
     </Card>
@@ -196,67 +237,171 @@ const TermsOfService = () => (
       <Section title="3. Rejestracja i konto">
         <BulletList items={[
           "Do korzystania wymagane jest konto (e-mail + hasło).",
-          "Użytkownik zobowiązuje się podać prawdziwy adres e-mail.",
-          "Użytkownik odpowiada za poufność hasła.",
+          "Użytkownik zobowiązuje się podać prawdziwy adres e-mail i potwierdzić go za pomocą linku weryfikacyjnego.",
+          "Użytkownik odpowiada za poufność hasła i wszelkie działania wykonane na jego koncie.",
           "Jedno konto może być przypisane do jednej pary.",
+          "Użytkownik musi mieć ukończone 16 lat.",
         ]} />
       </Section>
     </Card>
 
     <Card>
-      <Section title="4. Zasady korzystania">
+      <Section title="4. Subskrypcja i płatności">
         <BulletList items={[
-          "Korzystanie z aplikacji zgodnie z jej przeznaczeniem.",
-          "Niepodejmowanie działań zakłócających działanie aplikacji.",
-          "Nieumieszczanie treści niezgodnych z prawem.",
-          "Niestosowanie aplikacji w celach komercyjnych bez zgody.",
+          "Dostęp do funkcji aplikacji wymaga aktywnej subskrypcji.",
+          "Każda subskrypcja rozpoczyna się od 14-dniowego bezpłatnego okresu próbnego.",
+          "Po zakończeniu okresu próbnego subskrypcja jest automatycznie odnawiana, a opłata pobierana zgodnie z wybranym planem.",
+          <>Płatności obsługiwane są przez {PAYMENT_PROVIDER}. {APP_NAME} nie przechowuje danych kart płatniczych.</>,
+          "Akceptowane metody płatności: karta płatnicza, Google Pay. Dostępność metod może się różnić w zależności od regionu.",
         ]} />
-      </Section>
-    </Card>
 
-    <Card>
-      <Section title="5. Funkcje aplikacji">
-        <BulletList items={[
-          "Wspólne listy zakupów i zadań.",
-          "Planowanie posiłków z generowaniem przepisów.",
-          "Śledzenie wydatków i celów oszczędnościowych.",
-          "Kalendarz, odliczanie, albumy zdjęć, notatki.",
-          "Powiadomienia push o aktywnościach partnera.",
-          "Śledzenie cyklu menstruacyjnego (opcjonalne).",
-        ]} />
-      </Section>
-    </Card>
+        <p className="font-medium text-foreground text-xs mt-3">Dostępne plany indywidualne:</p>
+        <InfoTable
+          headers={["Plan", "Cena", "Cykl rozliczeniowy"]}
+          rows={[
+            ["Miesięczny", "5 zł", "Co miesiąc"],
+            ["Półroczny", "25 zł", "Co 6 miesięcy"],
+            ["Roczny", "50 zł", "Co rok"],
+          ]}
+        />
 
-    <Card>
-      <Section title="6. Treści użytkownika">
-        <p>
-          Użytkownik zachowuje pełne prawa do swoich treści. Administrator może usunąć treści
-          naruszające regulamin.
+        <p className="font-medium text-foreground text-xs mt-3">Plany dla par (dostęp dla dwóch osób):</p>
+        <InfoTable
+          headers={["Plan", "Cena", "Cykl rozliczeniowy"]}
+          rows={[
+            ["Miesięczny", "8 zł", "Co miesiąc"],
+            ["Półroczny", "40 zł", "Co 6 miesięcy"],
+            ["Roczny", "80 zł", "Co rok"],
+          ]}
+        />
+
+        <p className="text-xs mt-2">
+          Ceny podane są w złotych polskich (PLN) i zawierają podatek VAT (jeśli dotyczy). 
+          Usługodawca zastrzega sobie prawo do zmiany cen z 30-dniowym wyprzedzeniem — zmiana nie dotyczy 
+          już opłaconych okresów subskrypcji.
         </p>
       </Section>
     </Card>
 
     <Card>
-      <Section title="7. Dostępność i odpowiedzialność">
+      <Section title="5. Prawo odstąpienia od umowy">
         <BulletList items={[
-          "Aplikacja udostępniana \"takim, jakim jest\" (as is).",
-          "Administrator nie gwarantuje ciągłej dostępności.",
-          "Administrator nie ponosi odpowiedzialności za utratę danych wynikającą z działania użytkownika.",
+          "Konsument ma prawo odstąpić od umowy subskrypcji w terminie 14 dni od jej zawarcia bez podania przyczyny.",
+          "Aby skorzystać z prawa odstąpienia, należy złożyć oświadczenie drogą mailową na adres: " + CONTACT_EMAIL + ".",
+          "W przypadku odstąpienia w trakcie bezpłatnego okresu próbnego nie są pobierane żadne opłaty.",
+          "Jeśli konsument wyraził zgodę na rozpoczęcie świadczenia usługi przed upływem terminu odstąpienia i usługa została w pełni wykonana, prawo odstąpienia nie przysługuje (art. 38 pkt 1 ustawy o prawach konsumenta).",
+          "W przypadku częściowego wykonania usługi konsument ponosi koszty proporcjonalne do zakresu spełnionego świadczenia.",
+          "Zwrot środków następuje w ciągu 14 dni od otrzymania oświadczenia o odstąpieniu, przy użyciu tego samego sposobu płatności.",
         ]} />
       </Section>
     </Card>
 
     <Card>
-      <Section title="8. Usunięcie konta">
+      <Section title="6. Anulowanie i zarządzanie subskrypcją">
+        <BulletList items={[
+          "Użytkownik może anulować subskrypcję w dowolnym momencie za pośrednictwem portalu zarządzania subskrypcją dostępnego w ustawieniach aplikacji.",
+          "Anulowanie oznacza, że subskrypcja nie zostanie odnowiona na kolejny okres — dostęp do funkcji pozostaje aktywny do końca opłaconego okresu.",
+          "Brak możliwości częściowego zwrotu za niewykorzystaną część bieżącego okresu rozliczeniowego, chyba że przysługuje prawo odstąpienia od umowy.",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="7. Zasady korzystania">
+        <BulletList items={[
+          "Korzystanie z aplikacji zgodnie z jej przeznaczeniem i obowiązującym prawem.",
+          "Niepodejmowanie działań zakłócających działanie aplikacji.",
+          "Nieumieszczanie treści niezgodnych z prawem, obraźliwych lub naruszających prawa osób trzecich.",
+          "Niestosowanie aplikacji w celach komercyjnych bez pisemnej zgody usługodawcy.",
+          "Nieudostępnianie konta osobom trzecim.",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="8. Funkcje aplikacji">
+        <BulletList items={[
+          "Wspólne listy zakupów i zadań.",
+          "Planowanie posiłków z generowaniem przepisów przez AI.",
+          "Śledzenie wydatków i celów oszczędnościowych.",
+          "Kalendarz, odliczanie, albumy zdjęć, notatki, zaczepki.",
+          "Powiadomienia push o aktywnościach partnera.",
+          "Śledzenie cyklu menstruacyjnego (opcjonalne).",
+          "Pomysły na randki.",
+        ]} />
+        <p className="text-xs mt-2">
+          Wszystkie plany subskrypcji zapewniają dostęp do pełnej funkcjonalności. 
+          Usługodawca zastrzega prawo do dodawania, modyfikowania lub usuwania funkcji z ważnych przyczyn technicznych lub biznesowych.
+        </p>
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="9. Treści użytkownika">
+        <BulletList items={[
+          "Użytkownik zachowuje pełne prawa autorskie do treści, które tworzy w aplikacji.",
+          "Użytkownik udziela usługodawcy niewyłącznej, nieodpłatnej licencji na przechowywanie i wyświetlanie treści wyłącznie w celu świadczenia usługi.",
+          "Administrator może usunąć treści naruszające regulamin lub obowiązujące prawo po uprzednim powiadomieniu użytkownika.",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="10. Reklamacje">
+        <BulletList items={[
+          "Reklamacje można składać drogą elektroniczną na adres: " + CONTACT_EMAIL + ".",
+          "Reklamacja powinna zawierać: opis problemu, adres e-mail konta oraz oczekiwany sposób rozwiązania.",
+          "Reklamacje rozpatrujemy w terminie 14 dni od ich otrzymania.",
+          "Konsument ma prawo skorzystać z pozasądowych sposobów rozpatrywania reklamacji, w tym platformy ODR (ec.europa.eu/odr).",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="11. Odpowiedzialność">
+        <BulletList items={[
+          "Usługodawca dokłada wszelkich starań, aby aplikacja działała poprawnie i bez przerw.",
+          "Usługodawca nie ponosi odpowiedzialności za przerwy w działaniu wynikające z przyczyn niezależnych (siła wyższa, awarie dostawców zewnętrznych).",
+          "Usługodawca nie ponosi odpowiedzialności za utratę danych wynikającą z działania użytkownika.",
+          "Odpowiedzialność usługodawcy wobec konsumenta jest ograniczona do wartości opłaconej subskrypcji w okresie, w którym doszło do zdarzenia.",
+          "Powyższe ograniczenia nie dotyczą odpowiedzialności wynikającej z bezwzględnie obowiązujących przepisów prawa.",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="12. Usunięcie konta">
+        <BulletList items={[
+          <>Aby usunąć konto, skontaktuj się pod adresem {CONTACT_EMAIL}.</>,
+          "Usunięcie konta skutkuje trwałym usunięciem wszystkich danych w ciągu 30 dni.",
+          "Usunięcie konta nie zwalnia z obowiązku uiszczenia opłat za bieżący okres subskrypcji.",
+          "Przed usunięciem konta zalecamy anulowanie subskrypcji w portalu zarządzania subskrypcją.",
+        ]} />
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="13. Zmiany regulaminu">
         <p>
-          Kontakt pod adresem {CONTACT_EMAIL}. Usunięcie konta skutkuje trwałym usunięciem
-          wszystkich danych.
+          Usługodawca zastrzega sobie prawo do zmiany regulaminu z ważnych przyczyn (zmiana przepisów prawa, 
+          zmiana funkcjonalności aplikacji). O zmianach użytkownicy zostaną poinformowani z co najmniej 
+          14-dniowym wyprzedzeniem. Brak akceptacji zmian uprawnia do rozwiązania umowy.
+        </p>
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="14. Prawo właściwe">
+        <p>
+          Regulamin podlega prawu polskiemu. W sprawach nieuregulowanych stosuje się przepisy Kodeksu cywilnego, 
+          ustawy o prawach konsumenta, ustawy o świadczeniu usług drogą elektroniczną oraz RODO.
+          Wszelkie spory z konsumentami rozstrzygane będą przez sąd właściwy według przepisów ogólnych.
         </p>
       </Section>
     </Card>
 
     <Card className="bg-secondary/50 border-primary/20">
-      <Section title="9. Kontakt">
+      <Section title="15. Kontakt">
         <p>Pytania dotyczące regulaminu: <strong>{CONTACT_EMAIL}</strong></p>
       </Section>
     </Card>
@@ -289,6 +434,8 @@ const RodoClause = () => (
           rows={[
             ["Rejestracja i obsługa konta", "Art. 6 ust. 1 lit. b) — umowa"],
             ["Synchronizacja danych w parze", "Art. 6 ust. 1 lit. b) — umowa"],
+            ["Obsługa subskrypcji i płatności", "Art. 6 ust. 1 lit. b) — umowa"],
+            ["Realizacja obowiązków podatkowych", "Art. 6 ust. 1 lit. c) — obowiązek prawny"],
             ["Powiadomienia push", "Art. 6 ust. 1 lit. a) — zgoda"],
             ["Udostępnianie danych cyklu", "Art. 6 ust. 1 lit. a) — zgoda"],
             ["Bezpieczeństwo aplikacji", "Art. 6 ust. 1 lit. f) — uzasadniony interes"],
@@ -300,8 +447,9 @@ const RodoClause = () => (
     <Card>
       <Section title="3. Odbiorcy danych">
         <BulletList items={[
-          "Połączony partner (współdzielone treści).",
-          "Dostawcy infrastruktury technicznej (hosting, baza danych).",
+          "Połączony partner (współdzielone treści w ramach pary).",
+          <>{PAYMENT_PROVIDER} — operator płatności (przetwarzanie subskrypcji i transakcji).</>,
+          "Dostawcy infrastruktury technicznej (hosting, baza danych, przechowywanie plików).",
         ]} />
       </Section>
     </Card>
@@ -309,8 +457,9 @@ const RodoClause = () => (
     <Card>
       <Section title="4. Przekazywanie danych">
         <p>
-          Dane mogą być przetwarzane w UE lub w państwach z odpowiednim poziomem ochrony
-          (decyzja adekwatności KE lub standardowe klauzule umowne).
+          Dane mogą być przekazywane do podmiotów mających siedzibę poza EOG (np. {PAYMENT_PROVIDER} — USA).
+          W takim przypadku stosujemy standardowe klauzule umowne zatwierdzone przez Komisję Europejską 
+          lub opieramy się na decyzji o adekwatności poziomu ochrony danych (Data Privacy Framework).
         </p>
       </Section>
     </Card>
@@ -320,8 +469,9 @@ const RodoClause = () => (
         <InfoTable
           headers={["Dane", "Okres"]}
           rows={[
-            ["Dane konta", "Do usunięcia konta"],
-            ["Treści użytkownika", "Do usunięcia przez użytkownika"],
+            ["Dane konta", "Do usunięcia konta + 30 dni"],
+            ["Treści użytkownika", "Do usunięcia przez użytkownika lub usunięcia konta"],
+            ["Dane transakcji płatniczych", "5 lat od końca roku podatkowego"],
             ["Logi techniczne", "Do 90 dni"],
           ]}
         />
@@ -337,8 +487,8 @@ const RodoClause = () => (
           "Ograniczenie przetwarzania (art. 18 RODO).",
           "Przenoszenie danych (art. 20 RODO).",
           "Sprzeciw wobec przetwarzania (art. 21 RODO).",
-          "Wycofanie zgody (art. 7 ust. 3 RODO).",
-          "Skarga do PUODO — ul. Stawki 2, 00-193 Warszawa.",
+          "Wycofanie zgody (art. 7 ust. 3 RODO) — bez wpływu na zgodność z prawem przetwarzania przed wycofaniem.",
+          "Skarga do Prezesa UODO — ul. Stawki 2, 00-193 Warszawa (uodo.gov.pl).",
         ]} />
       </Section>
     </Card>
@@ -347,6 +497,7 @@ const RodoClause = () => (
       <Section title="7. Dobrowolność podania danych">
         <p>
           E-mail i hasło są niezbędne do korzystania z aplikacji.
+          Dane płatnicze są niezbędne do aktywacji subskrypcji.
           Pozostałe dane (płeć, dane cyklu) są dobrowolne.
         </p>
       </Section>
@@ -354,7 +505,10 @@ const RodoClause = () => (
 
     <Card>
       <Section title="8. Zautomatyzowane decyzje">
-        <p>Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania (art. 22 RODO).</p>
+        <p>
+          Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania w rozumieniu art. 22 RODO.
+          Funkcja generowania przepisów AI nie podejmuje decyzji wywołujących skutki prawne wobec użytkownika.
+        </p>
       </Section>
     </Card>
   </div>
@@ -380,9 +534,10 @@ const CookiesPolicy = () => (
         <InfoTable
           headers={["Rodzaj", "Cel", "Czas"]}
           rows={[
-            ["Niezbędne", "Uwierzytelnianie i sesja logowania", "Do zamknięcia przeglądarki"],
+            ["Niezbędne", "Uwierzytelnianie i sesja logowania", "Do zamknięcia sesji"],
             ["Funkcjonalne", "Preferencje widgetów, powiadomień, motywu", "Do 1 roku"],
-            ["Local Storage", "Token uwierzytelniania, preferencje UI, stan PWA", "Do usunięcia ręcznego"],
+            ["Płatności", "Sesje płatności Stripe (przetwarzane przez Stripe)", "Do zakończenia transakcji"],
+            ["Local Storage", "Token uwierzytelniania, preferencje UI, stan PWA, tryb płatności", "Do usunięcia ręcznego"],
           ]}
         />
       </Section>
@@ -390,10 +545,11 @@ const CookiesPolicy = () => (
 
     <Card>
       <Section title="3. Cookies podmiotów trzecich">
-        <p>
-          Aplikacja nie wykorzystuje cookies reklamowych ani śledzących.
-          Jedyne cookies zewnętrzne mogą pochodzić od dostawcy hostingu i służą celom technicznym.
-        </p>
+        <BulletList items={[
+          "Aplikacja nie wykorzystuje cookies reklamowych ani śledzących.",
+          <>{PAYMENT_PROVIDER} może używać własnych cookies w procesie płatności (checkout) — szczegóły: stripe.com/cookie-settings.</>,
+          "Jedyne inne cookies zewnętrzne mogą pochodzić od dostawcy hostingu i służą celom technicznym.",
+        ]} />
       </Section>
     </Card>
 
@@ -404,13 +560,26 @@ const CookiesPolicy = () => (
           "Chrome: Ustawienia → Prywatność i bezpieczeństwo → Pliki cookie",
           "Firefox: Ustawienia → Prywatność i bezpieczeństwo → Ciasteczka",
           "Safari: Preferencje → Prywatność → Zarządzaj danymi witryn",
+          "Edge: Ustawienia → Prywatność, wyszukiwanie i usługi → Pliki cookie",
         ]} />
-        <p className="text-xs mt-2">Wyłączenie cookies niezbędnych może uniemożliwić logowanie.</p>
+        <p className="text-xs mt-2">
+          Wyłączenie cookies niezbędnych może uniemożliwić logowanie i korzystanie z aplikacji.
+          Zablokowanie cookies płatniczych uniemożliwi dokonanie płatności.
+        </p>
+      </Section>
+    </Card>
+
+    <Card>
+      <Section title="5. Podstawa prawna">
+        <BulletList items={[
+          "Cookies niezbędne: art. 173 ust. 3 Prawa telekomunikacyjnego — nie wymagają zgody.",
+          "Cookies funkcjonalne: art. 6 ust. 1 lit. a) RODO — na podstawie zgody wyrażonej przez kontynuowanie korzystania z aplikacji.",
+        ]} />
       </Section>
     </Card>
 
     <Card className="bg-secondary/50 border-primary/20">
-      <Section title="5. Kontakt">
+      <Section title="6. Kontakt">
         <p>Pytania dotyczące cookies: <strong>{CONTACT_EMAIL}</strong></p>
       </Section>
     </Card>
