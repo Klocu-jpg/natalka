@@ -36,21 +36,11 @@ function concatUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
 
 // ── VAPID JWT ──────────────────────────────────────────────────────
 
-async function importVapidKeyPair(privateKeyBase64url: string, publicKeyBase64url: string): Promise<CryptoKey> {
-  const rawPrivate = base64urlToUint8Array(privateKeyBase64url);
-  const rawPublic = base64urlToUint8Array(publicKeyBase64url);
-
-  if (rawPublic.length !== 65 || rawPublic[0] !== 0x04) {
-    throw new Error(`Invalid public key length: ${rawPublic.length}`);
-  }
-
-  const x = uint8ArrayToBase64url(rawPublic.slice(1, 33));
-  const y = uint8ArrayToBase64url(rawPublic.slice(33, 65));
-  const d = uint8ArrayToBase64url(rawPrivate);
-
+async function importVapidPrivateKey(privateKeyBase64url: string): Promise<CryptoKey> {
+  const rawBytes = base64urlToUint8Array(privateKeyBase64url);
   return crypto.subtle.importKey(
-    "jwk",
-    { kty: "EC", crv: "P-256", d, x, y },
+    "pkcs8",
+    rawBytes.buffer,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"]
@@ -66,7 +56,7 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
   const encodedPayload = uint8ArrayToBase64url(new TextEncoder().encode(JSON.stringify(payload)));
   const unsignedToken = `${encodedHeader}.${encodedPayload}`;
 
-  const key = await importVapidKeyPair(vapidPrivateKey, vapidPublicKey);
+  const key = await importVapidPrivateKey(vapidPrivateKey);
   const signature = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
     key,
