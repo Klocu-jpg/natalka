@@ -85,11 +85,11 @@ export const useMeals = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success(variables.useAI ? "Obiad dodany z przepisem!" : "Obiad dodany!");
-      const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
-      notifyPartner("meals", "Love App", `🍽️ Plan posiłków: ${variables.name} — ${days[variables.dayOfWeek]}`, "🍽️");
-    },
+       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+       toast.success(variables.useAI ? "Obiad dodany z przepisem!" : "Obiad dodany!");
+       const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
+       notifyPartner("meals", "Plan posiłków", `🍽️ ${variables.name} — ${days[variables.dayOfWeek]}`, "🍽️");
+     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać obiadu");
     },
@@ -125,11 +125,11 @@ export const useMeals = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
-      toast.success("Przepis dodany do planu!");
-      const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
-      notifyPartner("meals", "Love App", `🍽️ Nowy przepis: ${variables.name} — ${days[variables.dayOfWeek]}`, "🍽️");
-    },
+       queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+       toast.success("Przepis dodany do planu!");
+       const days = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
+       notifyPartner("meals", "Nowy przepis", `🍽️ ${variables.name} — ${days[variables.dayOfWeek]}`, "🍽️");
+     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się dodać przepisu");
     },
