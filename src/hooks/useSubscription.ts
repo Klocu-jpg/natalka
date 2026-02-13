@@ -32,7 +32,11 @@ export const useSubscription = () => {
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
-      setState({ subscribed: false, isTrial: false, subscriptionEnd: null, loading: false });
+      // Don't set loading to false if we don't have a session yet — auth may still be loading
+      // Only mark as not subscribed if we're sure there's no user
+      if (!user) {
+        setState({ subscribed: false, isTrial: false, subscriptionEnd: null, loading: false });
+      }
       return;
     }
 
@@ -51,7 +55,7 @@ export const useSubscription = () => {
     } catch {
       setState((prev) => ({ ...prev, loading: false }));
     }
-  }, [session, testMode]);
+  }, [session, user, testMode]);
 
   useEffect(() => {
     checkSubscription();
