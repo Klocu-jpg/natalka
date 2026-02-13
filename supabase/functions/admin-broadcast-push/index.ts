@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
-    const payload = JSON.stringify({ title: "Love App", body: `${title}: ${body}`, url: "/" });
+    const payload = JSON.stringify({ title, body, url: "/" });
 
     let sent = 0;
     let gone = 0;

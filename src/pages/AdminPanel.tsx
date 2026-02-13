@@ -517,15 +517,15 @@ const AdminPanel = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { title: "📝 Nowe zadanie", body: "Kupić kwiaty dla ukochanej", emoji: "📝" },
-                { title: "🛒 Lista zakupów", body: "Dodano: Mleko, Chleb, Masło", emoji: "🛒" },
+                { title: "📝 Nowe zadanie", body: "Umyj naczynia", emoji: "📝" },
+                { title: "🛒 Lista zakupów", body: "Mleko, Chleb, Masło", emoji: "🛒" },
                 { title: "📅 Kalendarz", body: "Rocznica związku — 14.02.2026", emoji: "📅" },
-                { title: "💰 Wydatki", body: "Kolacja we dwoje — 150 zł", emoji: "💰" },
+                { title: "💰 Wydatki", body: "Kolacja — 150 PLN", emoji: "💰" },
                 { title: "🍽️ Plan posiłków", body: "Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
-                { title: "🍽️ Nowy przepis", body: "Lasagne z warzywami — Środa", emoji: "🍽️" },
+                { title: "🍽️ Nowy przepis", body: "Lasagne — Środa", emoji: "🍽️" },
                 { title: "❤️ Zaczepka", body: "Kocham Cię!", emoji: "❤️" },
                 { title: "😘 Zaczepka", body: "Buziaczek!", emoji: "😘" },
-                { title: "💬 Zaczepka", body: "Tęsknię za Tobą kochanie", emoji: "💬" },
+                { title: "💬 Zaczepka", body: "Tęsknię za Tobą", emoji: "💬" },
               ].map((notif, i) => (
                 <button
                   key={i}
