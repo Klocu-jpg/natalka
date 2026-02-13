@@ -506,6 +506,52 @@ const AdminPanel = () => {
               </p>
             </CardContent>
           </Card>
+
+          {/* Simulation */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                🧪 Symulacja powiadomień
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Wyślij testowe powiadomienie na swoje urządzenie</p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[
+                { title: "📝 Nowe zadanie", body: "Kupić kwiaty dla ukochanej", emoji: "📝" },
+                { title: "🛒 Lista zakupów", body: "Dodano: Mleko, Chleb, Masło", emoji: "🛒" },
+                { title: "📅 Kalendarz", body: "Rocznica związku — 14.02.2026", emoji: "📅" },
+                { title: "💰 Wydatki", body: "Kolacja we dwoje — 150 zł", emoji: "💰" },
+                { title: "🍽️ Plan posiłków", body: "Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
+                { title: "🍽️ Nowy przepis", body: "Lasagne z warzywami — Środa", emoji: "🍽️" },
+                { title: "❤️ Zaczepka", body: "Kocham Cię!", emoji: "❤️" },
+                { title: "😘 Zaczepka", body: "Buziaczek!", emoji: "😘" },
+                { title: "💬 Zaczepka", body: "Tęsknię za Tobą kochanie", emoji: "💬" },
+              ].map((notif, i) => (
+                <button
+                  key={i}
+                  onClick={async () => {
+                    try {
+                      const { data, error } = await supabase.functions.invoke("admin-broadcast-push", {
+                        body: { title: notif.title, body: notif.body },
+                      });
+                      if (error) throw error;
+                      toast.success(`Wysłano: ${notif.title}`);
+                    } catch {
+                      toast.error("Błąd wysyłania");
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all text-left"
+                >
+                  <span className="text-2xl">{notif.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{notif.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{notif.body}</p>
+                  </div>
+                  <Send className="w-4 h-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       )}
 
