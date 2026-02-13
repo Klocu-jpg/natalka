@@ -91,6 +91,75 @@ export const usePeriodTracker = () => {
 
   const isSharing = latestEntry?.share_with_partner ?? false;
 
+  // Ovulation & fertility calculations
+  // Ovulation typically occurs 14 days before the next period
+  const getOvulationDate = (periodStart: Date, cycleLen: number) => {
+    return addDays(periodStart, cycleLen - 14);
+  };
+
+  // Fertile window: 5 days before ovulation + ovulation day + 1 day after
+  const getFertileWindow = (periodStart: Date, cycleLen: number) => {
+    const ovulation = getOvulationDate(periodStart, cycleLen);
+    return {
+      start: addDays(ovulation, -5),
+      end: addDays(ovulation, 1),
+      ovulationDay: ovulation,
+    };
+  };
+
+  // Generate cycle events for calendar display
+  const getCycleEvents = () => {
+    const events: { date: Date; type: "period" | "fertile" | "ovulation" | "predicted-period" }[] = [];
+    
+    // Historical period days
+    for (const entry of entries) {
+      const start = new Date(entry.start_date);
+      const end = entry.end_date ? new Date(entry.end_date) : (
+        isPeriodActive && entry.id === latestEntry?.id ? new Date() : addDays(start, 4)
+      );
+      const days = differenceInDays(end, start) + 1;
+      for (let d = 0; d < days; d++) {
+        events.push({ date: addDays(start, d), type: "period" });
+      }
+
+      // Fertility & ovulation for this cycle
+      const cycleLen = entry.cycle_length || 28;
+      const fertile = getFertileWindow(start, cycleLen);
+      const fertileDays = differenceInDays(fertile.end, fertile.start) + 1;
+      for (let d = 0; d < fertileDays; d++) {
+        const day = addDays(fertile.start, d);
+        if (differenceInDays(day, fertile.ovulationDay) === 0) {
+          events.push({ date: day, type: "ovulation" });
+        } else {
+          events.push({ date: day, type: "fertile" });
+        }
+      }
+    }
+
+    // Predicted next period (5 days)
+    if (nextPeriodDate && !isPeriodActive) {
+      for (let d = 0; d < 5; d++) {
+        events.push({ date: addDays(nextPeriodDate, d), type: "predicted-period" });
+      }
+      // Predicted next ovulation & fertile window
+      const nextCycleLen = averageCycleLength;
+      const nextFertile = getFertileWindow(nextPeriodDate, nextCycleLen);
+      const nextFertileDays = differenceInDays(nextFertile.end, nextFertile.start) + 1;
+      for (let d = 0; d < nextFertileDays; d++) {
+        const day = addDays(nextFertile.start, d);
+        if (differenceInDays(day, nextFertile.ovulationDay) === 0) {
+          events.push({ date: day, type: "ovulation" });
+        } else {
+          events.push({ date: day, type: "fertile" });
+        }
+      }
+    }
+
+    return events;
+  };
+
+  const cycleEvents = entries.length > 0 ? getCycleEvents() : [];
+
   return { 
     entries, 
     isLoading, 
@@ -103,6 +172,7 @@ export const usePeriodTracker = () => {
     isSharing,
     latestEntry,
     isPeriodActive,
-    currentDayOfPeriod
+    currentDayOfPeriod,
+    cycleEvents,
   };
 };
