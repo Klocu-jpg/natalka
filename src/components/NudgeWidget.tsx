@@ -13,7 +13,7 @@ const QUICK_NUDGES = [
   { emoji: "🥰", message: "Myślę o Tobie" },
   { emoji: "☕", message: "Kawa?" },
   { emoji: "🌙", message: "Dobranoc kochanie" },
-  { emoji: "☀️", message: "Dzień dobry słonko!" },
+  { emoji: "☀️", message: "Dzień Dobry" },
   { emoji: "🤗", message: "Przytulas!" },
   { emoji: "💋", message: "Całuski!" },
 ];
