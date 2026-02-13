@@ -66,7 +66,7 @@ export const useExpenses = () => {
     },
     onSuccess: (_, expense) => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      notifyPartner("expenses", "Love App", `Nowy wydatek: ${expense.description} - ${expense.amount} zł`);
+      notifyPartner("expenses", "💰 Wydatki", `${expense.description} — ${expense.amount} zł`, "💰");
     },
   });
 
