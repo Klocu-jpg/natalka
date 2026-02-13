@@ -1,17 +1,22 @@
-import { Heart, Check, Loader2, Crown } from "lucide-react";
+import { Heart, Check, Loader2, Crown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
-import { PLANS } from "@/config/plans";
+import { PLANS, COUPLE_PLANS } from "@/config/plans";
 import { toast } from "sonner";
 import { useState } from "react";
+
+type PlanType = "solo" | "couple";
 
 const Paywall = () => {
   const { startCheckout, testMode } = useSubscription();
   const { signOut } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+  const [planType, setPlanType] = useState<PlanType>("solo");
 
-  const getPriceId = (plan: typeof PLANS[number]) =>
+  const activePlans = planType === "solo" ? PLANS : COUPLE_PLANS;
+
+  const getPriceId = (plan: typeof PLANS[number] | typeof COUPLE_PLANS[number]) =>
     testMode ? plan.testPriceId : plan.priceId;
 
   const handleCheckout = async (priceId: string) => {
@@ -24,6 +29,20 @@ const Paywall = () => {
       setLoading(null);
     }
   };
+
+  const features = [
+    "Wspólne listy zadań",
+    "Planer posiłków z AI",
+    "Śledzenie wydatków",
+    "Cele oszczędnościowe",
+    "Lista zakupów",
+    "Albumy zdjęć",
+    "Pomysły na randki",
+    "Odliczanie wydarzeń",
+    "Wspólne notatki",
+    "Kalendarz",
+    "Synchronizacja z partnerem",
+  ];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -44,8 +63,41 @@ const Paywall = () => {
           </p>
         </div>
 
+        {/* Solo / Couple toggle */}
+        <div className="flex justify-center">
+          <div className="inline-flex bg-muted rounded-full p-1 gap-1">
+            <button
+              onClick={() => setPlanType("solo")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                planType === "solo"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Solo
+            </button>
+            <button
+              onClick={() => setPlanType("couple")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                planType === "couple"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Para
+            </button>
+          </div>
+        </div>
+
+        {planType === "couple" && (
+          <p className="text-xs text-muted-foreground -mt-3">
+            💑 Jeden plan — dostęp dla Ciebie i Twojej drugiej połówki
+          </p>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-          {PLANS.map((plan) => (
+          {activePlans.map((plan) => (
             <div
               key={plan.id}
               className={`bg-card rounded-2xl p-5 shadow-card relative ${
@@ -67,24 +119,18 @@ const Paywall = () => {
               </div>
 
               <ul className="space-y-1.5 mb-4">
-                {[
-                  "Wspólne listy zadań",
-                  "Planer posiłków z AI",
-                  "Śledzenie wydatków",
-                  "Cele oszczędnościowe",
-                  "Lista zakupów",
-                  "Albumy zdjęć",
-                  "Pomysły na randki",
-                  "Odliczanie wydarzeń",
-                  "Wspólne notatki",
-                  "Kalendarz",
-                  "Synchronizacja z partnerem",
-                ].map((item) => (
+                {features.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs">
                     <Check className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
+                {planType === "couple" && (
+                  <li className="flex items-center gap-2 text-xs font-medium text-primary">
+                    <Users className="w-3.5 h-3.5 shrink-0" />
+                    <span>Dostęp dla partnera</span>
+                  </li>
+                )}
               </ul>
 
               <Button

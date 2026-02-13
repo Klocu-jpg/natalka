@@ -30,3 +30,42 @@ export const PLANS = [
     badge: "Najlepsza wartość",
   },
 ] as const;
+
+export const COUPLE_PLANS = [
+  {
+    id: "couple-monthly",
+    priceId: "price_1T0RlgGiLeHcQYBNCY317b4O",
+    testPriceId: "price_1T0RlgGiLeHcQYBNCY317b4O",
+    name: "Miesięczny",
+    price: "8 zł",
+    period: "/ miesiąc",
+    perMonth: "4 zł/os./mies.",
+    badge: null,
+  },
+  {
+    id: "couple-semiannual",
+    priceId: "price_1T0Rm8GiLeHcQYBNEXMJdm2y",
+    testPriceId: "price_1T0Rm8GiLeHcQYBNEXMJdm2y",
+    name: "6 miesięcy",
+    price: "40 zł",
+    period: "/ 6 miesięcy",
+    perMonth: "~3,33 zł/os./mies.",
+    badge: null,
+  },
+  {
+    id: "couple-annual",
+    priceId: "price_1T0RmlGiLeHcQYBN4x5ioVWm",
+    testPriceId: "price_1T0RmlGiLeHcQYBN4x5ioVWm",
+    name: "Roczny",
+    price: "80 zł",
+    period: "/ rok",
+    perMonth: "~3,33 zł/os./mies.",
+    badge: "Najlepsza wartość",
+  },
+] as const;
+
+export const COUPLE_PRICE_IDS = [
+  "price_1T0RlgGiLeHcQYBNCY317b4O",
+  "price_1T0Rm8GiLeHcQYBNEXMJdm2y",
+  "price_1T0RmlGiLeHcQYBN4x5ioVWm",
+] as const;

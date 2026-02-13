@@ -8,15 +8,23 @@ const corsHeaders = {
 };
 
 const LIVE_PRICES = [
-  "price_1Sywb9GiLeHcQYBNBSg0kYRP",  // monthly 5 PLN
-  "price_1SywquGiLeHcQYBNjFjfgsmG",  // 6 months 25 PLN
-  "price_1SywgIGiLeHcQYBN5Ad1ffwQ",  // yearly 50 PLN
+  "price_1Sywb9GiLeHcQYBNBSg0kYRP",
+  "price_1SywquGiLeHcQYBNjFjfgsmG",
+  "price_1SywgIGiLeHcQYBN5Ad1ffwQ",
+  // Couple plans
+  "price_1T0RlgGiLeHcQYBNCY317b4O",
+  "price_1T0Rm8GiLeHcQYBNEXMJdm2y",
+  "price_1T0RmlGiLeHcQYBN4x5ioVWm",
 ];
 
 const TEST_PRICES = [
-  "price_1SywqWGiLeHcQYBNZXo0GC0K",  // monthly 5 PLN (test)
-  "price_1SywuTGiLeHcQYBNjDz7dmbc",  // 6 months 25 PLN (test)
-  "price_1SywuHGiLeHcQYBNZFskrLPn",  // yearly 50 PLN (test)
+  "price_1SywqWGiLeHcQYBNZXo0GC0K",
+  "price_1SywuTGiLeHcQYBNjDz7dmbc",
+  "price_1SywuHGiLeHcQYBNZFskrLPn",
+  // Couple plans (using live for now)
+  "price_1T0RlgGiLeHcQYBNCY317b4O",
+  "price_1T0Rm8GiLeHcQYBNEXMJdm2y",
+  "price_1T0RmlGiLeHcQYBN4x5ioVWm",
 ];
 
 serve(async (req) => {
