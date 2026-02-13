@@ -65,9 +65,9 @@ export const useExpenses = () => {
       return expense;
     },
     onSuccess: (_, expense) => {
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      notifyPartner("expenses", "Love App", `💰 Nowy wydatek: ${expense.description} — ${expense.amount} zł`, "💰");
-    },
+       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+       notifyPartner("expenses", "Nowy wydatek", `💰 ${expense.description} — ${expense.amount} zł`, "💰");
+     },
   });
 
   const deleteExpense = useMutation({

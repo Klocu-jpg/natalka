@@ -37,9 +37,9 @@ export const useCalendarEvents = () => {
       return event;
     },
     onSuccess: (_, event) => {
-      queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
-      notifyPartner("calendar", "Love App", `📅 Nowe wydarzenie: ${event.title} — ${event.date}`, "📅");
-    },
+       queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
+       notifyPartner("calendar", "Nowe wydarzenie", `📅 ${event.title} — ${event.date}`, "📅");
+     },
   });
 
   const deleteEvent = useMutation({

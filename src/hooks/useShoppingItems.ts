@@ -36,9 +36,9 @@ export const useShoppingItems = () => {
       if (error) throw error;
     },
     onSuccess: (_, name) => {
-      queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
-      notifyPartner("shopping", "Love App", `🛒 Lista zakupów: ${name}`, "🛒");
-    },
+       queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
+       notifyPartner("shopping", "Lista zakupów", `🛒 ${name}`, "🛒");
+     },
   });
 
   // Bulk add - sends only ONE push notification
@@ -50,14 +50,14 @@ export const useShoppingItems = () => {
       return names;
     },
     onSuccess: (names) => {
-      queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
-      notifyPartner(
-        "shopping",
-        "Love App",
-        `🛒 Lista zakupów: dodano ${names.length} produktów`,
-        "🛒"
-      );
-    },
+       queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
+       notifyPartner(
+         "shopping",
+         "Lista zakupów",
+         `🛒 Dodano ${names.length} produktów`,
+         "🛒"
+       );
+     },
   });
 
   const toggleItem = useMutation({

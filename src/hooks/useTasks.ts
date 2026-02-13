@@ -37,9 +37,9 @@ export const useTasks = () => {
       if (error) throw error;
     },
     onSuccess: (_, title) => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      notifyPartner("tasks", "Love App", `📝 Nowe zadanie: ${title}`, "📝");
-    },
+       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+       notifyPartner("tasks", "Nowe zadanie", `📝 ${title}`, "📝");
+     },
   });
 
   const toggleTask = useMutation({

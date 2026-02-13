@@ -516,40 +516,40 @@ const AdminPanel = () => {
               <p className="text-xs text-muted-foreground">Wyślij testowe powiadomienie na swoje urządzenie</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              {[
-                { label: "📝 Nowe zadanie", body: "📝 Nowe zadanie: Umyj naczynia", emoji: "📝" },
-                { label: "🛒 Lista zakupów", body: "🛒 Lista zakupów: Mleko, Chleb, Masło", emoji: "🛒" },
-                { label: "📅 Kalendarz", body: "📅 Nowe wydarzenie: Rocznica związku — 14.02.2026", emoji: "📅" },
-                { label: "💰 Wydatki", body: "💰 Nowy wydatek: Kolacja — 150 PLN", emoji: "💰" },
-                { label: "🍽️ Plan posiłków", body: "🍽️ Plan posiłków: Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
-                { label: "🍽️ Nowy przepis", body: "🍽️ Nowy przepis: Lasagne — Środa", emoji: "🍽️" },
-                { label: "❤️ Zaczepka", body: "❤️ Kocham Cię!", emoji: "❤️" },
-                { label: "😘 Zaczepka", body: "😘 Buziaczek!", emoji: "😘" },
-                { label: "💬 Zaczepka", body: "💬 Tęsknię za Tobą", emoji: "💬" },
-              ].map((notif, i) => (
-                <button
-                  key={i}
-                  onClick={async () => {
-                    try {
-                      const { data, error } = await supabase.functions.invoke("admin-broadcast-push", {
-                        body: { title: "Love App", body: notif.body },
-                      });
-                      if (error) throw error;
-                      toast.success(`Wysłano: ${notif.label}`);
-                    } catch {
-                      toast.error("Błąd wysyłania");
-                    }
-                  }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all text-left"
-                >
-                  <span className="text-2xl">{notif.emoji}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{notif.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{notif.body}</p>
-                  </div>
-                  <Send className="w-4 h-4 text-muted-foreground shrink-0" />
-                </button>
-              ))}
+               {[
+                 { title: "Nowe zadanie", body: "📝 Umyj naczynia", emoji: "📝" },
+                 { title: "Lista zakupów", body: "🛒 Mleko, Chleb, Masło", emoji: "🛒" },
+                 { title: "Nowe wydarzenie", body: "📅 Rocznica związku — 14.02.2026", emoji: "📅" },
+                 { title: "Nowy wydatek", body: "💰 Kolacja — 150 PLN", emoji: "💰" },
+                 { title: "Plan posiłków", body: "🍽️ Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
+                 { title: "Nowy przepis", body: "🍽️ Lasagne — Środa", emoji: "🍽️" },
+                 { title: "Zaczepka", body: "❤️ Kocham Cię!", emoji: "❤️" },
+                 { title: "Zaczepka", body: "😘 Buziaczek!", emoji: "😘" },
+                 { title: "Zaczepka", body: "💬 Tęsknię za Tobą", emoji: "💬" },
+               ].map((notif, i) => (
+                 <button
+                   key={i}
+                   onClick={async () => {
+                     try {
+                       const { data, error } = await supabase.functions.invoke("admin-broadcast-push", {
+                         body: { title: notif.title, body: notif.body },
+                       });
+                       if (error) throw error;
+                       toast.success(`Wysłano: ${notif.title}`);
+                     } catch {
+                       toast.error("Błąd wysyłania");
+                     }
+                   }}
+                   className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all text-left"
+                 >
+                   <span className="text-2xl">{notif.emoji}</span>
+                   <div className="min-w-0 flex-1">
+                     <p className="text-sm font-medium truncate">{notif.title}</p>
+                     <p className="text-xs text-muted-foreground truncate">{notif.body}</p>
+                   </div>
+                   <Send className="w-4 h-4 text-muted-foreground shrink-0" />
+                 </button>
+               ))}
             </CardContent>
           </Card>
         </div>
