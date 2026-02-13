@@ -132,7 +132,7 @@ const PeriodTracker = () => {
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cycleLength, setCycleLength] = useState(averageCycleLength.toString());
-  const [showCalendar, setShowCalendar] = useState(false);
+  
 
   // Only show for female users
   if (profile?.gender !== "female") {
@@ -293,23 +293,32 @@ const PeriodTracker = () => {
             </div>
           )}
 
-          {/* Calendar toggle & calendar */}
-          {entries.length > 0 && (
-            <>
+          {/* Calendar button - always visible */}
+          <Dialog>
+            <DialogTrigger asChild>
               <button
-                onClick={() => setShowCalendar(!showCalendar)}
-                className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors py-1"
+                className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors py-2 rounded-xl bg-secondary/50 hover:bg-secondary/70"
               >
-                {showCalendar ? "Ukryj kalendarz" : "📅 Pokaż kalendarz cyklu"}
+                📅 Kalendarz cyklu
               </button>
-
-              {showCalendar && (
-                <div className="bg-secondary/30 rounded-xl p-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <CycleCalendar cycleEvents={cycleEvents} />
-                </div>
-              )}
-            </>
-          )}
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Droplets className="w-5 h-5 text-rose-500" />
+                  Kalendarz cyklu
+                </DialogTitle>
+              </DialogHeader>
+              <div className="pt-2">
+                <CycleCalendar cycleEvents={cycleEvents} />
+                {entries.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Zaznacz swój pierwszy okres, aby zobaczyć prognozy cyklu
+                  </p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Cycle info */}
           {entries.length > 0 && (
