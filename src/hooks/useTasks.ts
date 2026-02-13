@@ -38,7 +38,7 @@ export const useTasks = () => {
     },
     onSuccess: (_, title) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      notifyPartner("tasks", "📝 Nowe zadanie", title, "📝");
+      notifyPartner("tasks", "Love App", `📝 Nowe zadanie: ${title}`, "📝");
     },
   });
 

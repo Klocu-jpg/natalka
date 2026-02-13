@@ -59,7 +59,7 @@ export const useNudges = () => {
       if (error) throw error;
 
       // Send push notification to partner
-      sendPushToPartner(partnerId, `${emoji || "💌"} Zaczepka`, message, emoji);
+      sendPushToPartner(partnerId, "Love App", `${emoji || "💌"} ${message}`, emoji);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["nudges"] }),
   });

@@ -37,7 +37,7 @@ export const useShoppingItems = () => {
     },
     onSuccess: (_, name) => {
       queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
-      notifyPartner("shopping", "🛒 Lista zakupów", `Dodano: ${name}`, "🛒");
+      notifyPartner("shopping", "Love App", `🛒 Lista zakupów: ${name}`, "🛒");
     },
   });
 
@@ -53,8 +53,8 @@ export const useShoppingItems = () => {
       queryClient.invalidateQueries({ queryKey: ["shopping_items"] });
       notifyPartner(
         "shopping",
-        "🛒 Lista zakupów",
-        `Dodano ${names.length} produktów`,
+        "Love App",
+        `🛒 Lista zakupów: dodano ${names.length} produktów`,
         "🛒"
       );
     },

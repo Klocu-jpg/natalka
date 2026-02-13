@@ -517,25 +517,25 @@ const AdminPanel = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { title: "📝 Nowe zadanie", body: "Umyj naczynia", emoji: "📝" },
-                { title: "🛒 Lista zakupów", body: "Mleko, Chleb, Masło", emoji: "🛒" },
-                { title: "📅 Kalendarz", body: "Rocznica związku — 14.02.2026", emoji: "📅" },
-                { title: "💰 Wydatki", body: "Kolacja — 150 PLN", emoji: "💰" },
-                { title: "🍽️ Plan posiłków", body: "Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
-                { title: "🍽️ Nowy przepis", body: "Lasagne — Środa", emoji: "🍽️" },
-                { title: "❤️ Zaczepka", body: "Kocham Cię!", emoji: "❤️" },
-                { title: "😘 Zaczepka", body: "Buziaczek!", emoji: "😘" },
-                { title: "💬 Zaczepka", body: "Tęsknię za Tobą", emoji: "💬" },
+                { label: "📝 Nowe zadanie", body: "📝 Nowe zadanie: Umyj naczynia", emoji: "📝" },
+                { label: "🛒 Lista zakupów", body: "🛒 Lista zakupów: Mleko, Chleb, Masło", emoji: "🛒" },
+                { label: "📅 Kalendarz", body: "📅 Nowe wydarzenie: Rocznica związku — 14.02.2026", emoji: "📅" },
+                { label: "💰 Wydatki", body: "💰 Nowy wydatek: Kolacja — 150 PLN", emoji: "💰" },
+                { label: "🍽️ Plan posiłków", body: "🍽️ Plan posiłków: Spaghetti Bolognese — Poniedziałek", emoji: "🍽️" },
+                { label: "🍽️ Nowy przepis", body: "🍽️ Nowy przepis: Lasagne — Środa", emoji: "🍽️" },
+                { label: "❤️ Zaczepka", body: "❤️ Kocham Cię!", emoji: "❤️" },
+                { label: "😘 Zaczepka", body: "😘 Buziaczek!", emoji: "😘" },
+                { label: "💬 Zaczepka", body: "💬 Tęsknię za Tobą", emoji: "💬" },
               ].map((notif, i) => (
                 <button
                   key={i}
                   onClick={async () => {
                     try {
                       const { data, error } = await supabase.functions.invoke("admin-broadcast-push", {
-                        body: { title: notif.title, body: notif.body },
+                        body: { title: "Love App", body: notif.body },
                       });
                       if (error) throw error;
-                      toast.success(`Wysłano: ${notif.title}`);
+                      toast.success(`Wysłano: ${notif.label}`);
                     } catch {
                       toast.error("Błąd wysyłania");
                     }
@@ -544,7 +544,7 @@ const AdminPanel = () => {
                 >
                   <span className="text-2xl">{notif.emoji}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{notif.title}</p>
+                    <p className="text-sm font-medium truncate">{notif.label}</p>
                     <p className="text-xs text-muted-foreground truncate">{notif.body}</p>
                   </div>
                   <Send className="w-4 h-4 text-muted-foreground shrink-0" />
