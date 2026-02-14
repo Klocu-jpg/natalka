@@ -128,6 +128,8 @@ const PeriodTracker = () => {
     isPeriodActive,
     currentDayOfPeriod,
     cycleEvents,
+    currentPhase,
+    dayInCycle,
   } = usePeriodTracker();
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -277,6 +279,22 @@ const PeriodTracker = () => {
               )}
             </p>
           </div>
+
+          {/* Current phase indicator - like Flo */}
+          {entries.length > 0 && !isPeriodActive && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50">
+              <span className="text-2xl">{currentPhase.emoji}</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold">{currentPhase.phase}</p>
+                  {dayInCycle && (
+                    <span className="text-xs text-muted-foreground">Dzień {dayInCycle}</span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{currentPhase.description}</p>
+              </div>
+            </div>
+          )}
 
           {/* Next period prediction */}
           {!isPeriodActive && nextPeriodDate && daysUntilNext !== null && entries.length > 0 && (
