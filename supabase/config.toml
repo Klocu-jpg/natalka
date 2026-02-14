@@ -3,6 +3,9 @@ project_id = "butjvqkzaxavgigxojfv"
 [functions.generate-recipe]
 verify_jwt = false
 
+[functions.generate-recipe-from-url]
+verify_jwt = false
+
 [functions.send-push]
 verify_jwt = false
 

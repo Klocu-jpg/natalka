@@ -136,21 +136,45 @@ export const usePeriodTracker = () => {
       }
     }
 
-    // Predicted next period (5 days)
-    if (nextPeriodDate && !isPeriodActive) {
-      for (let d = 0; d < 5; d++) {
-        events.push({ date: addDays(nextPeriodDate, d), type: "predicted-period" });
+    // Predict multiple future cycles (like Flo - 6 months ahead)
+    const baseDate = latestEntry ? new Date(latestEntry.start_date) : null;
+    if (baseDate && !isPeriodActive) {
+      const numPredictions = 6;
+      for (let cycle = 1; cycle <= numPredictions; cycle++) {
+        const predictedStart = addDays(baseDate, averageCycleLength * cycle);
+        // Predicted period (5 days)
+        for (let d = 0; d < 5; d++) {
+          events.push({ date: addDays(predictedStart, d), type: "predicted-period" });
+        }
+        // Predicted ovulation & fertile window
+        const fertile = getFertileWindow(predictedStart, averageCycleLength);
+        const fertileDays = differenceInDays(fertile.end, fertile.start) + 1;
+        for (let d = 0; d < fertileDays; d++) {
+          const day = addDays(fertile.start, d);
+          if (differenceInDays(day, fertile.ovulationDay) === 0) {
+            events.push({ date: day, type: "ovulation" });
+          } else {
+            events.push({ date: day, type: "fertile" });
+          }
+        }
       }
-      // Predicted next ovulation & fertile window
-      const nextCycleLen = averageCycleLength;
-      const nextFertile = getFertileWindow(nextPeriodDate, nextCycleLen);
-      const nextFertileDays = differenceInDays(nextFertile.end, nextFertile.start) + 1;
-      for (let d = 0; d < nextFertileDays; d++) {
-        const day = addDays(nextFertile.start, d);
-        if (differenceInDays(day, nextFertile.ovulationDay) === 0) {
-          events.push({ date: day, type: "ovulation" });
-        } else {
-          events.push({ date: day, type: "fertile" });
+    } else if (baseDate && isPeriodActive) {
+      // Even during active period, predict the NEXT cycles
+      const numPredictions = 6;
+      for (let cycle = 1; cycle <= numPredictions; cycle++) {
+        const predictedStart = addDays(baseDate, averageCycleLength * cycle);
+        for (let d = 0; d < 5; d++) {
+          events.push({ date: addDays(predictedStart, d), type: "predicted-period" });
+        }
+        const fertile = getFertileWindow(predictedStart, averageCycleLength);
+        const fertileDays = differenceInDays(fertile.end, fertile.start) + 1;
+        for (let d = 0; d < fertileDays; d++) {
+          const day = addDays(fertile.start, d);
+          if (differenceInDays(day, fertile.ovulationDay) === 0) {
+            events.push({ date: day, type: "ovulation" });
+          } else {
+            events.push({ date: day, type: "fertile" });
+          }
         }
       }
     }
@@ -159,6 +183,42 @@ export const usePeriodTracker = () => {
   };
 
   const cycleEvents = entries.length > 0 ? getCycleEvents() : [];
+
+  // Current cycle phase (like Flo)
+  const getCurrentPhase = (): { phase: string; emoji: string; description: string } => {
+    if (isPeriodActive) {
+      return { phase: "Menstruacja", emoji: "🔴", description: "Trwa okres menstruacyjny" };
+    }
+    if (!latestEntry) {
+      return { phase: "Brak danych", emoji: "❓", description: "Zaznacz swój okres" };
+    }
+    
+    const today = new Date();
+    const lastStart = new Date(latestEntry.start_date);
+    const dayInCycle = differenceInDays(today, lastStart) + 1;
+    const cycleLen = averageCycleLength;
+    const ovulationDay = cycleLen - 14;
+    
+    if (dayInCycle >= ovulationDay - 5 && dayInCycle <= ovulationDay + 1) {
+      if (dayInCycle === ovulationDay) {
+        return { phase: "Owulacja", emoji: "🥚", description: "Dzień owulacji — najwyższa płodność" };
+      }
+      return { phase: "Okno płodne", emoji: "🌿", description: "Wysoka szansa na zapłodnienie" };
+    }
+    
+    if (dayInCycle < ovulationDay - 5) {
+      return { phase: "Faza folikularna", emoji: "🌸", description: "Przed owulacją — wzrost energii" };
+    }
+    
+    return { phase: "Faza lutealna", emoji: "🌙", description: "Po owulacji — przed następnym okresem" };
+  };
+
+  const currentPhase = getCurrentPhase();
+  
+  // Day in cycle
+  const dayInCycle = latestEntry && !isPeriodActive
+    ? differenceInDays(new Date(), new Date(latestEntry.start_date)) + 1
+    : null;
 
   return { 
     entries, 
@@ -174,5 +234,7 @@ export const usePeriodTracker = () => {
     isPeriodActive,
     currentDayOfPeriod,
     cycleEvents,
+    currentPhase,
+    dayInCycle,
   };
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus, Edit, ShoppingCart } from "lucide-react";
+import { BookOpen, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus, Edit, ShoppingCart, Link, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFavoriteRecipes, FavoriteRecipe } from "@/hooks/useFavoriteRecipes";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
 import { useMeals, Ingredient } from "@/hooks/useMeals";
+import { supabase } from "@/integrations/supabase/client";
 import WidgetWrapper from "./WidgetWrapper";
 import { toast } from "sonner";
 
@@ -40,6 +41,12 @@ const FavoriteRecipes = () => {
   const [formIngredients, setFormIngredients] = useState<Ingredient[]>([]);
   const [newIngredientName, setNewIngredientName] = useState("");
   const [newIngredientAmount, setNewIngredientAmount] = useState("");
+  
+  // URL import state
+  const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [urlPreview, setUrlPreview] = useState<{ name: string; recipe: string; ingredients: Ingredient[] } | null>(null);
 
   const openRecipe = (recipe: FavoriteRecipe) => {
     setSelectedRecipe(recipe);
@@ -54,6 +61,53 @@ const FavoriteRecipes = () => {
     setFormRecipe("");
     setFormIngredients([]);
     setIsAddDialogOpen(true);
+  };
+
+  const handleFetchFromUrl = async () => {
+    if (!urlInput.trim()) {
+      toast.error("Wklej link do przepisu");
+      return;
+    }
+    setIsLoadingUrl(true);
+    setUrlPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-recipe-from-url", {
+        body: { url: urlInput.trim() },
+      });
+      if (error) throw error;
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+      // Show preview - user can edit before saving
+      setUrlPreview({ name: data.name, recipe: data.recipe, ingredients: data.ingredients || [] });
+      // Pre-fill form for editing
+      setFormName(data.name);
+      setFormRecipe(data.recipe);
+      setFormIngredients(data.ingredients || []);
+    } catch (err: any) {
+      toast.error(err.message || "Nie udało się pobrać przepisu");
+    } finally {
+      setIsLoadingUrl(false);
+    }
+  };
+
+  const handleConfirmUrlRecipe = () => {
+    if (!formName.trim() || !formRecipe.trim()) {
+      toast.error("Podaj nazwę i przepis");
+      return;
+    }
+    addFavoriteRecipe.mutate({
+      name: formName.trim(),
+      recipe: formRecipe.trim(),
+      ingredients: formIngredients,
+    }, {
+      onSuccess: () => {
+        setIsUrlDialogOpen(false);
+        setUrlPreview(null);
+        setUrlInput("");
+      }
+    });
   };
 
   const openEditMode = () => {
@@ -177,58 +231,70 @@ const FavoriteRecipes = () => {
       icon={<BookOpen className="w-5 h-5 text-foreground" />}
       iconBg="bg-amber-100"
       actions={
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="icon" variant="soft" className="h-8 w-8" onClick={openAddDialog}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[85vh]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <ChefHat className="w-5 h-5" />
-                Dodaj własny przepis
-              </DialogTitle>
-            </DialogHeader>
-            <ScrollArea className="max-h-[65vh] pr-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Nazwa dania</label>
-                  <Input
-                    placeholder="Np. Spaghetti bolognese"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                  />
+        <div className="flex gap-1">
+          <Button size="icon" variant="soft" className="h-8 w-8" onClick={() => {
+            setUrlInput("");
+            setUrlPreview(null);
+            setFormName("");
+            setFormRecipe("");
+            setFormIngredients([]);
+            setIsUrlDialogOpen(true);
+          }}>
+            <Link className="w-4 h-4" />
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="soft" className="h-8 w-8" onClick={openAddDialog}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[85vh]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ChefHat className="w-5 h-5" />
+                  Dodaj własny przepis
+                </DialogTitle>
+              </DialogHeader>
+              <ScrollArea className="max-h-[65vh] pr-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Nazwa dania</label>
+                    <Input
+                      placeholder="Np. Spaghetti bolognese"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                    />
+                  </div>
+                  
+                  {renderIngredientForm()}
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Przepis</label>
+                    <Textarea
+                      placeholder="Opisz krok po kroku jak przygotować danie..."
+                      value={formRecipe}
+                      onChange={(e) => setFormRecipe(e.target.value)}
+                      className="min-h-[150px]"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleSaveRecipe} 
+                    className="w-full"
+                    disabled={addFavoriteRecipe.isPending}
+                  >
+                    {addFavoriteRecipe.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4 mr-2" />
+                    )}
+                    Zapisz przepis
+                  </Button>
                 </div>
-                
-                {renderIngredientForm()}
-                
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Przepis</label>
-                  <Textarea
-                    placeholder="Opisz krok po kroku jak przygotować danie..."
-                    value={formRecipe}
-                    onChange={(e) => setFormRecipe(e.target.value)}
-                    className="min-h-[150px]"
-                  />
-                </div>
-                
-                <Button 
-                  onClick={handleSaveRecipe} 
-                  className="w-full"
-                  disabled={addFavoriteRecipe.isPending}
-                >
-                  {addFavoriteRecipe.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
-                  )}
-                  Zapisz przepis
-                </Button>
-              </div>
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        </div>
       }
     >
       {isLoading ? (
@@ -419,6 +485,93 @@ const FavoriteRecipes = () => {
                 </div>
               </div>
             )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* URL Import Dialog */}
+      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
+        <DialogContent className="max-w-md max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Importuj przepis z linku
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[65vh] pr-4">
+            <div className="space-y-4">
+              {!urlPreview ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Link do przepisu</label>
+                    <Input
+                      placeholder="https://przepisy.pl/spaghetti-bolognese"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      type="url"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Wklej link do strony z przepisem — AI wyodrębni składniki i instrukcje
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleFetchFromUrl}
+                    className="w-full"
+                    disabled={isLoadingUrl || !urlInput.trim()}
+                  >
+                    {isLoadingUrl ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Pobieram przepis...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Pobierz przepis
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded-lg">
+                    ✨ AI wyodrębniło przepis — możesz go edytować przed zapisaniem
+                  </p>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Nazwa dania</label>
+                    <Input
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                    />
+                  </div>
+                  
+                  {renderIngredientForm()}
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Przepis</label>
+                    <Textarea
+                      value={formRecipe}
+                      onChange={(e) => setFormRecipe(e.target.value)}
+                      className="min-h-[150px]"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setUrlPreview(null)} className="flex-1">
+                      Wróć
+                    </Button>
+                    <Button onClick={handleConfirmUrlRecipe} className="flex-1" disabled={addFavoriteRecipe.isPending}>
+                      {addFavoriteRecipe.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4 mr-2" />
+                      )}
+                      Zapisz przepis
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
