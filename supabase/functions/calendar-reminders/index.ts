@@ -9,11 +9,8 @@ const corsHeaders = {
 // ── Base64url helpers ──────────────────────────────────────────────
 
 function base64urlToUint8Array(base64url: string): Uint8Array {
-  // 1. Strip whitespace
   let s = base64url.replace(/\s/g, "");
-  // 2. Convert base64url → standard base64 chars
   s = s.replace(/-/g, "+").replace(/_/g, "/");
-  // 3. Strip existing padding, then re-add correct padding
   s = s.replace(/=+$/, "");
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const raw = atob(s + pad);
@@ -70,13 +67,11 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
     new TextEncoder().encode(unsignedToken)
   );
 
-  // Convert DER signature to raw r||s format if needed
   const sigArray = new Uint8Array(signature);
   let rawSig: Uint8Array;
   if (sigArray.length === 64) {
     rawSig = sigArray;
   } else {
-    // DER encoded - extract r and s
     const r = sigArray.slice(4, 4 + sigArray[3]);
     const sOffset = 4 + sigArray[3] + 2;
     const s = sigArray.slice(sOffset, sOffset + sigArray[sOffset - 1]);
@@ -88,7 +83,7 @@ async function createJWT(vapidPrivateKey: string, vapidPublicKey: string, audien
   return `${unsignedToken}.${uint8ArrayToBase64url(rawSig)}`;
 }
 
-// ── RFC 8291 Web Push Encryption (aes128gcm) ──────────────────────
+// ── RFC 8291 Web Push Encryption ──────────────────────────────────
 
 async function encryptPayload(
   payloadText: string,
@@ -98,14 +93,12 @@ async function encryptPayload(
   const subscriberPubKeyBytes = base64urlToUint8Array(subscriberP256dh);
   const authSecret = base64urlToUint8Array(subscriberAuth);
 
-  // 1. Generate local ephemeral ECDH key pair
   const localKeyPair = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
     ["deriveBits"]
   );
 
-  // 2. Import subscriber's public key
   const subscriberCryptoKey = await crypto.subtle.importKey(
     "raw",
     subscriberPubKeyBytes,
@@ -114,7 +107,6 @@ async function encryptPayload(
     []
   );
 
-  // 3. ECDH shared secret
   const sharedSecret = new Uint8Array(
     await crypto.subtle.deriveBits(
       { name: "ECDH", public: subscriberCryptoKey },
@@ -123,13 +115,10 @@ async function encryptPayload(
     )
   );
 
-  // 4. Export local public key (65 bytes, uncompressed)
   const localPubKeyRaw = new Uint8Array(
     await crypto.subtle.exportKey("raw", localKeyPair.publicKey)
   );
 
-  // 5. Derive IKM via HKDF (RFC 8291 Section 3.3)
-  // info = "WebPush: info\0" || ua_public || as_public
   const encoder = new TextEncoder();
   const webpushInfo = concatUint8Arrays(
     encoder.encode("WebPush: info\0"),
@@ -137,13 +126,7 @@ async function encryptPayload(
     localPubKeyRaw
   );
 
-  const sharedSecretKey = await crypto.subtle.importKey(
-    "raw",
-    sharedSecret,
-    "HKDF",
-    false,
-    ["deriveBits"]
-  );
+  const sharedSecretKey = await crypto.subtle.importKey("raw", sharedSecret, "HKDF", false, ["deriveBits"]);
 
   const ikm = new Uint8Array(
     await crypto.subtle.deriveBits(
@@ -153,17 +136,8 @@ async function encryptPayload(
     )
   );
 
-  // 6. Generate random 16-byte salt
   const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  // 7. Derive CEK and nonce from IKM + salt
-  const ikmKey = await crypto.subtle.importKey(
-    "raw",
-    ikm,
-    "HKDF",
-    false,
-    ["deriveBits"]
-  );
+  const ikmKey = await crypto.subtle.importKey("raw", ikm, "HKDF", false, ["deriveBits"]);
 
   const cekBits = await crypto.subtle.deriveBits(
     { name: "HKDF", hash: "SHA-256", salt, info: encoder.encode("Content-Encoding: aes128gcm\0") },
@@ -177,20 +151,12 @@ async function encryptPayload(
     96
   );
 
-  // 8. Pad and encrypt payload
   const payloadBytes = encoder.encode(payloadText);
-  // Add padding delimiter (0x02 = final record) + no extra padding
   const paddedPayload = new Uint8Array(payloadBytes.length + 1);
   paddedPayload.set(payloadBytes);
-  paddedPayload[payloadBytes.length] = 2; // delimiter for final record
+  paddedPayload[payloadBytes.length] = 2;
 
-  const encryptKey = await crypto.subtle.importKey(
-    "raw",
-    cekBits,
-    "AES-GCM",
-    false,
-    ["encrypt"]
-  );
+  const encryptKey = await crypto.subtle.importKey("raw", cekBits, "AES-GCM", false, ["encrypt"]);
 
   const encrypted = new Uint8Array(
     await crypto.subtle.encrypt(
@@ -200,10 +166,8 @@ async function encryptPayload(
     )
   );
 
-  // 9. Build aes128gcm content coding header
-  // salt (16) || rs (4, big-endian) || idlen (1) || keyid (65 = local public key)
   const rs = 4096;
-  const header = new Uint8Array(86); // 16 + 4 + 1 + 65
+  const header = new Uint8Array(86);
   header.set(salt, 0);
   header[16] = (rs >> 24) & 0xff;
   header[17] = (rs >> 16) & 0xff;
@@ -215,8 +179,6 @@ async function encryptPayload(
   return concatUint8Arrays(header, encrypted);
 }
 
-// ── Send Web Push ──────────────────────────────────────────────────
-
 async function sendWebPush(
   subscription: { endpoint: string; p256dh: string; auth: string },
   payload: string,
@@ -225,10 +187,7 @@ async function sendWebPush(
 ) {
   const url = new URL(subscription.endpoint);
   const audience = `${url.protocol}//${url.host}`;
-
   const jwt = await createJWT(vapidPrivateKey, vapidPublicKey, audience);
-
-  // Encrypt payload per RFC 8291
   const encryptedBody = await encryptPayload(payload, subscription.p256dh, subscription.auth);
 
   const response = await fetch(subscription.endpoint, {
@@ -251,7 +210,6 @@ async function sendWebPush(
       return { gone: true, endpoint: subscription.endpoint };
     }
   }
-
   return { gone: false };
 }
 
@@ -263,79 +221,99 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { recipientId, title, body, emoji } = await req.json();
-
-    if (!recipientId || !title || !body) {
-      return new Response(JSON.stringify({ error: "Missing fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: subscriptions, error: subError } = await adminClient
-      .from("push_subscriptions")
+    // Get tomorrow's date in UTC
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    // Find all calendar events happening tomorrow
+    const { data: events, error: eventsError } = await adminClient
+      .from("calendar_events")
       .select("*")
-      .eq("user_id", recipientId);
+      .eq("date", tomorrowStr);
 
-    if (subError) throw subError;
+    if (eventsError) throw eventsError;
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: "No subscriptions" }), {
+    if (!events || events.length === 0) {
+      return new Response(JSON.stringify({ sent: 0, message: "No events tomorrow" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
-    const payload = JSON.stringify({ title, body, emoji, url: "/" });
+    // Also check event_countdowns
+    const { data: countdowns, error: countdownError } = await adminClient
+      .from("event_countdowns")
+      .select("*")
+      .eq("date", tomorrowStr);
 
-    let sent = 0;
-    for (const sub of subscriptions) {
-      try {
-        const result = await sendWebPush(
-          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-          payload,
-          vapidPublicKey,
-          vapidPrivateKey
-        );
-        if (result.gone) {
-          await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-        } else {
-          sent++;
-        }
-      } catch (e) {
-        console.error("Push error for endpoint:", sub.endpoint, e);
+    if (countdownError) throw countdownError;
+
+    // Collect all user IDs that need notifications
+    const userNotifications = new Map<string, string[]>(); // userId -> messages[]
+
+    for (const event of events) {
+      const msgs = userNotifications.get(event.user_id) || [];
+      msgs.push(`📅 Jutro: ${event.title}`);
+      userNotifications.set(event.user_id, msgs);
+    }
+
+    if (countdowns) {
+      for (const cd of countdowns) {
+        const msgs = userNotifications.get(cd.user_id) || [];
+        msgs.push(`${cd.emoji || "🎯"} Jutro: ${cd.title}`);
+        userNotifications.set(cd.user_id, msgs);
       }
     }
 
-    return new Response(JSON.stringify({ sent }), {
+    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
+
+    let totalSent = 0;
+
+    for (const [userId, messages] of userNotifications.entries()) {
+      // Get push subscriptions for this user
+      const { data: subscriptions } = await adminClient
+        .from("push_subscriptions")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (!subscriptions || subscriptions.length === 0) continue;
+
+      const body = messages.join("\n");
+      const payload = JSON.stringify({
+        title: "Przypomnienie 🔔",
+        body,
+        url: "/",
+        urgency: "high",
+        requireInteraction: true,
+      });
+
+      for (const sub of subscriptions) {
+        try {
+          const result = await sendWebPush(
+            { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+            payload,
+            vapidPublicKey,
+            vapidPrivateKey
+          );
+          if (result.gone) {
+            await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+          } else {
+            totalSent++;
+          }
+        } catch (e) {
+          console.error("Push error:", e);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ sent: totalSent, events: events.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
