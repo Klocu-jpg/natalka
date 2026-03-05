@@ -30,10 +30,12 @@ self.addEventListener("push", (event) => {
     body: data.body,
     icon: "/favicon.png",
     badge: "/favicon.png",
-    vibrate: [200, 100, 200],
-    tag: "nudge-notification",
+    vibrate: [200, 100, 200, 100, 200],
+    tag: data.tag || "love-app-notification",
     renotify: true,
+    requireInteraction: data.requireInteraction || false,
     data: { url: data.url || "/" },
+    actions: data.actions || [],
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
