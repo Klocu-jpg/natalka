@@ -238,6 +238,7 @@ async function sendWebPush(
       "Content-Encoding": "aes128gcm",
       Authorization: `vapid t=${jwt}, k=${vapidPublicKey}`,
       TTL: "86400",
+      Urgency: "high",
       "Content-Length": String(encryptedBody.byteLength),
     },
     body: encryptedBody,
