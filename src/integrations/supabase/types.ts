@@ -71,6 +71,50 @@ export type Database = {
         }
         Relationships: []
       }
+      chores: {
+        Row: {
+          assigned_to: string | null
+          completed: boolean
+          couple_id: string | null
+          created_at: string
+          day_of_week: number
+          id: string
+          recurring: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed?: boolean
+          couple_id?: string | null
+          created_at?: string
+          day_of_week: number
+          id?: string
+          recurring?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed?: boolean
+          couple_id?: string | null
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          recurring?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chores_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couple_anniversaries: {
         Row: {
           couple_id: string

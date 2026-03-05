@@ -14,7 +14,7 @@ export const TABS: TabConfig[] = [
     id: "lists",
     label: "Listy",
     icon: <ListTodo className="w-5 h-5" />,
-    widgets: ["shopping-list", "task-list", "shared-notes"],
+    widgets: ["shopping-list", "task-list", "chores-planner", "shared-notes"],
   },
   {
     id: "finance",
