@@ -48,7 +48,7 @@ const SharedRecipe = () => {
         </div>
         <h1 className="text-xl font-heading font-bold mb-2">Zaloguj się, aby zobaczyć przepis</h1>
         <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-          Ktoś udostępnił Ci przepis z Lovers App. Zaloguj się lub załóż konto, aby go zobaczyć.
+          Ktoś udostępnił Ci przepis z LoveApp. Zaloguj się lub załóż konto, aby go zobaczyć.
         </p>
         <div className="flex gap-3">
           <Button onClick={() => navigate("/auth")} className="gap-2">
@@ -72,7 +72,7 @@ const SharedRecipe = () => {
         </div>
         <h1 className="text-xl font-heading font-bold mb-2">Potrzebujesz subskrypcji</h1>
         <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-          Aby zobaczyć udostępnione przepisy, potrzebujesz aktywnej subskrypcji Lovers App.
+          Aby zobaczyć udostępnione przepisy, potrzebujesz aktywnej subskrypcji LoveApp.
         </p>
         <div className="flex gap-3">
           <Button onClick={() => navigate("/")} className="gap-2">
@@ -130,7 +130,7 @@ const SharedRecipe = () => {
             </div>
             <div>
               <h1 className="font-heading font-bold text-lg">{recipe.name}</h1>
-              <p className="text-xs text-muted-foreground">Udostępniony przepis z Lovers App</p>
+              <p className="text-xs text-muted-foreground">Udostępniony przepis z LoveApp</p>
             </div>
           </div>
 

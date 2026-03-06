@@ -1,6 +1,6 @@
 {
-  "name": "Love App",
-  "short_name": "Love App",
+  "name": "LoveApp",
+  "short_name": "LoveApp",
   "description": "Aplikacja dla par - wspólne planowanie, listy zakupów, kalendarz i więcej 💕",
   "start_url": "/",
   "display": "standalone",

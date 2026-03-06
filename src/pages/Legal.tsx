@@ -3,7 +3,7 @@ import { ArrowLeft, Shield, FileText, Cookie, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const APP_NAME = "Love App";
+const APP_NAME = "LoveApp";
 const APP_URL = "loversapp.lovable.app";
 const CONTACT_EMAIL = "kontakt@loveapp.pl";
 const LAST_UPDATED = "13 lutego 2026";

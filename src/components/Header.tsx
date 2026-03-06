@@ -38,7 +38,7 @@ const Header = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-primary animate-heart-beat" fill="currentColor" />
             <h1 className="text-lg sm:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
-              Love App
+              LoveApp
             </h1>
           </div>
           

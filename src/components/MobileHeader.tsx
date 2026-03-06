@@ -55,7 +55,7 @@ const MobileHeader = ({ activeTab }: MobileHeaderProps) => {
             {currentTab?.icon || <Heart className="w-5 h-5" fill="currentColor" />}
           </div>
            <h1 className="text-lg font-heading font-bold text-foreground">
-            {currentTab?.label || "Love App"}
+            {currentTab?.label || "LoveApp"}
           </h1>
         </div>
         

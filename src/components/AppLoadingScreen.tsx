@@ -51,7 +51,7 @@ const AppLoadingScreen = () => {
         className="text-2xl font-heading font-bold text-foreground tracking-wide z-10 animate-fade-in"
         style={{ animationDelay: "0.2s", animationFillMode: "both" }}
       >
-        Lovers App
+        LoveApp
       </h1>
       <p
         className="text-xs text-muted-foreground mt-1 z-10 animate-fade-in"
