@@ -35,7 +35,7 @@ const Landing = () => {
           </div>
           <h1 className="text-4xl sm:text-5xl font-heading font-bold leading-tight">
             <span className="bg-gradient-to-r from-primary to-coral bg-clip-text text-transparent">
-              Love App
+              LoveApp
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
@@ -160,7 +160,7 @@ const Landing = () => {
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Heart className="w-4 h-4 text-primary" fill="currentColor" />
-            <span>Love App</span>
+            <span>LoveApp</span>
           </div>
           <div className="flex gap-4">
             <a href="/prawne/regulamin" className="hover:text-primary transition-colors">Regulamin</a>

@@ -177,7 +177,7 @@ const Index = () => {
 
       <footer className="py-8 text-center">
         <p className="text-muted-foreground text-sm">
-          Love App
+          LoveApp
         </p>
       </footer>
     </div>

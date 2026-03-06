@@ -67,7 +67,7 @@ const PWAInstallPrompt = () => {
     {
       icon: <Heart className="w-8 h-8 text-primary" fill="currentColor" />,
       title: "Krok 3: Gotowe!",
-      desc: 'Kliknij "Dodaj" i Love App pojawi się na Twoim ekranie jak prawdziwa aplikacja!',
+      desc: 'Kliknij "Dodaj" i LoveApp pojawi się na Twoim ekranie jak prawdziwa aplikacja!',
     },
   ];
 
@@ -85,7 +85,7 @@ const PWAInstallPrompt = () => {
     {
       icon: <Heart className="w-8 h-8 text-primary" fill="currentColor" />,
       title: "Krok 3: Gotowe!",
-      desc: "Love App pojawi się na Twoim ekranie jak prawdziwa aplikacja!",
+      desc: "LoveApp pojawi się na Twoim ekranie jak prawdziwa aplikacja!",
     },
   ];
 
@@ -102,7 +102,7 @@ const PWAInstallPrompt = () => {
       <div className="flex items-center justify-between px-4 py-3 pt-safe">
         <div className="flex items-center gap-2">
           <Heart className="w-6 h-6 text-primary" fill="currentColor" />
-          <span className="font-heading font-bold text-lg">Love App</span>
+          <span className="font-heading font-bold text-lg">LoveApp</span>
         </div>
         <button
           onClick={handleDismiss}
@@ -119,7 +119,7 @@ const PWAInstallPrompt = () => {
             <Heart className="w-10 h-10 text-primary-foreground" fill="currentColor" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-            Zainstaluj Love App
+            Zainstaluj LoveApp
           </h1>
           <p className="text-muted-foreground text-sm">
             Dodaj do ekranu głównego, żeby korzystać jak z prawdziwej aplikacji!
