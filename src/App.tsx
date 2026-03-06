@@ -10,6 +10,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import AppLoadingScreen from "@/components/AppLoadingScreen";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Legal from "./pages/Legal";
