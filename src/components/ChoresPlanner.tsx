@@ -313,6 +313,7 @@ const ChoresPlanner = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
                 ) : (
                   <button
                     onClick={() => {
