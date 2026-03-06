@@ -27,11 +27,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, isLoading: adminLoading } = useAdmin();
 
   if (loading || subLoading || adminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary">Ładowanie...</div>
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (!user) {
@@ -49,11 +45,7 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary">Ładowanie...</div>
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (user) {
@@ -67,11 +59,7 @@ const LandingRoute = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary">Ładowanie...</div>
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (user) {
