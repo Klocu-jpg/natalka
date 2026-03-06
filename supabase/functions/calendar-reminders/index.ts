@@ -213,6 +213,52 @@ async function sendWebPush(
   return { gone: false };
 }
 
+// ── Helper: send push to user ─────────────────────────────────────
+
+async function sendPushToUser(
+  adminClient: any,
+  userId: string,
+  title: string,
+  body: string,
+  vapidPublicKey: string,
+  vapidPrivateKey: string
+): Promise<number> {
+  const { data: subscriptions } = await adminClient
+    .from("push_subscriptions")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (!subscriptions || subscriptions.length === 0) return 0;
+
+  const payload = JSON.stringify({
+    title,
+    body,
+    url: "/",
+    urgency: "high",
+    requireInteraction: true,
+  });
+
+  let sent = 0;
+  for (const sub of subscriptions) {
+    try {
+      const result = await sendWebPush(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        payload,
+        vapidPublicKey,
+        vapidPrivateKey
+      );
+      if (result.gone) {
+        await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      } else {
+        sent++;
+      }
+    } catch (e) {
+      console.error("Push error:", e);
+    }
+  }
+  return sent;
+}
+
 // ── Main handler ───────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -226,42 +272,40 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get tomorrow's date in UTC
+    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
+
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split("T")[0]; // YYYY-MM-DD
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-    // Find all calendar events happening tomorrow
-    const { data: events, error: eventsError } = await adminClient
+    // Today's day of week (0=Monday .. 6=Sunday)
+    const jsDay = now.getDay(); // 0=Sunday
+    const todayDayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
+
+    // Collect all notifications per user
+    const userNotifications = new Map<string, string[]>();
+
+    // 1. Calendar events tomorrow
+    const { data: events } = await adminClient
       .from("calendar_events")
       .select("*")
       .eq("date", tomorrowStr);
 
-    if (eventsError) throw eventsError;
-
-    if (!events || events.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: "No events tomorrow" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (events) {
+      for (const event of events) {
+        const msgs = userNotifications.get(event.user_id) || [];
+        msgs.push(`📅 Jutro: ${event.title}`);
+        userNotifications.set(event.user_id, msgs);
+      }
     }
 
-    // Also check event_countdowns
-    const { data: countdowns, error: countdownError } = await adminClient
+    // 2. Event countdowns tomorrow
+    const { data: countdowns } = await adminClient
       .from("event_countdowns")
       .select("*")
       .eq("date", tomorrowStr);
-
-    if (countdownError) throw countdownError;
-
-    // Collect all user IDs that need notifications
-    const userNotifications = new Map<string, string[]>(); // userId -> messages[]
-
-    for (const event of events) {
-      const msgs = userNotifications.get(event.user_id) || [];
-      msgs.push(`📅 Jutro: ${event.title}`);
-      userNotifications.set(event.user_id, msgs);
-    }
 
     if (countdowns) {
       for (const cd of countdowns) {
@@ -271,49 +315,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
+    // 3. Today's chores (uncompleted)
+    const { data: chores } = await adminClient
+      .from("chores")
+      .select("*")
+      .eq("day_of_week", todayDayOfWeek)
+      .eq("completed", false);
+
+    if (chores && chores.length > 0) {
+      // Group chores by user
+      const choresByUser = new Map<string, string[]>();
+      for (const chore of chores) {
+        const list = choresByUser.get(chore.user_id) || [];
+        list.push(chore.title);
+        choresByUser.set(chore.user_id, list);
+      }
+
+      for (const [userId, choreTitles] of choresByUser.entries()) {
+        const msgs = userNotifications.get(userId) || [];
+        if (choreTitles.length === 1) {
+          msgs.push(`🧹 Dziś do zrobienia: ${choreTitles[0]}`);
+        } else {
+          msgs.push(`🧹 Dziś do zrobienia:\n${choreTitles.map(t => `• ${t}`).join("\n")}`);
+        }
+        userNotifications.set(userId, msgs);
+      }
+    }
 
     let totalSent = 0;
 
     for (const [userId, messages] of userNotifications.entries()) {
-      // Get push subscriptions for this user
-      const { data: subscriptions } = await adminClient
-        .from("push_subscriptions")
-        .select("*")
-        .eq("user_id", userId);
-
-      if (!subscriptions || subscriptions.length === 0) continue;
-
-      const body = messages.join("\n");
-      const payload = JSON.stringify({
-        title: "Przypomnienie 🔔",
+      const body = messages.join("\n\n");
+      const sent = await sendPushToUser(
+        adminClient,
+        userId,
+        "Dzień dobry! ☀️",
         body,
-        url: "/",
-        urgency: "high",
-        requireInteraction: true,
-      });
-
-      for (const sub of subscriptions) {
-        try {
-          const result = await sendWebPush(
-            { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-            payload,
-            vapidPublicKey,
-            vapidPrivateKey
-          );
-          if (result.gone) {
-            await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-          } else {
-            totalSent++;
-          }
-        } catch (e) {
-          console.error("Push error:", e);
-        }
-      }
+        vapidPublicKey,
+        vapidPrivateKey
+      );
+      totalSent += sent;
     }
 
-    return new Response(JSON.stringify({ sent: totalSent, events: events.length }), {
+    return new Response(JSON.stringify({ sent: totalSent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
