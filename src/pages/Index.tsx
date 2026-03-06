@@ -17,6 +17,7 @@ import PeriodTracker from "@/components/PeriodTracker";
 import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
 import NudgeWidget from "@/components/NudgeWidget";
+import ChoresPlanner from "@/components/ChoresPlanner";
 import GenderSelector from "@/components/GenderSelector";
 import MobileDashboard from "@/components/MobileDashboard";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
