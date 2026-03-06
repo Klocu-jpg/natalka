@@ -53,6 +53,9 @@ const defaultLayouts: Layouts = {
     { i: "period-tracker", x: 0, y: 22, w: 1, h: 4, minH: 3 },
     { i: "event-countdowns", x: 1, y: 22, w: 1, h: 4, minH: 3 },
     { i: "nudge-widget", x: 2, y: 22, w: 1, h: 4, minH: 3 },
+
+    // Row 7: Chores planner
+    { i: "chores-planner", x: 0, y: 26, w: 1, h: 5, minH: 4 },
   ],
   md: [
     // Row 1: Full width header
@@ -86,6 +89,9 @@ const defaultLayouts: Layouts = {
     
     // Row 9: Nudge widget
     { i: "nudge-widget", x: 0, y: 35, w: 2, h: 4, minH: 3 },
+
+    // Row 10: Chores planner
+    { i: "chores-planner", x: 0, y: 39, w: 2, h: 5, minH: 4 },
   ],
 };
 
@@ -104,6 +110,7 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "savings-goals": SavingsGoals,
   "photo-albums": PhotoAlbums,
   "nudge-widget": NudgeWidget,
+  "chores-planner": ChoresPlanner,
 };
 
 const Index = () => {
