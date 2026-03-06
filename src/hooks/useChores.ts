@@ -11,6 +11,7 @@ export interface Chore {
   assigned_to: string;
   completed: boolean;
   recurring: boolean;
+  recurrence: string;
   created_at: string;
 }
 
@@ -37,11 +38,12 @@ export const useChores = () => {
   });
 
   const addChore = useMutation({
-    mutationFn: async (chore: { title: string; day_of_week: number; assigned_to?: string }) => {
+    mutationFn: async (chore: { title: string; day_of_week: number; assigned_to?: string; recurrence?: string }) => {
       const { error } = await supabase.from("chores").insert({
         title: chore.title,
         day_of_week: chore.day_of_week,
         assigned_to: chore.assigned_to || "both",
+        recurrence: chore.recurrence || "weekly",
         user_id: user!.id,
       });
       if (error) throw error;
@@ -68,9 +70,13 @@ export const useChores = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["chores"] }),
   });
 
-  const choresByDay = DAYS.map((_, index) =>
-    chores.filter((c) => c.day_of_week === index)
-  );
+  // For daily chores, show them on every day
+  const choresByDay = DAYS.map((_, index) => {
+    return chores.filter((c) => {
+      if (c.recurrence === "daily") return true; // show on all days
+      return c.day_of_week === index;
+    });
+  });
 
   return { chores, choresByDay, isLoading, addChore, toggleChore, deleteChore };
 };

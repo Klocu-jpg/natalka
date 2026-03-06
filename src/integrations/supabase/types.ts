@@ -79,6 +79,7 @@ export type Database = {
           created_at: string
           day_of_week: number
           id: string
+          recurrence: string
           recurring: boolean
           title: string
           user_id: string
@@ -90,6 +91,7 @@ export type Database = {
           created_at?: string
           day_of_week: number
           id?: string
+          recurrence?: string
           recurring?: boolean
           title: string
           user_id: string
@@ -101,6 +103,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number
           id?: string
+          recurrence?: string
           recurring?: boolean
           title?: string
           user_id?: string
