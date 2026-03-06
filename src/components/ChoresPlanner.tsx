@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users } from "lucide-react";
 import { useChores, DAY_LABELS } from "@/hooks/useChores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,12 @@ const RECURRENCE_OPTIONS = [
   { value: "daily", label: "Codziennie", icon: "🔄" },
   { value: "weekly", label: "Co tydzień", icon: "📅" },
   { value: "monthly", label: "Raz w miesiącu", icon: "🗓️" },
+];
+
+const ASSIGNED_OPTIONS = [
+  { value: "me", label: "Ja", icon: "👤" },
+  { value: "partner", label: "Partner", icon: "💑" },
+  { value: "both", label: "Oboje", icon: "👫" },
 ];
 
 const DAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
@@ -44,6 +50,7 @@ const ChoresPlanner = () => {
   const [expandedDay, setExpandedDay] = useState<number | null>(todayIndex);
   const [newChoreText, setNewChoreText] = useState("");
   const [newRecurrence, setNewRecurrence] = useState("weekly");
+  const [newAssignedTo, setNewAssignedTo] = useState("both");
   const [addingForDay, setAddingForDay] = useState<number | null>(null);
 
   const currentDayOfMonth = new Date().getDate();
@@ -67,9 +74,11 @@ const ChoresPlanner = () => {
         title: newChoreText.trim(),
         day_of_week: dayIndex,
         recurrence: newRecurrence,
+        assigned_to: newAssignedTo,
       });
       setNewChoreText("");
       setNewRecurrence("weekly");
+      setNewAssignedTo("both");
       setAddingForDay(null);
       toast.success("Dodano obowiązek!");
     } catch {
@@ -238,6 +247,8 @@ const ChoresPlanner = () => {
                             : chore.recurrence === "monthly"
                             ? "Raz w miesiącu"
                             : "Co tydzień"}
+                          {" · "}
+                          {chore.assigned_to === "me" ? "👤 Ja" : chore.assigned_to === "partner" ? "💑 Partner" : "👫 Oboje"}
                           {!active && " · nieaktywne"}
                         </span>
                       </div>
@@ -287,6 +298,21 @@ const ChoresPlanner = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <Select value={newAssignedTo} onValueChange={setNewAssignedTo}>
+                      <SelectTrigger className="h-8 text-xs rounded-xl bg-background/70 w-full">
+                        <div className="flex items-center gap-1.5">
+                          <User className="w-3 h-3" />
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ASSIGNED_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                            {opt.icon} {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 ) : (
                   <button
@@ -294,6 +320,7 @@ const ChoresPlanner = () => {
                       setAddingForDay(dayIndex);
                       setNewChoreText("");
                       setNewRecurrence("weekly");
+                      setNewAssignedTo("both");
                     }}
                     className={`flex items-center gap-1.5 text-xs ${DAY_ACCENTS[dayIndex]} opacity-70 hover:opacity-100 transition-opacity pt-1 pl-1`}
                   >

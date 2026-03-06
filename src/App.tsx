@@ -12,6 +12,7 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
 import Index from "./pages/Index";
+import SharedRecipe from "./pages/SharedRecipe";
 import Auth from "./pages/Auth";
 import Legal from "./pages/Legal";
 import Landing from "./pages/Landing";
@@ -74,6 +75,7 @@ const AppRoutes = () => (
     <Route path="/landing" element={<LandingRoute />} />
     <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
     <Route path="/prawne/:slug" element={<Legal />} />
+    <Route path="/przepis/:id" element={<SharedRecipe />} />
     <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />

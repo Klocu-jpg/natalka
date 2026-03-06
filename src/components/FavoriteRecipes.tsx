@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus, Edit, ShoppingCart, Link, Sparkles } from "lucide-react";
+import { BookOpen, Trash2, ChefHat, Loader2, Plus, Check, CalendarPlus, Edit, ShoppingCart, Link, Sparkles, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -356,6 +356,14 @@ const FavoriteRecipes = () => {
                   <Button variant="outline" size="sm" onClick={openEditMode} className="gap-2 flex-1">
                     <Edit className="w-4 h-4" />
                     Edytuj
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2 flex-1" onClick={() => {
+                    const url = `${window.location.origin}/przepis/${selectedRecipe.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Link skopiowany! Wyślij go znajomym 📋");
+                  }}>
+                    <Share2 className="w-4 h-4" />
+                    Udostępnij
                   </Button>
                 </div>
                 
