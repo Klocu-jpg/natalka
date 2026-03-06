@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users } from "lucide-react";
 import { useChores, DAY_LABELS } from "@/hooks/useChores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,12 @@ const RECURRENCE_OPTIONS = [
   { value: "daily", label: "Codziennie", icon: "🔄" },
   { value: "weekly", label: "Co tydzień", icon: "📅" },
   { value: "monthly", label: "Raz w miesiącu", icon: "🗓️" },
+];
+
+const ASSIGNED_OPTIONS = [
+  { value: "me", label: "Ja", icon: "👤" },
+  { value: "partner", label: "Partner", icon: "💑" },
+  { value: "both", label: "Oboje", icon: "👫" },
 ];
 
 const DAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
@@ -44,6 +50,7 @@ const ChoresPlanner = () => {
   const [expandedDay, setExpandedDay] = useState<number | null>(todayIndex);
   const [newChoreText, setNewChoreText] = useState("");
   const [newRecurrence, setNewRecurrence] = useState("weekly");
+  const [newAssignedTo, setNewAssignedTo] = useState("both");
   const [addingForDay, setAddingForDay] = useState<number | null>(null);
 
   const currentDayOfMonth = new Date().getDate();
@@ -67,9 +74,11 @@ const ChoresPlanner = () => {
         title: newChoreText.trim(),
         day_of_week: dayIndex,
         recurrence: newRecurrence,
+        assigned_to: newAssignedTo,
       });
       setNewChoreText("");
       setNewRecurrence("weekly");
+      setNewAssignedTo("both");
       setAddingForDay(null);
       toast.success("Dodano obowiązek!");
     } catch {
