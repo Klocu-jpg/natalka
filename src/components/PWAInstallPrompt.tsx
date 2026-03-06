@@ -119,7 +119,7 @@ const PWAInstallPrompt = () => {
             <Heart className="w-10 h-10 text-primary-foreground" fill="currentColor" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-            Zainstaluj Love App
+            Zainstaluj LoveApp
           </h1>
           <p className="text-muted-foreground text-sm">
             Dodaj do ekranu głównego, żeby korzystać jak z prawdziwej aplikacji!
