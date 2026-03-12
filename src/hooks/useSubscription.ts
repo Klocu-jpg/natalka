@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,7 +15,7 @@ export const useSubscription = () => {
   const { user, session } = useAuth();
   const [testMode, setTestMode] = useState(() => {
     const stored = localStorage.getItem(STRIPE_TEST_MODE_KEY);
-    if (stored === null) return false; // default to live mode
+    if (stored === null) return false;
     return stored === "true";
   });
   const [state, setState] = useState<SubscriptionState>({
@@ -24,28 +24,35 @@ export const useSubscription = () => {
     subscriptionEnd: null,
     loading: true,
   });
+  const lastCheckedSessionRef = useRef<string | null>(null);
+  const checkInFlightRef = useRef(false);
 
   const toggleTestMode = useCallback((enabled: boolean) => {
     setTestMode(enabled);
     localStorage.setItem(STRIPE_TEST_MODE_KEY, String(enabled));
+    lastCheckedSessionRef.current = null; // force recheck
   }, []);
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
-      // Don't set loading to false if we don't have a session yet — auth may still be loading
-      // Only mark as not subscribed if we're sure there's no user
       if (!user) {
         setState({ subscribed: false, isTrial: false, subscriptionEnd: null, loading: false });
       }
       return;
     }
 
+    // Deduplicate: skip if same session token already checked
+    const tokenKey = session.access_token;
+    if (checkInFlightRef.current) return;
+    
+    checkInFlightRef.current = true;
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription", {
         body: { testMode },
       });
       if (error) throw error;
 
+      lastCheckedSessionRef.current = tokenKey;
       setState({
         subscribed: data.subscribed ?? false,
         isTrial: data.is_trial ?? false,
@@ -54,14 +61,10 @@ export const useSubscription = () => {
       });
     } catch {
       setState((prev) => ({ ...prev, loading: false }));
+    } finally {
+      checkInFlightRef.current = false;
     }
   }, [session, user, testMode]);
-
-  useEffect(() => {
-    checkSubscription();
-    const interval = setInterval(checkSubscription, 60_000);
-    return () => clearInterval(interval);
-  }, [checkSubscription]);
 
   const startCheckout = async (priceId?: string) => {
     const { data, error } = await supabase.functions.invoke("create-checkout", {
