@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users, ArrowUp, ArrowDown } from "lucide-react";
-import { useChores, DAY_LABELS } from "@/hooks/useChores";
+import { useState, useRef, useCallback } from "react";
+import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, GripVertical } from "lucide-react";
+import { useChores, DAY_LABELS, Chore } from "@/hooks/useChores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,7 +41,7 @@ const DAY_ACCENTS = [
 ];
 
 const ChoresPlanner = () => {
-  const { choresByDay, isLoading, addChore, toggleChore, deleteChore, moveChore } = useChores();
+  const { choresByDay, isLoading, addChore, toggleChore, deleteChore, reorderChores } = useChores();
   const todayIndex = (() => {
     const jsDay = new Date().getDay();
     return jsDay === 0 ? 6 : jsDay - 1;
@@ -53,16 +53,20 @@ const ChoresPlanner = () => {
   const [newAssignedTo, setNewAssignedTo] = useState("both");
   const [addingForDay, setAddingForDay] = useState<number | null>(null);
 
-  const currentDayOfMonth = new Date().getDate();
+  // Drag state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [localOrder, setLocalOrder] = useState<Chore[] | null>(null);
+  const dragItemRef = useRef<number | null>(null);
+  const touchStartY = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isChoreActiveToday = (chore: { recurrence: string; day_of_week: number }) => {
     if (chore.recurrence === "daily") return true;
-    if (chore.recurrence === "weekly") return true; // shown on its assigned day
+    if (chore.recurrence === "weekly") return true;
     if (chore.recurrence === "monthly") {
-      // Monthly chores: active only on first occurrence of that weekday in the month
       const today = new Date();
-      const dayOfMonth = today.getDate();
-      return dayOfMonth <= 7; // first week of month
+      return today.getDate() <= 7;
     }
     return true;
   };
@@ -103,10 +107,63 @@ const ChoresPlanner = () => {
     }
   };
 
-  const recurrenceLabel = (r: string) => {
-    const opt = RECURRENCE_OPTIONS.find((o) => o.value === r);
-    return opt ? `${opt.icon} ${opt.label}` : r;
-  };
+  // --- Drag and Drop handlers ---
+  const handleDragStart = useCallback((index: number) => {
+    dragItemRef.current = index;
+    setDraggedIndex(index);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDragEnd = useCallback(async (dayChores: Chore[]) => {
+    const from = dragItemRef.current;
+    const to = dragOverIndex;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    dragItemRef.current = null;
+
+    if (from === null || to === null || from === to) return;
+
+    const reordered = [...dayChores];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+
+    setLocalOrder(reordered);
+    try {
+      await reorderChores(reordered);
+    } catch {
+      toast.error("Nie udało się zmienić kolejności");
+    }
+    setLocalOrder(null);
+  }, [dragOverIndex, reorderChores]);
+
+  // Touch-based drag
+  const handleTouchStart = useCallback((e: React.TouchEvent, index: number) => {
+    touchStartY.current = e.touches[0].clientY;
+    dragItemRef.current = index;
+    setDraggedIndex(index);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent, dayChores: Chore[]) => {
+    if (dragItemRef.current === null || !containerRef.current) return;
+    const touchY = e.touches[0].clientY;
+    const items = containerRef.current.querySelectorAll('[data-chore-item]');
+    
+    for (let i = 0; i < items.length; i++) {
+      const rect = items[i].getBoundingClientRect();
+      if (touchY >= rect.top && touchY <= rect.bottom) {
+        setDragOverIndex(i);
+        break;
+      }
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(async (dayChores: Chore[]) => {
+    await handleDragEnd(dayChores);
+  }, [handleDragEnd]);
 
   const totalChores = choresByDay.reduce((sum, day) => sum + day.length, 0);
   const totalCompleted = choresByDay.reduce((sum, day) => sum + day.filter((c) => c.completed).length, 0);
@@ -173,11 +230,14 @@ const ChoresPlanner = () => {
       {/* Expanded day content */}
       <div className="divide-y divide-border/10">
         {DAY_LABELS.map((dayName, dayIndex) => {
-          const dayChores = choresByDay[dayIndex];
+          const rawDayChores = choresByDay[dayIndex];
           const isExpanded = expandedDay === dayIndex;
           const isToday = dayIndex === todayIndex;
 
           if (!isExpanded) return null;
+
+          // Use local reordered list while dragging
+          const dayChores = localOrder && expandedDay === dayIndex ? localOrder : rawDayChores;
 
           return (
             <div key={dayIndex} className={`bg-gradient-to-b ${DAY_COLORS[dayIndex]}`}>
@@ -195,24 +255,44 @@ const ChoresPlanner = () => {
                 </span>
               </div>
 
-              <div className="px-3 pb-3 space-y-1">
+              <div className="px-3 pb-3 space-y-1" ref={containerRef}>
                 {dayChores.length === 0 && addingForDay !== dayIndex && (
                   <p className="text-xs text-muted-foreground/50 py-4 text-center italic">Brak obowiązków</p>
                 )}
 
-                {dayChores.map((chore) => {
+                {dayChores.map((chore, idx) => {
                   const active = isChoreActiveToday(chore);
+                  const isDragging = draggedIndex === idx;
+                  const isDragOver = dragOverIndex === idx && draggedIndex !== idx;
+
                   return (
                     <div
                       key={chore.id}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all group ${
-                        !active
+                      data-chore-item
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={() => handleDragEnd(dayChores)}
+                      onTouchStart={(e) => handleTouchStart(e, idx)}
+                      onTouchMove={(e) => handleTouchMove(e, dayChores)}
+                      onTouchEnd={() => handleTouchEnd(dayChores)}
+                      className={`flex items-center gap-2 px-2 py-2.5 rounded-xl transition-all group ${
+                        isDragging
+                          ? "opacity-50 scale-95 bg-primary/10"
+                          : isDragOver
+                          ? "border-t-2 border-primary"
+                          : !active
                           ? "bg-background/30 opacity-50"
                           : chore.completed
                           ? "bg-background/40"
                           : "bg-background/70 shadow-sm"
                       }`}
                     >
+                      {/* Grip handle */}
+                      <div className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-0.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors">
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+
                       <button
                         onClick={() => handleToggle(chore.id, chore.completed)}
                         className="shrink-0 transition-transform active:scale-90"
@@ -252,32 +332,12 @@ const ChoresPlanner = () => {
                           {!active && " · nieaktywne"}
                         </span>
                       </div>
-                      <div className="shrink-0 flex items-center gap-0.5">
-                        {dayChores.length > 1 && (
-                          <>
-                            <button
-                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "up")}
-                              disabled={dayChores.indexOf(chore) === 0}
-                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "down")}
-                              disabled={dayChores.indexOf(chore) === dayChores.length - 1}
-                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => handleDelete(chore.id)}
-                          className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all p-1"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleDelete(chore.id)}
+                        className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all p-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   );
                 })}
