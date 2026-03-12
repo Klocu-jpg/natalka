@@ -83,15 +83,11 @@ export const useChores = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["chores"] }),
   });
 
-  const moveChore = async (dayChores: Chore[], index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= dayChores.length) return;
-    const current = dayChores[index];
-    const target = dayChores[targetIndex];
-    await Promise.all([
-      reorderChore.mutateAsync({ id: current.id, newOrder: target.sort_order }),
-      reorderChore.mutateAsync({ id: target.id, newOrder: current.sort_order }),
-    ]);
+  const reorderChores = async (reorderedChores: Chore[]) => {
+    const updates = reorderedChores.map((chore, index) => 
+      reorderChore.mutateAsync({ id: chore.id, newOrder: index })
+    );
+    await Promise.all(updates);
   };
 
   // For daily chores, show them on every day
@@ -102,5 +98,5 @@ export const useChores = () => {
     });
   });
 
-  return { chores, choresByDay, isLoading, addChore, toggleChore, deleteChore, moveChore };
+  return { chores, choresByDay, isLoading, addChore, toggleChore, deleteChore, reorderChore, reorderChores };
 };
