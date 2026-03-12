@@ -13,10 +13,11 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
   const [containerWidth, setContainerWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
-  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState<boolean | null>(null);
+  const directionLockedRef = useRef<"horizontal" | "vertical" | null>(null);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const startTimeRef = useRef(0);
+  const prevIndexRef = useRef(activeIndex);
 
   const tabs = React.Children.toArray(children);
   const totalTabs = tabs.length;
@@ -38,7 +39,7 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     startXRef.current = e.touches[0].clientX;
     startYRef.current = e.touches[0].clientY;
     startTimeRef.current = Date.now();
-    setIsHorizontalSwipe(null); // Reset direction detection
+    directionLockedRef.current = null;
     setDragOffset(0);
   }, []);
 
@@ -48,45 +49,45 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     const diffX = currentX - startXRef.current;
     const diffY = currentY - startYRef.current;
 
-    // Detect direction on first significant movement (threshold: 10px)
-    if (isHorizontalSwipe === null) {
+    // Lock direction on first significant movement (threshold: 6px)
+    if (directionLockedRef.current === null) {
       const absX = Math.abs(diffX);
       const absY = Math.abs(diffY);
       
-      if (absX > 10 || absY > 10) {
-        // If horizontal movement is greater, it's a swipe
-        const isHorizontal = absX > absY;
-        setIsHorizontalSwipe(isHorizontal);
-        
-        if (isHorizontal) {
-          setIsDragging(true);
-        }
+      if (absX < 6 && absY < 6) return; // Not enough movement yet
+
+      // Use a stricter ratio: horizontal only if absX > absY * 1.5
+      if (absX > absY * 1.5) {
+        directionLockedRef.current = "horizontal";
+        setIsDragging(true);
+      } else {
+        directionLockedRef.current = "vertical";
       }
       return;
     }
 
-    // If vertical scroll, don't interfere
-    if (!isHorizontalSwipe) {
+    // Once locked vertical, never switch
+    if (directionLockedRef.current === "vertical") {
       return;
     }
 
-    // Horizontal swipe - prevent scroll and handle tab change
+    // Horizontal swipe - prevent any vertical scroll
     e.preventDefault();
+    e.stopPropagation();
     
     // Add resistance at edges
     if ((activeIndex === 0 && diffX > 0) || (activeIndex === totalTabs - 1 && diffX < 0)) {
-      setDragOffset(diffX * 0.3);
+      setDragOffset(diffX * 0.25);
     } else {
       setDragOffset(diffX);
     }
-  }, [isHorizontalSwipe, activeIndex, totalTabs]);
+  }, [activeIndex, totalTabs]);
 
   const handleTouchEnd = useCallback(() => {
-    // If it wasn't a horizontal swipe, just reset
-    if (!isHorizontalSwipe || !isDragging) {
+    if (directionLockedRef.current !== "horizontal" || !isDragging) {
       setIsDragging(false);
       setDragOffset(0);
-      setIsHorizontalSwipe(null);
+      directionLockedRef.current = null;
       return;
     }
     
@@ -107,23 +108,22 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     
     setIsDragging(false);
     setDragOffset(0);
-    setIsHorizontalSwipe(null);
+    directionLockedRef.current = null;
     
     if (newIndex !== activeIndex) {
-      // Scroll the target tab to top
-      const tabElements = containerRef.current?.querySelectorAll(':scope > div > div');
-      if (tabElements && tabElements[newIndex]) {
-        tabElements[newIndex].scrollTop = 0;
-      }
       onIndexChange(newIndex);
     }
-  }, [isHorizontalSwipe, isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
+  }, [isDragging, dragOffset, activeIndex, totalTabs, onIndexChange]);
 
-  // Reset scroll position when active tab changes (e.g. via bottom tab bar)
+  // Always scroll to top when activeIndex changes (swipe or bottom tab)
   useEffect(() => {
-    const tabElements = containerRef.current?.querySelectorAll(':scope > div > div');
-    if (tabElements && tabElements[activeIndex]) {
-      tabElements[activeIndex].scrollTop = 0;
+    if (prevIndexRef.current !== activeIndex) {
+      const tabElements = containerRef.current?.querySelectorAll<HTMLElement>('[data-tab-panel]');
+      if (tabElements) {
+        // Scroll target tab to top
+        tabElements[activeIndex]?.scrollTo({ top: 0 });
+      }
+      prevIndexRef.current = activeIndex;
     }
   }, [activeIndex]);
 
@@ -137,6 +137,7 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
     <div 
       ref={containerRef}
       className="relative overflow-hidden flex-1"
+      style={{ touchAction: "none" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -153,11 +154,12 @@ const SwipeableTabs = ({ activeIndex, onIndexChange, children }: SwipeableTabsPr
         {tabs.map((child, index) => (
           <div
             key={index}
+            data-tab-panel
             className="h-full overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 shrink-0"
             style={{ 
               width: containerWidth || '100vw',
               WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y',
+              touchAction: directionLockedRef.current === "horizontal" ? "none" : "pan-y",
             }}
           >
             {child}
