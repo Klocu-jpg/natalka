@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users, ArrowUp, ArrowDown } from "lucide-react";
 import { useChores, DAY_LABELS } from "@/hooks/useChores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ const DAY_ACCENTS = [
 ];
 
 const ChoresPlanner = () => {
-  const { choresByDay, isLoading, addChore, toggleChore, deleteChore } = useChores();
+  const { choresByDay, isLoading, addChore, toggleChore, deleteChore, moveChore } = useChores();
   const todayIndex = (() => {
     const jsDay = new Date().getDay();
     return jsDay === 0 ? 6 : jsDay - 1;
@@ -252,12 +252,32 @@ const ChoresPlanner = () => {
                           {!active && " · nieaktywne"}
                         </span>
                       </div>
-                      <button
-                        onClick={() => handleDelete(chore.id)}
-                        className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="shrink-0 flex items-center gap-0.5">
+                        {dayChores.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "up")}
+                              disabled={dayChores.indexOf(chore) === 0}
+                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "down")}
+                              disabled={dayChores.indexOf(chore) === dayChores.length - 1}
+                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleDelete(chore.id)}
+                          className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

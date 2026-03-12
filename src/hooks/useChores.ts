@@ -12,6 +12,7 @@ export interface Chore {
   completed: boolean;
   recurring: boolean;
   recurrence: string;
+  sort_order: number;
   created_at: string;
 }
 
@@ -30,6 +31,7 @@ export const useChores = () => {
         .from("chores")
         .select("*")
         .order("day_of_week", { ascending: true })
+        .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data as Chore[];
@@ -70,13 +72,35 @@ export const useChores = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["chores"] }),
   });
 
+  const reorderChore = useMutation({
+    mutationFn: async ({ id, newOrder }: { id: string; newOrder: number }) => {
+      const { error } = await supabase
+        .from("chores")
+        .update({ sort_order: newOrder })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["chores"] }),
+  });
+
+  const moveChore = async (dayChores: Chore[], index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= dayChores.length) return;
+    const current = dayChores[index];
+    const target = dayChores[targetIndex];
+    await Promise.all([
+      reorderChore.mutateAsync({ id: current.id, newOrder: target.sort_order }),
+      reorderChore.mutateAsync({ id: target.id, newOrder: current.sort_order }),
+    ]);
+  };
+
   // For daily chores, show them on every day
   const choresByDay = DAYS.map((_, index) => {
     return chores.filter((c) => {
-      if (c.recurrence === "daily") return true; // show on all days
+      if (c.recurrence === "daily") return true;
       return c.day_of_week === index;
     });
   });
 
-  return { chores, choresByDay, isLoading, addChore, toggleChore, deleteChore };
+  return { chores, choresByDay, isLoading, addChore, toggleChore, deleteChore, moveChore };
 };
