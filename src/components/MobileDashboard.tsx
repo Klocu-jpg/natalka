@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import ShoppingList from "@/components/ShoppingList";
+import { useProfile } from "@/hooks/useProfile";
 import TaskList from "@/components/TaskList";
 import MiniCalendar from "@/components/MiniCalendar";
 import DateIdeas from "@/components/DateIdeas";
