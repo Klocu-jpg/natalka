@@ -66,7 +66,16 @@ export const useSubscription = () => {
     }
   }, [session, user, testMode]);
 
-  const startCheckout = async (priceId?: string) => {
+  useEffect(() => {
+    checkSubscription();
+    const interval = setInterval(() => {
+      lastCheckedSessionRef.current = null; // allow periodic recheck
+      checkSubscription();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [checkSubscription]);
+
+
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: { priceId, testMode },
     });
