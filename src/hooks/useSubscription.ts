@@ -75,7 +75,7 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
-
+  const startCheckout = async (priceId?: string) => {
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: { priceId, testMode },
     });
