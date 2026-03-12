@@ -12,6 +12,7 @@ export interface Chore {
   completed: boolean;
   recurring: boolean;
   recurrence: string;
+  sort_order: number;
   created_at: string;
 }
 
