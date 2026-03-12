@@ -46,11 +46,16 @@ const MobileDashboard = () => {
   const { visibleWidgets } = useWidgetVisibility();
   const { profile, isLoading } = useProfile();
 
-  // Get widgets for each tab, filtered by visibility
+  // Get widgets for each tab, filtered by visibility and gender
   const tabContents = useMemo(() => {
     return TABS.map((tab) => {
       const tabWidgets = tab.widgets
         .filter((widgetId) => visibleWidgets.includes(widgetId))
+        // Hide period-tracker for non-female users
+        .filter((widgetId) => {
+          if (widgetId === "period-tracker" && profile?.gender !== "female") return false;
+          return true;
+        })
         .map((widgetId) => {
           const Component = ALL_WIDGETS[widgetId];
           return Component ? { id: widgetId, Component } : null;
@@ -59,7 +64,7 @@ const MobileDashboard = () => {
       
       return { tabId: tab.id, widgets: tabWidgets, icon: tab.icon, label: tab.label };
     });
-  }, [visibleWidgets]);
+  }, [visibleWidgets, profile?.gender]);
 
   // Show gender selector if profile doesn't have gender set
   if (!isLoading && profile === null) {
