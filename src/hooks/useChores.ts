@@ -30,6 +30,7 @@ export const useChores = () => {
         .from("chores")
         .select("*")
         .order("day_of_week", { ascending: true })
+        .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data as Chore[];
