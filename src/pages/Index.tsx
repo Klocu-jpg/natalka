@@ -118,6 +118,14 @@ const Index = () => {
   const { profile, isLoading } = useProfile();
   const isMobile = useIsMobile();
   
+  // Filter out period-tracker for non-female users
+  const effectiveVisibleWidgets = useMemo(() => {
+    return visibleWidgets.filter((id) => {
+      if (id === "period-tracker" && profile?.gender !== "female") return false;
+      return true;
+    });
+  }, [visibleWidgets, profile?.gender]);
+
   // Get filtered layouts based on visible widgets
   const getLayoutsForVisibleWidgets = useMemo(() => {
     const result: Layouts = {};
@@ -125,20 +133,20 @@ const Index = () => {
     for (const [breakpoint, layout] of Object.entries(defaultLayouts)) {
       const layoutArray = layout as Layout[];
       result[breakpoint] = layoutArray
-        .filter((item) => visibleWidgets.includes(item.i))
+        .filter((item) => effectiveVisibleWidgets.includes(item.i))
         .map((item) => ({ ...item }));
     }
     
     return result;
-  }, [visibleWidgets]);
+  }, [effectiveVisibleWidgets]);
 
   // Get visible widget components in correct order
   const widgetComponents = useMemo(() => {
     const orderedIds = defaultLayouts.lg.map(l => l.i);
     return orderedIds
-      .filter((id) => visibleWidgets.includes(id))
+      .filter((id) => effectiveVisibleWidgets.includes(id))
       .map((id) => ({ id, Component: ALL_WIDGETS[id] }));
-  }, [visibleWidgets]);
+  }, [effectiveVisibleWidgets]);
 
   // Show gender selector if profile doesn't have gender set
   if (!isLoading && profile === null) {
