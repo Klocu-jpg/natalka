@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, Users, ArrowUp, ArrowDown } from "lucide-react";
 import { useChores, DAY_LABELS } from "@/hooks/useChores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
