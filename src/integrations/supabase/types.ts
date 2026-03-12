@@ -81,6 +81,7 @@ export type Database = {
           id: string
           recurrence: string
           recurring: boolean
+          sort_order: number | null
           title: string
           user_id: string
         }
@@ -93,6 +94,7 @@ export type Database = {
           id?: string
           recurrence?: string
           recurring?: boolean
+          sort_order?: number | null
           title: string
           user_id: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           id?: string
           recurrence?: string
           recurring?: boolean
+          sort_order?: number | null
           title?: string
           user_id?: string
         }
