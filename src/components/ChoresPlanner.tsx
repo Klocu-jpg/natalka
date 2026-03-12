@@ -252,12 +252,32 @@ const ChoresPlanner = () => {
                           {!active && " · nieaktywne"}
                         </span>
                       </div>
-                      <button
-                        onClick={() => handleDelete(chore.id)}
-                        className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="shrink-0 flex items-center gap-0.5">
+                        {dayChores.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "up")}
+                              disabled={dayChores.indexOf(chore) === 0}
+                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => moveChore(dayChores, dayChores.indexOf(chore), "down")}
+                              disabled={dayChores.indexOf(chore) === dayChores.length - 1}
+                              className="p-1 text-muted-foreground/30 hover:text-primary disabled:opacity-20 transition-all"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleDelete(chore.id)}
+                          className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground/30 hover:text-destructive transition-all p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
