@@ -82,5 +82,18 @@ export const useShoppingItems = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping_items"] }),
   });
 
-  return { items, isLoading, addItem, addItems, toggleItem, deleteItem };
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      const ids = items.map((i) => i.id);
+      if (ids.length === 0) return;
+      const { error } = await supabase
+        .from("shopping_items")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping_items"] }),
+  });
+
+  return { items, isLoading, addItem, addItems, toggleItem, deleteItem, clearAll };
 };
