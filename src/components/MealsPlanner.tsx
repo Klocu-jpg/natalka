@@ -270,74 +270,72 @@ const MealsPlanner = () => {
           })}
         </div>
 
-        {DAYS.map((day) => {
-          const dayMeals = getMealsForDay(day.id);
+        {(() => {
+          const dayMeals = getMealsForDay(selectedDay);
+          const day = DAYS[selectedDay];
           return (
-            <TabsContent key={day.id} value={String(day.id)} className="mt-0">
-              <div className="space-y-2">
-                <h3 className="font-heading font-semibold text-sm text-muted-foreground mb-3">
-                  {day.full}
-                </h3>
+            <div className="space-y-2">
+              <h3 className="font-heading font-semibold text-sm text-muted-foreground mb-3">
+                {day.full}
+              </h3>
 
-                {isLoading ? (
-                  <div className="flex justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  </div>
-                ) : dayMeals.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-6 text-sm">
-                    Brak zaplanowanych obiadów
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {dayMeals.map((meal) => (
-                      <li
-                        key={meal.id}
-                        className="bg-secondary rounded-xl p-3 group hover:shadow-card transition-all"
-                      >
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => openRecipe(meal)}
-                            className="flex-1 text-left flex items-center gap-2 hover:text-primary transition-colors min-w-0"
-                          >
-                            <BookOpen className="w-4 h-4 text-primary shrink-0" />
-                            <span className="font-medium truncate">{meal.name}</span>
-                          </button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-green-500/20 hover:text-green-600"
-                            onClick={() => handleMarkAsEaten(meal)}
-                            title="Oznacz jako zjedzone"
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <button
-                            onClick={() => deleteMeal.mutate(meal.id)}
-                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0"
-                            title="Usuń"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {meal.ingredients && meal.ingredients.length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1 ml-6">
-                            {meal.ingredients.length} składników
-                          </p>
-                        )}
-                        {!meal.recipe && (
-                          <p className="text-xs text-amber-600 mt-1 ml-6">
-                            Bez przepisu
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </TabsContent>
+              {isLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              ) : dayMeals.length === 0 ? (
+                <p className="text-center text-muted-foreground py-6 text-sm">
+                  Brak zaplanowanych obiadów
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {dayMeals.map((meal) => (
+                    <li
+                      key={meal.id}
+                      className="bg-secondary rounded-xl p-3 group hover:shadow-card transition-all"
+                    >
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openRecipe(meal)}
+                          className="flex-1 text-left flex items-center gap-2 hover:text-primary transition-colors min-w-0"
+                        >
+                          <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                          <span className="font-medium truncate">{meal.name}</span>
+                        </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-green-500/20 hover:text-green-600"
+                          onClick={() => handleMarkAsEaten(meal)}
+                          title="Oznacz jako zjedzone"
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <button
+                          onClick={() => deleteMeal.mutate(meal.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all shrink-0"
+                          title="Usuń"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {meal.ingredients && meal.ingredients.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1 ml-6">
+                          {meal.ingredients.length} składników
+                        </p>
+                      )}
+                      {!meal.recipe && (
+                        <p className="text-xs text-amber-600 mt-1 ml-6">
+                          Bez przepisu
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           );
-        })}
-      </Tabs>
+        })()}
 
       {/* Recipe Dialog */}
       <Dialog open={recipeDialogOpen} onOpenChange={setRecipeDialogOpen}>
