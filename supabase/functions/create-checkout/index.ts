@@ -70,6 +70,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    const origin = req.headers.get("origin") || "https://loveapp.pl";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -77,7 +78,6 @@ serve(async (req) => {
       mode: "subscription",
       allow_promotion_codes: true,
       subscription_data: { trial_period_days: 14 },
-      const origin = req.headers.get("origin") || "https://loveapp.pl";
       success_url: `${origin}/?subscription=success`,
       cancel_url: `${origin}/?subscription=cancelled`,
     });
