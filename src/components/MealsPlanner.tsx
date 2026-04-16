@@ -247,24 +247,28 @@ const MealsPlanner = () => {
         </div>
       }
     >
-      <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))} className="overflow-hidden">
-        <TabsList className="w-full !grid grid-cols-7 mb-4 h-auto p-1">
+      <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))} className="w-full">
+        <div className="grid grid-cols-7 gap-1 mb-4 bg-muted rounded-lg p-1">
           {DAYS.map((day) => {
             const hasMeals = getMealsForDay(day.id).length > 0;
+            const isActive = selectedDay === day.id;
             return (
-              <TabsTrigger
+              <button
                 key={day.id}
-                value={String(day.id)}
+                onClick={() => setSelectedDay(day.id)}
                 className={cn(
-                  "text-xs px-0 py-2 min-w-0 w-full overflow-hidden",
-                  hasMeals && "bg-primary/20 text-primary font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  "text-xs py-2 rounded-md text-center transition-all font-medium",
+                  isActive && hasMeals && "bg-primary text-primary-foreground shadow-sm",
+                  isActive && !hasMeals && "bg-background text-foreground shadow-sm",
+                  !isActive && hasMeals && "bg-primary/20 text-primary font-semibold",
+                  !isActive && !hasMeals && "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {day.short}
-              </TabsTrigger>
+              </button>
             );
           })}
-        </TabsList>
+        </div>
 
         {DAYS.map((day) => {
           const dayMeals = getMealsForDay(day.id);
