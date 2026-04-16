@@ -43,6 +43,7 @@ const DAY_ACCENTS = [
 ];
 
 const ChoresPlanner = () => {
+  const { user } = useAuth();
   const { choresByDay, isLoading, addChore, toggleChore, deleteChore, reorderChores } = useChores();
   const todayIndex = (() => {
     const jsDay = new Date().getDay();
