@@ -248,7 +248,7 @@ const MealsPlanner = () => {
       }
     >
       <div>
-        <div className="grid grid-cols-7 gap-1 mb-4 bg-muted rounded-lg p-1">
+        <div className="grid grid-cols-7 gap-0.5 mb-4 bg-muted rounded-lg p-1 mr-2 sm:mr-3">
           {DAYS.map((day) => {
             const hasMeals = getMealsForDay(day.id).length > 0;
             const isActive = selectedDay === day.id;
