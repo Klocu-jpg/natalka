@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import WidgetWrapper from "./WidgetWrapper";
 
 const ShoppingList = () => {
-  const { items, isLoading, addItem, toggleItem, deleteItem } = useShoppingItems();
+  const { items, isLoading, addItem, toggleItem, deleteItem, clearAll } = useShoppingItems();
   const [newItem, setNewItem] = useState("");
 
   const handleAddItem = () => {
