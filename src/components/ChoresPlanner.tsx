@@ -304,7 +304,7 @@ const ChoresPlanner = () => {
                           ? "Raz w miesiącu"
                           : "Co tydzień"}
                         {" · "}
-                        {chore.assigned_to === "me" ? "👤 Ja" : chore.assigned_to === "partner" ? "💑 Partner" : "👫 Oboje"}
+                        {getAssignedLabel(chore)}
                         {!active && " · nieaktywne"}
                       </span>
                     </div>
