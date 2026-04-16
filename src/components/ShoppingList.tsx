@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ShoppingCart, Plus, Trash2, Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -8,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import WidgetWrapper from "./WidgetWrapper";
 
 const ShoppingList = () => {
-  const { items, isLoading, addItem, toggleItem, deleteItem } = useShoppingItems();
+  const { items, isLoading, addItem, toggleItem, deleteItem, clearAll } = useShoppingItems();
   const [newItem, setNewItem] = useState("");
 
   const handleAddItem = () => {
@@ -23,6 +24,29 @@ const ShoppingList = () => {
       title="Lista Zakupów"
       icon={<ShoppingCart className="w-5 h-5 text-primary-foreground" />}
       iconBg="gradient-primary"
+      actions={
+        items.length > 0 ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8" title="Wyczyść listę">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Wyczyścić całą listę?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Usunie to wszystkie produkty z listy zakupów. Tej akcji nie można cofnąć.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={() => clearAll.mutate()}>Wyczyść</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null
+      }
     >
       <div className="flex gap-2 mb-4">
         <Input
