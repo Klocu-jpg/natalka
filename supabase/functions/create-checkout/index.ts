@@ -77,8 +77,9 @@ serve(async (req) => {
       mode: "subscription",
       allow_promotion_codes: true,
       subscription_data: { trial_period_days: 14 },
-      success_url: `${req.headers.get("origin")}/?subscription=success`,
-      cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
+      const origin = req.headers.get("origin") || "https://loveapp.pl";
+      success_url: `${origin}/?subscription=success`,
+      cancel_url: `${origin}/?subscription=cancelled`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
