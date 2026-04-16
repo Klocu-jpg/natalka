@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Plus, Trash2, CheckCircle2, Circle, Home, Repeat, CalendarDays, User, GripVertical } from "lucide-react";
 import { useChores, DAY_LABELS, Chore } from "@/hooks/useChores";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
