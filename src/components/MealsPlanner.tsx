@@ -336,6 +336,7 @@ const MealsPlanner = () => {
             </div>
           );
         })()}
+      </div>
 
       {/* Recipe Dialog */}
       <Dialog open={recipeDialogOpen} onOpenChange={setRecipeDialogOpen}>
