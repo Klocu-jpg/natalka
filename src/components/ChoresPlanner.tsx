@@ -61,6 +61,17 @@ const ChoresPlanner = () => {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const dragSrcIdx = useRef<number | null>(null);
 
+  // Resolve "me"/"partner" relative to who created the chore vs who is viewing
+  const getAssignedLabel = (chore: Chore) => {
+    if (chore.assigned_to === "both") return "👫 Oboje";
+    const isCreator = chore.user_id === user?.id;
+    if (chore.assigned_to === "me") {
+      return isCreator ? "👤 Ja" : "💑 Partner";
+    }
+    // assigned_to === "partner"
+    return isCreator ? "💑 Partner" : "👤 Ja";
+  };
+
   const isChoreActiveToday = (chore: { recurrence: string; day_of_week: number }) => {
     if (chore.recurrence === "daily") return true;
     if (chore.recurrence === "weekly") return true;
