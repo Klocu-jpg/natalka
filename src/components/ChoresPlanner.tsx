@@ -63,13 +63,6 @@ const ChoresPlanner = () => {
 
   // Resolve "me"/"partner" relative to who created the chore vs who is viewing
   const getAssignedLabel = (chore: Chore) => {
-    console.log('[ChoreDebug]', { 
-      choreTitle: chore.title, 
-      assignedTo: chore.assigned_to, 
-      choreUserId: chore.user_id, 
-      currentUserId: user?.id,
-      isCreator: chore.user_id === user?.id 
-    });
     if (chore.assigned_to === "both") return "👫 Oboje";
     const isCreator = chore.user_id === user?.id;
     if (chore.assigned_to === "me") {

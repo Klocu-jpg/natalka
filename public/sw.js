@@ -1,20 +1,61 @@
 // Service Worker for Push Notifications + PWA caching
 
-const CACHE_NAME = "nasza-przestrzen-v1";
+const CACHE_NAME = "loveapp-v1";
+const ASSETS_TO_CACHE = [
+  "/",
+  "/index.html",
+  "/favicon.png",
+  "/manifest.json",
+];
 
-// Install
+// Install — pre-cache core assets
 self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+  );
   self.skipWaiting();
 });
 
-// Activate
+// Activate — clean old caches
 self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
   event.waitUntil(clients.claim());
+});
+
+// Fetch — network first, fallback to cache (skip /~oauth and supabase API)
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // Never cache auth/oauth or API requests
+  if (
+    url.pathname.startsWith("/~oauth") ||
+    url.hostname.includes("supabase") ||
+    event.request.method !== "GET"
+  ) {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/")))
+  );
 });
 
 // Push notification handler
 self.addEventListener("push", (event) => {
-  let data = { title: "Love App", body: "Nowa wiadomość! 💕" };
+  let data = { title: "LoveApp", body: "Nowa wiadomość! 💕" };
 
   try {
     if (event.data) {
@@ -31,7 +72,7 @@ self.addEventListener("push", (event) => {
     icon: "/favicon.png",
     badge: "/favicon.png",
     vibrate: [200, 100, 200, 100, 200],
-    tag: data.tag || "love-app-notification",
+    tag: data.tag || "loveapp-notification",
     renotify: true,
     requireInteraction: data.requireInteraction || false,
     data: { url: data.url || "/" },
