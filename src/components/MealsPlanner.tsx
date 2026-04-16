@@ -247,7 +247,7 @@ const MealsPlanner = () => {
         </div>
       }
     >
-      <Tabs value={String(selectedDay)} onValueChange={(v) => setSelectedDay(Number(v))} className="w-full">
+      <div>
         <div className="grid grid-cols-7 gap-1 mb-4 bg-muted rounded-lg p-1">
           {DAYS.map((day) => {
             const hasMeals = getMealsForDay(day.id).length > 0;
