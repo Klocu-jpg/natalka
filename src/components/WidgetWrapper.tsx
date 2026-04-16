@@ -33,7 +33,7 @@ const WidgetWrapper = ({ title, icon, iconBg = "gradient-primary", children, act
           )}
         </div>
       </div>
-      <ScrollArea className="flex-1 -mr-2 pr-2 sm:-mr-3 sm:pr-3">
+      <ScrollArea className="flex-1">
         {children}
       </ScrollArea>
     </div>
