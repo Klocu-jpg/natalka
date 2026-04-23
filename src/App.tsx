@@ -12,6 +12,7 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import AppLoadingScreen from "@/components/AppLoadingScreen";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import SharedRecipe from "./pages/SharedRecipe";
 import Auth from "./pages/Auth";
@@ -23,12 +24,22 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const useMinDelay = (ms: number) => {
+  const [elapsed, setElapsed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setElapsed(true), ms);
+    return () => clearTimeout(t);
+  }, [ms]);
+  return elapsed;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
   const { isAdmin, isLoading: adminLoading } = useAdmin();
+  const minElapsed = useMinDelay(1500);
 
-  if (loading || subLoading || adminLoading) {
+  if (loading || subLoading || adminLoading || !minElapsed) {
     return <AppLoadingScreen />;
   }
 
@@ -45,8 +56,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const minElapsed = useMinDelay(1500);
 
-  if (loading) {
+  if (loading || !minElapsed) {
     return <AppLoadingScreen />;
   }
 
@@ -59,8 +71,9 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 
 const LandingRoute = () => {
   const { user, loading } = useAuth();
+  const minElapsed = useMinDelay(1500);
 
-  if (loading) {
+  if (loading || !minElapsed) {
     return <AppLoadingScreen />;
   }
 
