@@ -67,7 +67,7 @@ const ShoppingList = () => {
         </div>
       ) : (
         <ul className="space-y-2">
-          {items.map((item) => (
+          {[...items].sort((a, b) => Number(a.completed) - Number(b.completed)).map((item) => (
             <li
               key={item.id}
               className={cn(
