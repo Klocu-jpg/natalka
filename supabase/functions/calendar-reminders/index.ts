@@ -275,6 +275,18 @@ Deno.serve(async (req) => {
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
 
+    // mode: "morning" (default) — calendar + countdowns + chores
+    //       "afternoon" — only uncompleted chores for today
+    let mode: "morning" | "afternoon" = "morning";
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        if (body && body.mode === "afternoon") mode = "afternoon";
+      }
+      const url = new URL(req.url);
+      if (url.searchParams.get("mode") === "afternoon") mode = "afternoon";
+    } catch {}
+
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -287,7 +299,8 @@ Deno.serve(async (req) => {
     // Collect all notifications per user
     const userNotifications = new Map<string, string[]>();
 
-    // 1. Calendar events tomorrow
+    // 1. Calendar events tomorrow (morning only)
+    if (mode === "morning") {
     const { data: events } = await adminClient
       .from("calendar_events")
       .select("*")
@@ -314,6 +327,7 @@ Deno.serve(async (req) => {
         userNotifications.set(cd.user_id, msgs);
       }
     }
+    }
 
     // 3. Today's chores (uncompleted)
     const { data: chores } = await adminClient
@@ -333,10 +347,11 @@ Deno.serve(async (req) => {
 
       for (const [userId, choreTitles] of choresByUser.entries()) {
         const msgs = userNotifications.get(userId) || [];
+        const prefix = mode === "afternoon" ? "⏰ Pamiętaj o obowiązkach" : "🧹 Dziś do zrobienia";
         if (choreTitles.length === 1) {
-          msgs.push(`🧹 Dziś do zrobienia: ${choreTitles[0]}`);
+          msgs.push(`${prefix}: ${choreTitles[0]}`);
         } else {
-          msgs.push(`🧹 Dziś do zrobienia:\n${choreTitles.map(t => `• ${t}`).join("\n")}`);
+          msgs.push(`${prefix}:\n${choreTitles.map(t => `• ${t}`).join("\n")}`);
         }
         userNotifications.set(userId, msgs);
       }
@@ -344,12 +359,13 @@ Deno.serve(async (req) => {
 
     let totalSent = 0;
 
+    const pushTitle = mode === "afternoon" ? "Przypomnienie ⏰" : "Dzień dobry! ☀️";
     for (const [userId, messages] of userNotifications.entries()) {
       const body = messages.join("\n\n");
       const sent = await sendPushToUser(
         adminClient,
         userId,
-        "Dzień dobry! ☀️",
+        pushTitle,
         body,
         vapidPublicKey,
         vapidPrivateKey
