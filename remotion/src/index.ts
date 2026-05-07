@@ -1,13 +1,22 @@
-import { registerRoot, staticFile } from "remotion";
+import { registerRoot, staticFile, delayRender, continueRender } from "remotion";
 import { RemotionRoot } from "./Root";
 
-const emojiFont = new FontFace(
-  "NotoColorEmoji",
-  `url(${staticFile("fonts/NotoColorEmoji.ttf")})`
-);
-emojiFont.load().then((f) => {
+const handle = delayRender("emoji-font");
+const style = document.createElement("style");
+style.textContent = `
+  @font-face {
+    font-family: 'NotoColorEmoji';
+    src: url('${staticFile("fonts/NotoColorEmoji.ttf")}') format('truetype');
+    font-display: block;
+  }
+  * { font-family: inherit, 'NotoColorEmoji' !important; }
+`;
+document.head.appendChild(style);
+const f = new FontFace("NotoColorEmoji", `url(${staticFile("fonts/NotoColorEmoji.ttf")})`);
+f.load().then((loaded) => {
   // @ts-ignore
-  document.fonts.add(f);
-});
+  document.fonts.add(loaded);
+  continueRender(handle);
+}).catch(() => continueRender(handle));
 
 registerRoot(RemotionRoot);
