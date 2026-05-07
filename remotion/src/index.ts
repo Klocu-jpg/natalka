@@ -9,7 +9,7 @@ style.textContent = `
     src: url('${staticFile("fonts/NotoColorEmoji.ttf")}') format('truetype');
     font-display: block;
   }
-  * { font-family: inherit, 'NotoColorEmoji' !important; }
+  body { font-family: 'NotoColorEmoji'; }
 `;
 document.head.appendChild(style);
 const f = new FontFace("NotoColorEmoji", `url(${staticFile("fonts/NotoColorEmoji.ttf")})`);
