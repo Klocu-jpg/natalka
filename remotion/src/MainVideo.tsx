@@ -51,7 +51,7 @@ const PersistentBg = () => {
 
 export const MainVideo = () => {
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ fontFamily: "Inter, NotoColorEmoji" }}>
       <PersistentBg />
       <TransitionSeries>
         <TransitionSeries.Sequence durationInFrames={100}>
