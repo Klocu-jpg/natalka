@@ -42,7 +42,7 @@ export const Scene5CTA = () => {
         loversapp.lovable.app
       </div>
       <div style={{ fontFamily: body.fontFamily, fontSize: 32, color: "#9A4437", marginTop: 16, opacity: t4 }}>
-        Bez karty kredytowej · Anuluj kiedy chcesz
+        Anuluj kiedy chcesz
       </div>
     </AbsoluteFill>
   );
