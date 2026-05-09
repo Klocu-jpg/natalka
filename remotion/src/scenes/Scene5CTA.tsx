@@ -39,7 +39,7 @@ export const Scene5CTA = () => {
         14 dni gratis
       </div>
       <div style={{ fontFamily: body.fontFamily, fontSize: 50, fontWeight: 700, color: "#1F1B16", marginTop: 80, opacity: t4 }}>
-        loversapp.lovable.app
+        loveapp.pl
       </div>
       <div style={{ fontFamily: body.fontFamily, fontSize: 32, color: "#9A4437", marginTop: 16, opacity: t4 }}>
         Anuluj kiedy chcesz

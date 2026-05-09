@@ -11,11 +11,11 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@remotion/bundler": "^4.0.457",
+    "@remotion/bundler": "^4.0.459",
     "@remotion/cli": "^4.0.457",
     "@remotion/compositor-linux-x64-musl": "^4.0.457",
     "@remotion/google-fonts": "^4.0.457",
-    "@remotion/renderer": "^4.0.457",
+    "@remotion/renderer": "^4.0.459",
     "@remotion/transitions": "^4.0.457",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
