@@ -750,6 +750,7 @@ export type Database = {
         Returns: boolean
       }
       join_couple: { Args: { p_invite_code: string }; Returns: string }
+      leave_couple: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
