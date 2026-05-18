@@ -114,15 +114,22 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
     }
 
-    // Check if user's partner is admin
-    const { data: partnerId } = await supabaseClient.rpc("get_partner_id", { p_user_id: user.id });
+    // Resolve ALL other group members (group can hold up to 4 users)
+    const { data: memberRows } = await supabaseClient.rpc("get_couple_member_ids", { p_user_id: user.id });
+    const partnerIds: string[] = Array.isArray(memberRows)
+      ? memberRows
+          .map((r: any) => (typeof r === "string" ? r : r?.get_couple_member_ids))
+          .filter((id: string | null) => id && id !== user.id)
+      : [];
+    logStep("Group members resolved", { partnerIds });
 
-    if (partnerId) {
-      const { data: partnerIsAdmin } = await supabaseClient.rpc("has_role", {
-        _user_id: partnerId, _role: "admin",
+    // Any group member admin? -> grant access
+    for (const pid of partnerIds) {
+      const { data: pAdmin } = await supabaseClient.rpc("has_role", {
+        _user_id: pid, _role: "admin",
       });
-      if (partnerIsAdmin) {
-        logStep("Partner is admin - bypassing subscription check");
+      if (pAdmin) {
+        logStep("Group member is admin - bypassing subscription check", { pid });
         return new Response(JSON.stringify({
           subscribed: true, subscription_end: null, is_trial: false, is_admin_partner: true,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
@@ -150,26 +157,24 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
     }
 
-    // 2. Check partner's subscription (only couple plans grant partner access)
-    if (partnerId) {
-      // Get partner's email
-      const { data: partnerData } = await supabaseClient.auth.admin.getUserById(partnerId);
+    // 2. Check each other group member's subscription (only couple/group plans grant shared access)
+    for (const pid of partnerIds) {
+      const { data: partnerData } = await supabaseClient.auth.admin.getUserById(pid);
       const partnerEmail = partnerData?.user?.email;
+      if (!partnerEmail) continue;
 
-      if (partnerEmail) {
-        logStep("Checking partner subscription", { partnerEmail });
-        const partnerSub = await checkStripeSubscription(stripe, partnerEmail);
+      logStep("Checking group member subscription", { partnerEmail });
+      const partnerSub = await checkStripeSubscription(stripe, partnerEmail);
 
-        if (partnerSub?.hasActiveSub && partnerSub.isCouplePlan) {
-          logStep("Partner has couple plan - granting access");
-          return new Response(JSON.stringify({
-            subscribed: true,
-            subscription_end: partnerSub.subscriptionEnd,
-            is_trial: partnerSub.isTrial,
-            is_couple_plan: true,
-            via_partner: true,
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
-        }
+      if (partnerSub?.hasActiveSub && partnerSub.isCouplePlan) {
+        logStep("Group member has couple/group plan - granting access", { partnerEmail });
+        return new Response(JSON.stringify({
+          subscribed: true,
+          subscription_end: partnerSub.subscriptionEnd,
+          is_trial: partnerSub.isTrial,
+          is_couple_plan: true,
+          via_partner: true,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
       }
     }
 
