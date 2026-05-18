@@ -1,10 +1,21 @@
 import { useState } from "react";
-import { Heart, Users, Copy, Check, UserPlus, Loader2 } from "lucide-react";
+import { Heart, Users, Copy, Check, UserPlus, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useCouple } from "@/hooks/useCouple";
 
 type TriggerRender = (args: {
@@ -18,7 +29,7 @@ interface CoupleConnectPopoverProps {
 }
 
 const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
-  const { couple, isLoading, hasPartner, createCouple, joinCouple } = useCouple();
+  const { couple, isLoading, hasPartner, createCouple, joinCouple, leaveCouple } = useCouple();
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -55,6 +66,50 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
     }
   };
 
+  const handleLeaveCouple = async () => {
+    try {
+      await leaveCouple.mutateAsync();
+      toast.success("Opuszczono parę");
+    } catch (error: any) {
+      toast.error(error?.message || "Nie udało się opuścić pary");
+    }
+  };
+
+  const leaveButton = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full h-12 text-destructive hover:text-destructive"
+          disabled={leaveCouple.isPending}
+        >
+          {leaveCouple.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <LogOut className="w-4 h-4 mr-2" />
+              Opuść parę
+            </>
+          )}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Opuścić parę?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {hasPartner
+              ? "Stracisz dostęp do wspólnych danych. Partner zostanie w parze i otrzyma nowy kod zaproszenia."
+              : "Para zostanie usunięta. Będziesz mógł utworzyć nową lub dołączyć do innej."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Anuluj</AlertDialogCancel>
+          <AlertDialogAction onClick={handleLeaveCouple}>Opuść</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -79,6 +134,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
             </div>
             <p className="text-sm font-medium">Para połączona!</p>
             <p className="text-xs text-muted-foreground mt-1">Wszystkie dane są współdzielone</p>
+            <div className="mt-4">{leaveButton}</div>
           </div>
         ) : couple ? (
           <div className="space-y-3">
@@ -126,6 +182,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
             <p className="text-xs text-muted-foreground text-center">
               Partner musi się zarejestrować i wpisać Twój kod
             </p>
+            {leaveButton}
           </div>
         ) : (
           <div className="space-y-3">
