@@ -6,6 +6,8 @@ export interface Couple {
   id: string;
   user1_id: string;
   user2_id: string | null;
+  user3_id: string | null;
+  user4_id: string | null;
   invite_code: string;
   created_at: string;
 }
@@ -20,7 +22,9 @@ export const useCouple = () => {
       const { data, error } = await supabase
         .from("couples")
         .select("*")
-        .or(`user1_id.eq.${user!.id},user2_id.eq.${user!.id}`)
+        .or(
+          `user1_id.eq.${user!.id},user2_id.eq.${user!.id},user3_id.eq.${user!.id},user4_id.eq.${user!.id}`
+        )
         .maybeSingle();
       if (error) throw error;
       return data as Couple | null;
@@ -90,8 +94,26 @@ export const useCouple = () => {
     },
   });
 
-  const hasPartner = !!couple && couple.user2_id !== null;
+  const memberIds = couple
+    ? [couple.user1_id, couple.user2_id, couple.user3_id, couple.user4_id].filter(
+        (id): id is string => !!id
+      )
+    : [];
+  const memberCount = memberIds.length;
+  const hasPartner = memberCount > 1;
+  const isFull = memberCount >= 4;
   const isCreator = couple?.user1_id === user?.id;
 
-  return { couple, isLoading, createCouple, joinCouple, leaveCouple, hasPartner, isCreator };
+  return {
+    couple,
+    isLoading,
+    createCouple,
+    joinCouple,
+    leaveCouple,
+    hasPartner,
+    isCreator,
+    memberIds,
+    memberCount,
+    isFull,
+  };
 };
