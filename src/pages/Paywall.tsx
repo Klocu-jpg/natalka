@@ -23,8 +23,10 @@ const Paywall = () => {
       toast.error("Wpisz kod zaproszenia");
       return;
     }
+    const match = inviteCode.match(/\/zaproszenie\/([^/?#\s]+)/i);
+    const code = (match ? match[1] : inviteCode).trim();
     try {
-      await joinCouple.mutateAsync(inviteCode);
+      await joinCouple.mutateAsync(code);
       toast.success("Dołączono do pary! Sprawdzam subskrypcję partnera…");
       await checkSubscription();
     } catch (error: any) {
@@ -176,14 +178,14 @@ const Paywall = () => {
             <h3 className="text-sm font-heading font-semibold">Twój partner ma już plan „Para"?</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Wpisz jego kod zaproszenia — jeden plan „Para" odblokowuje dostęp dla Was obojga, nie musisz nic kupować.
+            Wklej link zaproszenia od partnera — jeden plan „Para" odblokowuje dostęp dla Was obojga, nie musisz nic kupować.
           </p>
           <div className="flex gap-2">
             <Input
-              placeholder="Kod zaproszenia"
+              placeholder="Link lub kod zaproszenia"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
-              className="font-mono uppercase h-11"
+              className="h-11"
             />
             <Button
               onClick={handleJoin}
