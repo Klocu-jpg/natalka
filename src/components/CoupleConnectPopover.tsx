@@ -29,7 +29,7 @@ interface CoupleConnectPopoverProps {
 }
 
 const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
-  const { couple, isLoading, hasPartner, createCouple, joinCouple, leaveCouple } = useCouple();
+  const { couple, isLoading, hasPartner, createCouple, joinCouple, leaveCouple, memberCount, isFull } = useCouple();
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -145,7 +145,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
           <div className="flex justify-center py-4">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : hasPartner ? (
+        ) : hasPartner && isFull ? (
           <div className="text-center py-2">
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="w-10 h-10 rounded-full bg-rose-light flex items-center justify-center">
@@ -156,14 +156,21 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
                 <Users className="w-5 h-5 text-coral" />
               </div>
             </div>
-            <p className="text-sm font-medium">Para połączona!</p>
+            <p className="text-sm font-medium">Grupa pełna ({memberCount}/4)</p>
             <p className="text-xs text-muted-foreground mt-1">Wszystkie dane są współdzielone</p>
             <div className="mt-4">{leaveButton}</div>
           </div>
         ) : couple ? (
           <div className="space-y-3">
-            <p className="text-sm font-medium">Zaproś partnera</p>
-            <p className="text-xs text-muted-foreground">Wyślij ten link partnerowi — kliknięcie automatycznie połączy Was w parę:</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">
+                {hasPartner ? `Zaproś kolejną osobę` : `Zaproś partnera`}
+              </p>
+              <span className="text-xs text-muted-foreground">{memberCount}/4</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Wyślij ten link — kliknięcie automatycznie dołączy do Waszej grupy (do 4 osób):
+            </p>
             <div className="flex items-center gap-2 bg-secondary rounded-xl p-2 pl-3">
               <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="flex-1 text-xs font-mono truncate" title={inviteUrl}>

@@ -160,6 +160,8 @@ export type Database = {
           invite_code: string
           user1_id: string
           user2_id: string | null
+          user3_id: string | null
+          user4_id: string | null
         }
         Insert: {
           created_at?: string
@@ -167,6 +169,8 @@ export type Database = {
           invite_code?: string
           user1_id: string
           user2_id?: string | null
+          user3_id?: string | null
+          user4_id?: string | null
         }
         Update: {
           created_at?: string
@@ -174,6 +178,8 @@ export type Database = {
           invite_code?: string
           user1_id?: string
           user2_id?: string | null
+          user3_id?: string | null
+          user4_id?: string | null
         }
         Relationships: []
       }
@@ -741,6 +747,7 @@ export type Database = {
           day: string
         }[]
       }
+      get_couple_member_ids: { Args: { p_user_id: string }; Returns: string[] }
       get_partner_id: { Args: { p_user_id: string }; Returns: string }
       has_role: {
         Args: {
