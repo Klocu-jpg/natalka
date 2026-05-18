@@ -81,7 +81,21 @@ export const useSubscription = () => {
     });
     if (error) throw error;
     if (data?.url) {
-      window.location.href = data.url;
+      // In Lovable preview the app runs inside an iframe — same-frame navigation
+      // to external domains (Stripe) is blocked. Try a new tab first, then fall
+      // back to navigating the top-level window, then the current window.
+      const opened = window.open(data.url, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.href = data.url;
+            return;
+          }
+        } catch {
+          // cross-origin top access blocked — fall through
+        }
+        window.location.href = data.url;
+      }
     }
   };
 
