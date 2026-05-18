@@ -79,8 +79,19 @@ export const useCouple = () => {
       queryClient.invalidateQueries({ queryKey: ["couple", user?.id] }),
   });
 
+  const leaveCouple = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("leave_couple");
+      if (error) throw new Error(error.message || "Nie udało się opuścić pary");
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["couple", user?.id] });
+    },
+  });
+
   const hasPartner = !!couple && couple.user2_id !== null;
   const isCreator = couple?.user1_id === user?.id;
 
-  return { couple, isLoading, createCouple, joinCouple, hasPartner, isCreator };
+  return { couple, isLoading, createCouple, joinCouple, leaveCouple, hasPartner, isCreator };
 };
