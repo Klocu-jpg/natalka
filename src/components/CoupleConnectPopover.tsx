@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Users, Copy, Check, UserPlus, Loader2, LogOut } from "lucide-react";
+import { Heart, Users, Copy, Check, UserPlus, Loader2, LogOut, Link2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,10 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const inviteUrl = couple
+    ? `${window.location.origin}/zaproszenie/${couple.invite_code}`
+    : "";
+
   const handleCreateCouple = async () => {
     try {
       await createCouple.mutateAsync();
@@ -47,8 +51,11 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
       toast.error("Wpisz kod zaproszenia");
       return;
     }
+    // Allow pasting the full invite URL too
+    const match = inviteCode.match(/\/zaproszenie\/([^/?#\s]+)/i);
+    const code = (match ? match[1] : inviteCode).trim();
     try {
-      await joinCouple.mutateAsync(inviteCode);
+      await joinCouple.mutateAsync(code);
       toast.success("Dołączono do pary!");
       setInviteCode("");
     } catch (error: any) {
@@ -57,13 +64,30 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
     }
   };
 
-  const copyCode = () => {
-    if (couple?.invite_code) {
-      navigator.clipboard.writeText(couple.invite_code);
+  const copyLink = () => {
+    if (inviteUrl) {
+      navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
-      toast.success("Kod skopiowany!");
+      toast.success("Link skopiowany!");
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const shareLink = async () => {
+    if (!inviteUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Dołącz do mnie w LoveApp 💕",
+          text: "Kliknij, żeby połączyć się ze mną w LoveApp:",
+          url: inviteUrl,
+        });
+        return;
+      } catch {
+        // user cancelled — fall back to copy
+      }
+    }
+    copyLink();
   };
 
   const handleLeaveCouple = async () => {
@@ -139,15 +163,20 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
         ) : couple ? (
           <div className="space-y-3">
             <p className="text-sm font-medium">Zaproś partnera</p>
-            <p className="text-xs text-muted-foreground">Podziel się tym kodem:</p>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-secondary rounded-xl p-3 font-mono text-center font-bold tracking-wider text-lg">
-                {couple.invite_code.toUpperCase()}
+            <p className="text-xs text-muted-foreground">Wyślij ten link partnerowi — kliknięcie automatycznie połączy Was w parę:</p>
+            <div className="flex items-center gap-2 bg-secondary rounded-xl p-2 pl-3">
+              <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 text-xs font-mono truncate" title={inviteUrl}>
+                {inviteUrl.replace(/^https?:\/\//, "")}
               </div>
-              <Button onClick={copyCode} size="icon" variant="ghost" className="h-12 w-12">
-                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              <Button onClick={copyLink} size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
+            <Button onClick={shareLink} className="w-full h-11">
+              <Share2 className="w-4 h-4 mr-2" />
+              Udostępnij link
+            </Button>
 
             <div className="relative my-3">
               <div className="absolute inset-0 flex items-center">
@@ -160,10 +189,10 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
 
             <div className="space-y-2">
               <Input
-                placeholder="Wpisz kod zaproszenia"
+                placeholder="Wklej link lub kod zaproszenia"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                className="font-mono uppercase text-base h-12"
+                className="text-base h-12"
               />
               <Button
                 onClick={handleJoinCouple}
@@ -180,7 +209,7 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
             </div>
 
             <p className="text-xs text-muted-foreground text-center">
-              Partner musi się zarejestrować i wpisać Twój kod
+              Partner po kliknięciu w link założy konto i automatycznie dołączy do pary.
             </p>
             {leaveButton}
           </div>
@@ -208,10 +237,10 @@ const CoupleConnectPopover = ({ trigger }: CoupleConnectPopoverProps) => {
 
             <div className="space-y-2">
               <Input
-                placeholder="Wpisz kod zaproszenia"
+                placeholder="Wklej link lub kod zaproszenia"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                className="font-mono uppercase text-base h-12"
+                className="text-base h-12"
               />
               <Button
                 onClick={handleJoinCouple}
