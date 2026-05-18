@@ -1,7 +1,9 @@
-import { Heart, Check, Loader2, Crown, Users } from "lucide-react";
+import { Heart, Check, Loader2, Crown, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCouple } from "@/hooks/useCouple";
 import { PLANS, COUPLE_PLANS } from "@/config/plans";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -9,10 +11,26 @@ import { useState } from "react";
 type PlanType = "solo" | "couple";
 
 const Paywall = () => {
-  const { startCheckout, testMode } = useSubscription();
+  const { startCheckout, testMode, checkSubscription } = useSubscription();
   const { signOut } = useAuth();
+  const { joinCouple } = useCouple();
   const [loading, setLoading] = useState<string | null>(null);
   const [planType, setPlanType] = useState<PlanType>("solo");
+  const [inviteCode, setInviteCode] = useState("");
+
+  const handleJoin = async () => {
+    if (!inviteCode.trim()) {
+      toast.error("Wpisz kod zaproszenia");
+      return;
+    }
+    try {
+      await joinCouple.mutateAsync(inviteCode);
+      toast.success("Dołączono do pary! Sprawdzam subskrypcję partnera…");
+      await checkSubscription();
+    } catch (error: any) {
+      toast.error(error?.message || "Nieprawidłowy kod");
+    }
+  };
 
   const activePlans = planType === "solo" ? PLANS : COUPLE_PLANS;
 
@@ -151,6 +169,32 @@ const Paywall = () => {
         </div>
 
         <p className="text-xs text-muted-foreground">🎁 14-dniowy darmowy okres próbny • Anuluj w dowolnym momencie</p>
+
+        <div className="bg-card border border-border rounded-2xl p-5 text-left max-w-md mx-auto">
+          <div className="flex items-center gap-2 mb-2">
+            <UserPlus className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-heading font-semibold">Twój partner ma już plan „Para"?</h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Wpisz jego kod zaproszenia — jeden plan „Para" odblokowuje dostęp dla Was obojga, nie musisz nic kupować.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Kod zaproszenia"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              className="font-mono uppercase h-11"
+            />
+            <Button
+              onClick={handleJoin}
+              variant="outline"
+              className="h-11"
+              disabled={joinCouple.isPending}
+            >
+              {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dołącz"}
+            </Button>
+          </div>
+        </div>
 
         <div className="flex flex-col items-center gap-1.5">
           <p className="text-xs text-muted-foreground font-medium">Akceptowane metody płatności</p>
