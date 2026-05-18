@@ -21,6 +21,8 @@ import Landing from "./pages/Landing";
 import Paywall from "./pages/Paywall";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
+import InvitePage from "./pages/InvitePage";
+import PendingInviteHandler from "@/components/invite/PendingInviteHandler";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +92,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
     <Route path="/prawne/:slug" element={<Legal />} />
     <Route path="/przepis/:id" element={<SharedRecipe />} />
+    <Route path="/zaproszenie/:code" element={<InvitePage />} />
     <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
@@ -108,6 +111,7 @@ const App = () => (
               <LoadingProvider>
                 <LoadingOverlay />
                 <PWAInstallPrompt />
+                <PendingInviteHandler />
                 <AppRoutes />
               </LoadingProvider>
             </WidgetVisibilityProvider>
