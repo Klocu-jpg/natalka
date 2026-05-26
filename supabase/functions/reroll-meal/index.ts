@@ -55,7 +55,7 @@ serve(async (req) => {
 
     const { excludeNames = [], mealType = "dinner", servings: rawServings = 1 } =
       await req.json().catch(() => ({}));
-    const servings = Math.min(6, Math.max(1, Number.isFinite(Number(rawServings)) ? Math.round(Number(rawServings)) : 1));
+    const requestedServings = Math.min(6, Math.max(1, Number.isFinite(Number(rawServings)) ? Math.round(Number(rawServings)) : 1));
     const safeExclude: string[] = Array.isArray(excludeNames)
       ? excludeNames.filter((s: unknown) => typeof s === "string").slice(0, 20)
       : [];
@@ -64,29 +64,46 @@ serve(async (req) => {
     const typeLabel = type === "breakfast" ? "ŚNIADANIE" : type === "lunch" ? "OBIAD" : "KOLACJĘ";
     const split: Record<string, number> = { breakfast: 0.25, lunch: 0.38, dinner: 0.37 };
 
-    const { data: prefs } = await supabase
+    // Pobierz członków pary i ich preferencje
+    const { data: memberRows } = await supabase
+      .rpc("get_couple_member_ids", { p_user_id: user.id });
+    const memberIds: string[] = Array.isArray(memberRows)
+      ? memberRows.map((r: any) => (typeof r === "string" ? r : r.get_couple_member_ids)).filter(Boolean)
+      : [];
+    const orderedIds = [user.id, ...memberIds.filter((id) => id !== user.id)];
+    const effectiveServings = Math.min(requestedServings, Math.max(1, orderedIds.length));
+    const useIds = orderedIds.slice(0, effectiveServings);
+
+    const { data: prefsRows } = await supabase
       .from("diet_preferences")
       .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .in("user_id", useIds);
+    const prefsById = new Map<string, any>((prefsRows ?? []).map((p: any) => [p.user_id, p]));
+    const perPerson = useIds.map((id) => ({ kcal: computeCalories(prefsById.get(id)), prefs: prefsById.get(id) }));
+    const totalKcal = perPerson.reduce((s, p) => s + (p.kcal ?? 0), 0) || null;
+    const mealKcal = totalKcal ? Math.round(totalKcal * split[type]) : null;
 
-    const target = computeCalories(prefs);
-    const mealKcal = target ? Math.round(target * split[type]) : null;
+    const collect = (key: string) =>
+      perPerson.map((p) => p.prefs?.[key]).filter((v: any) => typeof v === "string" && v.trim());
+    const allAllergies = Array.from(new Set(collect("allergies").join(",").split(",").map((s) => s.trim()).filter(Boolean)));
+    const allDislikes = Array.from(new Set(collect("dislikes").join(",").split(",").map((s) => s.trim()).filter(Boolean)));
+    const allDietTypes = Array.from(new Set(collect("diet_type")));
+    const allHealth = collect("health_conditions").join(" | ");
+    const allLikes = collect("likes").join(" | ");
 
     const ctxParts: string[] = [];
-    if (prefs?.diet_type) ctxParts.push(`Typ diety: ${prefs.diet_type}`);
-    if (prefs?.allergies) ctxParts.push(`ALERGIE (bezwzględnie pomiń): ${prefs.allergies}`);
-    if (prefs?.health_conditions) ctxParts.push(`Ograniczenia zdrowotne: ${prefs.health_conditions}`);
-    if (prefs?.dislikes) ctxParts.push(`Nie lubi: ${prefs.dislikes}`);
-    if (prefs?.likes) ctxParts.push(`Lubi: ${prefs.likes}`);
-    if (prefs?.notes) ctxParts.push(`Uwagi: ${prefs.notes}`);
+    if (allDietTypes.length) ctxParts.push(`Typ diety: ${allDietTypes.join(", ")}`);
+    if (allAllergies.length) ctxParts.push(`ALERGIE (bezwzględnie pomiń): ${allAllergies.join(", ")}`);
+    if (allHealth) ctxParts.push(`Ograniczenia zdrowotne: ${allHealth}`);
+    if (allDislikes.length) ctxParts.push(`Nie lubią: ${allDislikes.join(", ")}`);
+    if (allLikes) ctxParts.push(`Lubią: ${allLikes}`);
     const ctx = ctxParts.length ? `\n\nPREFERENCJE:\n- ${ctxParts.join("\n- ")}` : "";
 
     const kcalLine = mealKcal
-      ? `Cel kalorii: około ${mealKcal} kcal.`
+      ? `Cel kalorii ŁĄCZNIE dla ${effectiveServings} ${effectiveServings === 1 ? "osoby" : "os."}: ~${mealKcal} kcal.`
       : "Cel: zbilansowany posiłek.";
-    const servingsLine = servings > 1
-      ? `\nGOTUJEMY DLA ${servings} OSÓB: ilości w "ingredients" pomnóż × ${servings}; "calories" i makro zostaw NA 1 PORCJĘ.`
+    const servingsLine = effectiveServings > 1
+      ? `\nGOTUJEMY DLA ${effectiveServings} OSÓB: składniki w "ingredients" = ŁĄCZNA ilość; "calories" i makro = SUMA dla całego posiłku.`
       : "";
     const excludeLine = safeExclude.length
       ? `\nNIE PROPONUJ tych dań (były już w planie): ${safeExclude.join(", ")}.`
