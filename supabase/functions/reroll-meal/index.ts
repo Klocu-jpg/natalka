@@ -103,10 +103,14 @@ serve(async (req) => {
             role: "system",
             content: `Jesteś dietetykiem i kucharzem. Proponujesz JEDNO ${typeLabel} po polsku.
 ${kcalLine}${excludeLine}
+Zawsze pełen przepis (min. 4 kroki) i konkretne ilości składników. Dopasuj do preferencji, NIGDY nie używaj alergenów.
 Odpowiadaj TYLKO w formacie JSON:
 {
   "name": "nazwa dania",
   "calories": 650,
+  "protein_g": 35,
+  "carbs_g": 60,
+  "fats_g": 20,
   "recipe": "Szczegółowy przepis krok po kroku...",
   "ingredients": [{ "name": "...", "amount": "..." }]
 }${ctx}`,
