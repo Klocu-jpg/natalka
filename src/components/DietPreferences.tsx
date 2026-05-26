@@ -19,6 +19,7 @@ import { useLoading } from "@/contexts/LoadingContext";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
 import { useCouple } from "@/hooks/useCouple";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +110,28 @@ const DietPreferences = () => {
       .filter(Boolean).length || 1;
   }, [couple]);
 
+  const memberIds = useMemo(() => {
+    if (!couple) return user ? [user.id] : [];
+    const ids = [couple.user1_id, couple.user2_id, couple.user3_id, couple.user4_id].filter(Boolean) as string[];
+    // user jako pierwszy
+    return user ? [user.id, ...ids.filter((id) => id !== user.id)] : ids;
+  }, [couple, user]);
+
+  // Preferencje wszystkich członków pary (do wyliczenia łącznego zapotrzebowania)
+  const { data: allMembersPrefs = [] } = useQuery({
+    queryKey: ["diet_preferences_all", memberIds.join(",")],
+    queryFn: async () => {
+      if (memberIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("diet_preferences" as any)
+        .select("user_id, biological_sex, birth_year, height_cm, weight_kg, activity_level, goal")
+        .in("user_id", memberIds);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    enabled: memberIds.length > 0,
+  });
+
   const [servings, setServings] = useState<number>(() => {
     try {
       const raw = localStorage.getItem(SERVINGS_KEY);
@@ -132,6 +155,32 @@ const DietPreferences = () => {
   useEffect(() => {
     try { localStorage.setItem(SERVINGS_KEY, String(servings)); } catch { /* ignore */ }
   }, [servings]);
+
+  // Per-osoba kcal dla wybranej liczby porcji
+  const perPersonCalories = useMemo(() => {
+    if (memberIds.length === 0) return [];
+    const prefsById = new Map<string, any>(allMembersPrefs.map((p) => [p.user_id, p]));
+    return memberIds.slice(0, servings).map((id, i) => {
+      const p = prefsById.get(id);
+      const c = calculateCalories({
+        sex: p?.biological_sex ?? "",
+        birthYear: p?.birth_year ?? null,
+        heightCm: p?.height_cm ?? null,
+        weightKg: p?.weight_kg ?? null,
+        activity: p?.activity_level ?? "",
+        goal: p?.goal ?? "",
+      });
+      return {
+        id,
+        idx: i + 1,
+        isMe: id === user?.id,
+        target: c?.target ?? null,
+      };
+    });
+  }, [memberIds, allMembersPrefs, servings, user?.id]);
+
+  const totalDailyKcal = perPersonCalories.reduce((s, p) => s + (p.target ?? 0), 0) || null;
+  const allPersonsHaveData = perPersonCalories.length > 0 && perPersonCalories.every((p) => p.target != null);
 
   useEffect(() => {
     try {
@@ -184,6 +233,11 @@ const DietPreferences = () => {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
+      if (servings > 1 && !allPersonsHaveData) {
+        toast.error("Brakuje danych jednej z osób (płeć, wzrost, waga, wiek). Uzupełnij w ustawieniach diety.");
+        setGenerating(false);
+        return;
+      }
       const { data, error } = await withLoading(
         () => supabase.functions.invoke("generate-meal-plan", { body: { servings } }),
         `AI układa plan na tydzień dla ${servings} ${servings === 1 ? "osoby" : "osób"}...`
