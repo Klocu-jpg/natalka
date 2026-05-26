@@ -16,6 +16,7 @@ import { calculateCalories, ACTIVITY_LABELS, GOAL_LABELS } from "@/lib/calories"
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
+import { useShoppingItems } from "@/hooks/useShoppingItems";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,9 @@ interface DraftMeal {
   meal_type: MealType;
   name: string;
   calories?: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fats_g?: number | null;
   recipe?: string | null;
   ingredients?: DraftIngredient[];
 }
@@ -80,6 +84,7 @@ const DietPreferences = () => {
   const { user } = useAuth();
   const { preferences, isLoading, upsertPreferences } = useDietPreferences();
   const { withLoading } = useLoading();
+  const { addItems } = useShoppingItems();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<DietPreferencesInput>(empty);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -180,6 +185,9 @@ const DietPreferences = () => {
                 ...m,
                 name: (data as any).name,
                 calories: (data as any).calories ?? null,
+                protein_g: (data as any).protein_g ?? null,
+                carbs_g: (data as any).carbs_g ?? null,
+                fats_g: (data as any).fats_g ?? null,
                 recipe: (data as any).recipe ?? null,
                 ingredients: (data as any).ingredients ?? [],
               }
@@ -203,11 +211,19 @@ const DietPreferences = () => {
 
       const rows = plan.map((m) => {
         const meta = MEAL_META[m.meal_type];
+        const macros = [
+          m.protein_g != null ? `B:${m.protein_g}g` : null,
+          m.carbs_g != null ? `W:${m.carbs_g}g` : null,
+          m.fats_g != null ? `T:${m.fats_g}g` : null,
+        ].filter(Boolean).join(" · ");
+        const recipeWithMacros = m.recipe
+          ? (macros ? `📊 Makro: ${macros}\n\n${m.recipe}` : m.recipe)
+          : null;
         return {
           user_id: user.id,
           day_of_week: m.day_of_week,
           name: `${meta.emoji} ${meta.label} · ${m.name}`,
-          recipe: m.recipe ?? null,
+          recipe: recipeWithMacros,
           ingredients: JSON.parse(JSON.stringify(m.ingredients ?? [])),
           calories: m.calories ?? null,
         };
@@ -215,8 +231,30 @@ const DietPreferences = () => {
       const { error: insErr } = await supabase.from("meals").insert(rows);
       if (insErr) throw insErr;
 
+      // Auto-add all ingredients to shopping list (deduplicated by name)
+      const ingMap = new Map<string, string>();
+      for (const m of plan) {
+        for (const ing of m.ingredients ?? []) {
+          if (!ing?.name) continue;
+          const key = ing.name.trim().toLowerCase();
+          if (!ingMap.has(key)) {
+            ingMap.set(key, `${ing.name}${ing.amount ? ` (${ing.amount})` : ""}`);
+          }
+        }
+      }
+      const shoppingNames = Array.from(ingMap.values());
+      if (shoppingNames.length > 0) {
+        try {
+          await addItems.mutateAsync(shoppingNames);
+        } catch (e) {
+          console.warn("Shopping list import failed:", e);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["meals", user.id] });
-      toast.success(`Zaimportowano ${rows.length} posiłków do planu 🍽️`);
+      toast.success(
+        `Zaimportowano ${rows.length} posiłków 🍽️ + ${shoppingNames.length} produktów do listy zakupów 🛒`
+      );
     } catch (e: any) {
       toast.error(e?.message || "Nie udało się zaimportować planu");
     } finally {
@@ -612,12 +650,35 @@ const DietPreferences = () => {
                           )}
                         </Button>
                       </div>
-                      {meal.calories ? (
-                        <p className="text-xs text-muted-foreground mt-1 ml-7">
-                          {meal.calories} kcal
-                          {meal.ingredients?.length ? ` · ${meal.ingredients.length} składników` : ""}
-                        </p>
-                      ) : null}
+                      {(meal.calories || meal.protein_g != null) && (
+                        <div className="mt-1.5 ml-7 flex flex-wrap items-center gap-1.5 text-[10px]">
+                          {meal.calories ? (
+                            <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
+                              {meal.calories} kcal
+                            </span>
+                          ) : null}
+                          {meal.protein_g != null && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600">
+                              B {meal.protein_g}g
+                            </span>
+                          )}
+                          {meal.carbs_g != null && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700">
+                              W {meal.carbs_g}g
+                            </span>
+                          )}
+                          {meal.fats_g != null && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700">
+                              T {meal.fats_g}g
+                            </span>
+                          )}
+                          {meal.ingredients?.length ? (
+                            <span className="text-muted-foreground">
+                              · {meal.ingredients.length} skł.
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
                     </li>
                   );
                 })}
@@ -679,12 +740,29 @@ const DietPreferences = () => {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
-                {recipeMeal.calories ? (
-                  <div className="inline-flex items-center gap-2 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full">
-                    <Flame className="w-3.5 h-3.5" />
-                    {recipeMeal.calories} kcal
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap gap-1.5">
+                  {recipeMeal.calories ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
+                      <Flame className="w-3.5 h-3.5" />
+                      {recipeMeal.calories} kcal
+                    </span>
+                  ) : null}
+                  {recipeMeal.protein_g != null && (
+                    <span className="text-xs bg-rose-500/10 text-rose-600 px-3 py-1.5 rounded-full font-medium">
+                      Białko {recipeMeal.protein_g}g
+                    </span>
+                  )}
+                  {recipeMeal.carbs_g != null && (
+                    <span className="text-xs bg-amber-500/10 text-amber-700 px-3 py-1.5 rounded-full font-medium">
+                      Węgle {recipeMeal.carbs_g}g
+                    </span>
+                  )}
+                  {recipeMeal.fats_g != null && (
+                    <span className="text-xs bg-emerald-500/10 text-emerald-700 px-3 py-1.5 rounded-full font-medium">
+                      Tłuszcze {recipeMeal.fats_g}g
+                    </span>
+                  )}
+                </div>
                 {recipeMeal.ingredients && recipeMeal.ingredients.length > 0 && (
                   <div>
                     <h4 className="font-heading font-semibold mb-2 text-sm">🧂 Składniki</h4>
