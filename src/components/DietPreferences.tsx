@@ -747,7 +747,7 @@ const DietPreferences = () => {
                 </h3>
                 {dayTotalKcal > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    Σ {dayTotalKcal} kcal
+                    Σ {dayTotalKcal} kcal{servings > 1 ? ` (łącznie / ${servings} os.)` : ""}
                   </span>
                 )}
               </div>
