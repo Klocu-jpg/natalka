@@ -53,10 +53,14 @@ serve(async (req) => {
       });
     }
 
-    const { excludeNames = [] } = await req.json().catch(() => ({}));
+    const { excludeNames = [], mealType = "dinner" } = await req.json().catch(() => ({}));
     const safeExclude: string[] = Array.isArray(excludeNames)
       ? excludeNames.filter((s: unknown) => typeof s === "string").slice(0, 20)
       : [];
+    const validTypes = ["breakfast", "lunch", "dinner"] as const;
+    const type = (validTypes as readonly string[]).includes(mealType) ? mealType : "dinner";
+    const typeLabel = type === "breakfast" ? "ŚNIADANIE" : type === "lunch" ? "OBIAD" : "KOLACJĘ";
+    const split: Record<string, number> = { breakfast: 0.25, lunch: 0.38, dinner: 0.37 };
 
     const { data: prefs } = await supabase
       .from("diet_preferences")
@@ -65,7 +69,7 @@ serve(async (req) => {
       .maybeSingle();
 
     const target = computeCalories(prefs);
-    const dinnerKcal = target ? Math.round(target * 0.37) : null;
+    const mealKcal = target ? Math.round(target * split[type]) : null;
 
     const ctxParts: string[] = [];
     if (prefs?.diet_type) ctxParts.push(`Typ diety: ${prefs.diet_type}`);
@@ -76,9 +80,9 @@ serve(async (req) => {
     if (prefs?.notes) ctxParts.push(`Uwagi: ${prefs.notes}`);
     const ctx = ctxParts.length ? `\n\nPREFERENCJE:\n- ${ctxParts.join("\n- ")}` : "";
 
-    const kcalLine = dinnerKcal
-      ? `Cel kalorii: około ${dinnerKcal} kcal.`
-      : "Cel: zbilansowany obiad ~600-700 kcal.";
+    const kcalLine = mealKcal
+      ? `Cel kalorii: około ${mealKcal} kcal.`
+      : "Cel: zbilansowany posiłek.";
     const excludeLine = safeExclude.length
       ? `\nNIE PROPONUJ tych dań (były już w planie): ${safeExclude.join(", ")}.`
       : "";
@@ -97,7 +101,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Jesteś dietetykiem i kucharzem. Proponujesz JEDEN obiad po polsku.
+            content: `Jesteś dietetykiem i kucharzem. Proponujesz JEDNO ${typeLabel} po polsku.
 ${kcalLine}${excludeLine}
 Odpowiadaj TYLKO w formacie JSON:
 {
@@ -107,7 +111,7 @@ Odpowiadaj TYLKO w formacie JSON:
   "ingredients": [{ "name": "...", "amount": "..." }]
 }${ctx}`,
           },
-          { role: "user", content: "Zaproponuj jeden nowy obiad." },
+          { role: "user", content: `Zaproponuj jedno nowe ${typeLabel.toLowerCase()}.` },
         ],
       }),
     });

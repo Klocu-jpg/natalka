@@ -64,8 +64,10 @@ serve(async (req) => {
       .maybeSingle();
 
     const targetCalories = computeCalories(prefs);
-    // The plan generates DINNERS only — target dinner = ~35-40% of daily kcal
-    const dinnerKcal = targetCalories ? Math.round(targetCalories * 0.37) : null;
+    // Calorie split for breakfast / lunch / dinner
+    const split = { breakfast: 0.25, lunch: 0.38, dinner: 0.37 } as const;
+    const kcalFor = (type: keyof typeof split) =>
+      targetCalories ? Math.round(targetCalories * split[type]) : null;
 
     const ctxParts: string[] = [];
     if (prefs?.diet_type) ctxParts.push(`Typ diety: ${prefs.diet_type}`);
@@ -78,9 +80,14 @@ serve(async (req) => {
       ? `\n\nPREFERENCJE UŻYTKOWNIKA:\n- ${ctxParts.join("\n- ")}`
       : "";
 
-    const kcalLine = dinnerKcal
-      ? `Cel kalorii NA OBIAD: około ${dinnerKcal} kcal (dzienne zapotrzebowanie użytkownika: ${targetCalories} kcal).`
-      : "Generuj zbilansowane obiady ~600-700 kcal.";
+    const kcalLine = targetCalories
+      ? `Dzienne zapotrzebowanie użytkownika: ${targetCalories} kcal.
+Rozkład kcal na posiłek:
+- ŚNIADANIE (breakfast): ~${kcalFor("breakfast")} kcal
+- OBIAD (lunch): ~${kcalFor("lunch")} kcal
+- KOLACJA (dinner): ~${kcalFor("dinner")} kcal`
+      : `Generuj zbilansowane posiłki:
+- śniadanie ~400 kcal, obiad ~700 kcal, kolacja ~500 kcal.`;
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
@@ -96,29 +103,30 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Jesteś dietetykiem i kucharzem. Generujesz plan obiadów na 7 dni po polsku.
+            content: `Jesteś dietetykiem i kucharzem. Generujesz KOMPLETNY plan jedzenia na 7 dni po polsku: ŚNIADANIE, OBIAD i KOLACJA na każdy dzień (łącznie DOKŁADNIE 21 pozycji).
 ${kcalLine}
-Dania mają być RÓŻNORODNE (różne białka, różne kuchnie świata, brak powtórzeń).
+Dania mają być RÓŻNORODNE (różne białka, różne kuchnie świata, brak powtórzeń w tygodniu).
 
 Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
 {
   "meals": [
     {
       "day_of_week": 0,
+      "meal_type": "breakfast",
       "name": "nazwa dania",
-      "calories": 650,
+      "calories": 420,
       "recipe": "Szczegółowy przepis krok po kroku...",
       "ingredients": [
         { "name": "nazwa składnika", "amount": "ilość np. 200g" }
       ]
     }
-    // ... dni 0..6 (Pn=0, Nd=6) – DOKŁADNIE 7 elementów
+    // 21 elementów: dni 0..6 (Pn=0, Nd=6) × meal_type: breakfast|lunch|dinner
   ]
 }${ctx}`,
           },
           {
             role: "user",
-            content: "Wygeneruj plan obiadów na cały tydzień (7 dni).",
+            content: "Wygeneruj kompletny plan jedzenia na cały tydzień: śniadanie, obiad i kolacja na każdy dzień (21 posiłków).",
           },
         ],
       }),
@@ -154,7 +162,7 @@ Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
     }
 
     return new Response(
-      JSON.stringify({ meals: parsed.meals, targetCalories, dinnerKcal }),
+      JSON.stringify({ meals: parsed.meals, targetCalories }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
