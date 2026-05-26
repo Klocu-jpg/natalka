@@ -558,6 +558,34 @@ const DietPreferences = () => {
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Servings selector */}
+          <div className="flex items-center justify-between gap-2 rounded-2xl border bg-card px-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="font-medium">Plan dla</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setServings(n)}
+                  className={cn(
+                    "h-7 w-9 rounded-md text-xs font-semibold transition-all",
+                    servings === n
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                  title={`${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osób"}`}
+                >
+                  {n}
+                </button>
+              ))}
+              <span className="ml-1 text-xs text-muted-foreground">
+                {servings === 1 ? "osoby" : "osób"}
+              </span>
+            </div>
+          </div>
+
           {/* Calorie summary */}
           {calories ? (
             <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">
