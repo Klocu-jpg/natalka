@@ -22,6 +22,7 @@ const DEFAULT_VISIBILITY: WidgetVisibility = {
   "photo-albums": true,
   "nudge-widget": true,
   "chores-planner": true,
+  "diet-preferences": true,
 };
 
 export const WIDGET_LABELS: Record<string, string> = {
@@ -40,6 +41,7 @@ export const WIDGET_LABELS: Record<string, string> = {
   "photo-albums": "Wspomnienia",
   "nudge-widget": "Zaczepki",
   "chores-planner": "Obowiązki domowe",
+  "diet-preferences": "Preferencje dietetyczne",
 };
 
 interface WidgetVisibilityContextType {
