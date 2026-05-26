@@ -1,13 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { Salad, Save, Loader2, Flame } from "lucide-react";
+import { Salad, Save, Loader2, Flame, Settings, Sparkles, Shuffle, BookOpen, ChefHat, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import WidgetWrapper from "./WidgetWrapper";
 import { useDietPreferences, DietPreferencesInput } from "@/hooks/useDietPreferences";
 import { calculateCalories, ACTIVITY_LABELS, GOAL_LABELS } from "@/lib/calories";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLoading } from "@/contexts/LoadingContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const DIET_TYPES = [
   { value: "none", label: "Brak (wszystko)" },
@@ -36,9 +47,59 @@ const empty: DietPreferencesInput = {
   goal: "",
 };
 
+type MealType = "breakfast" | "lunch" | "dinner";
+interface DraftIngredient { name: string; amount: string }
+interface DraftMeal {
+  day_of_week: number;
+  meal_type: MealType;
+  name: string;
+  calories?: number | null;
+  recipe?: string | null;
+  ingredients?: DraftIngredient[];
+}
+
+const DAYS = [
+  { id: 0, short: "Pn", full: "Poniedziałek" },
+  { id: 1, short: "Wt", full: "Wtorek" },
+  { id: 2, short: "Śr", full: "Środa" },
+  { id: 3, short: "Cz", full: "Czwartek" },
+  { id: 4, short: "Pt", full: "Piątek" },
+  { id: 5, short: "So", full: "Sobota" },
+  { id: 6, short: "Nd", full: "Niedziela" },
+];
+
+const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
+  breakfast: { label: "Śniadanie", emoji: "🍳" },
+  lunch: { label: "Obiad", emoji: "🍝" },
+  dinner: { label: "Kolacja", emoji: "🌙" },
+};
+
+const DRAFT_KEY = "diet-plan-draft-v1";
+
 const DietPreferences = () => {
+  const { user } = useAuth();
   const { preferences, isLoading, upsertPreferences } = useDietPreferences();
+  const { withLoading } = useLoading();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState<DietPreferencesInput>(empty);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [plan, setPlan] = useState<DraftMeal[]>(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? (JSON.parse(raw) as DraftMeal[]) : [];
+    } catch { return []; }
+  });
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [generating, setGenerating] = useState(false);
+  const [rerollingKey, setRerollingKey] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [recipeMeal, setRecipeMeal] = useState<DraftMeal | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(plan));
+    } catch { /* ignore */ }
+  }, [plan]);
 
   useEffect(() => {
     if (preferences) {
@@ -82,41 +143,99 @@ const DietPreferences = () => {
     });
   };
 
-  return (
-    <WidgetWrapper
-      title="Preferencje dietetyczne"
-      icon={<Salad className="w-5 h-5 text-primary-foreground" />}
-      iconBg="gradient-primary"
-    >
-      {isLoading ? (
-        <div className="flex justify-center py-6">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-xs text-muted-foreground">
-            AI używa tych danych do liczenia kalorii i generowania planu obiadów.
-          </p>
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await withLoading(
+        () => supabase.functions.invoke("generate-meal-plan", { body: {} }),
+        "AI układa plan na tydzień (śniadania, obiady, kolacje)..."
+      );
+      if (error) throw new Error(error.message || "Błąd generowania");
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const meals: DraftMeal[] = (data as any)?.meals ?? [];
+      if (!Array.isArray(meals) || meals.length === 0) throw new Error("Pusty plan z AI");
+      setPlan(meals);
+      toast.success(`Plan gotowy! 🍽️ (${meals.length} posiłków)`);
+    } catch (e: any) {
+      toast.error(e?.message || "Nie udało się wygenerować planu");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
-          {/* Calorie summary card */}
-          {calories && (
-            <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <Flame className="w-4 h-4" />
-                <span className="text-xs font-medium opacity-90">Dzienne zapotrzebowanie</span>
-              </div>
-              <div className="text-3xl font-heading font-bold">
-                {calories.target}{" "}
-                <span className="text-base font-normal opacity-90">kcal/dzień</span>
-              </div>
-              <div className="text-xs opacity-80 mt-1">
-                BMR: {calories.bmr} · TDEE: {calories.tdee} · {calories.age} lat
-              </div>
-            </div>
-          )}
+  const handleReroll = async (meal: DraftMeal) => {
+    const key = `${meal.day_of_week}-${meal.meal_type}`;
+    setRerollingKey(key);
+    try {
+      const excludeNames = plan.map((m) => m.name).filter(Boolean);
+      const { data, error } = await supabase.functions.invoke("reroll-meal", {
+        body: { excludeNames, mealType: meal.meal_type },
+      });
+      if (error) throw new Error(error.message || "Błąd");
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setPlan((prev) =>
+        prev.map((m) =>
+          m.day_of_week === meal.day_of_week && m.meal_type === meal.meal_type
+            ? {
+                ...m,
+                name: (data as any).name,
+                calories: (data as any).calories ?? null,
+                recipe: (data as any).recipe ?? null,
+                ingredients: (data as any).ingredients ?? [],
+              }
+            : m
+        )
+      );
+      toast.success(`Wymieniono: ${(data as any).name} 🎲`);
+    } catch (e: any) {
+      toast.error(e?.message || "Nie udało się wymienić posiłku");
+    } finally {
+      setRerollingKey(null);
+    }
+  };
 
-          {/* Body data */}
-          <div className="space-y-2 pt-1">
+  const handleImport = async () => {
+    if (!user || plan.length === 0) return;
+    setImporting(true);
+    try {
+      const { error: delErr } = await supabase.from("meals").delete().eq("user_id", user.id);
+      if (delErr) throw delErr;
+
+      const rows = plan.map((m) => {
+        const meta = MEAL_META[m.meal_type];
+        return {
+          user_id: user.id,
+          day_of_week: m.day_of_week,
+          name: `${meta.emoji} ${meta.label} · ${m.name}`,
+          recipe: m.recipe ?? null,
+          ingredients: JSON.parse(JSON.stringify(m.ingredients ?? [])),
+          calories: m.calories ?? null,
+        };
+      });
+      const { error: insErr } = await supabase.from("meals").insert(rows);
+      if (insErr) throw insErr;
+
+      queryClient.invalidateQueries({ queryKey: ["meals", user.id] });
+      toast.success(`Zaimportowano ${rows.length} posiłków do planu 🍽️`);
+    } catch (e: any) {
+      toast.error(e?.message || "Nie udało się zaimportować planu");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const dayMeals = useMemo(
+    () => plan.filter((m) => m.day_of_week === selectedDay),
+    [plan, selectedDay]
+  );
+
+  const orderedTypes: MealType[] = ["breakfast", "lunch", "dinner"];
+  const dayTotalKcal = dayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+
+  const preferencesForm = (
+    <div className="space-y-4">
+      {/* Body data */}
+      <div className="space-y-2 pt-1">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Dane ciała
             </h4>
@@ -324,8 +443,274 @@ const DietPreferences = () => {
               </>
             )}
           </Button>
+    </div>
+  );
+
+  return (
+    <WidgetWrapper
+      title="Dieta i plan jedzenia"
+      icon={<Salad className="w-5 h-5 text-primary-foreground" />}
+      iconBg="gradient-primary"
+      actions={
+        <div className="flex gap-1">
+          <Button
+            size="icon"
+            variant="soft"
+            className="h-8 w-8"
+            onClick={handleGenerate}
+            disabled={generating}
+            title="Wygeneruj plan tygodniowy AI"
+          >
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          </Button>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8" title="Ustawienia diety">
+                <Settings className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-heading flex items-center gap-2">
+                  <Salad className="w-5 h-5 text-primary" /> Ustawienia diety
+                </DialogTitle>
+              </DialogHeader>
+              <div className="pt-2">{preferencesForm}</div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      }
+    >
+      {isLoading ? (
+        <div className="flex justify-center py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Calorie summary */}
+          {calories ? (
+            <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className="w-4 h-4" />
+                <span className="text-xs font-medium opacity-90">Dzienne zapotrzebowanie</span>
+              </div>
+              <div className="text-3xl font-heading font-bold">
+                {calories.target}{" "}
+                <span className="text-base font-normal opacity-90">kcal/dzień</span>
+              </div>
+              <div className="text-xs opacity-80 mt-1">
+                BMR: {calories.bmr} · TDEE: {calories.tdee} · {calories.age} lat
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+              Uzupełnij dane (płeć, wzrost, waga…) w{" "}
+              <button
+                className="text-primary underline underline-offset-2"
+                onClick={() => setSettingsOpen(true)}
+              >
+                ustawieniach diety
+              </button>
+              , aby policzyć kalorie i wygenerować plan.
+            </div>
+          )}
+
+          {/* Plan section */}
+          {plan.length === 0 ? (
+            <div className="rounded-2xl bg-secondary p-5 text-center space-y-3">
+              <ChefHat className="w-8 h-8 mx-auto text-primary" />
+              <div>
+                <div className="font-heading font-semibold text-sm">Brak planu na tydzień</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Kliknij ✨, aby AI ułożyła śniadania, obiady i kolacje dopasowane do Twoich preferencji.
+                </div>
+              </div>
+              <Button size="sm" onClick={handleGenerate} disabled={generating} className="gap-2">
+                {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Wygeneruj plan
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Day picker */}
+              <div className="grid grid-cols-7 gap-0.5 bg-muted rounded-lg p-1">
+                {DAYS.map((day) => {
+                  const has = plan.some((m) => m.day_of_week === day.id);
+                  const isActive = selectedDay === day.id;
+                  return (
+                    <button
+                      key={day.id}
+                      onClick={() => setSelectedDay(day.id)}
+                      className={cn(
+                        "text-xs py-2 rounded-md text-center transition-all font-medium",
+                        isActive && has && "bg-primary text-primary-foreground shadow-sm",
+                        isActive && !has && "bg-background text-foreground shadow-sm",
+                        !isActive && has && "bg-primary/20 text-primary font-semibold",
+                        !isActive && !has && "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {day.short}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between px-1">
+                <h3 className="font-heading font-semibold text-sm text-muted-foreground">
+                  {DAYS[selectedDay].full}
+                </h3>
+                {dayTotalKcal > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    Σ {dayTotalKcal} kcal
+                  </span>
+                )}
+              </div>
+
+              <ul className="space-y-2">
+                {orderedTypes.map((type) => {
+                  const meal = dayMeals.find((m) => m.meal_type === type);
+                  const meta = MEAL_META[type];
+                  const key = `${selectedDay}-${type}`;
+                  if (!meal) {
+                    return (
+                      <li key={key} className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+                        {meta.emoji} {meta.label} — brak
+                      </li>
+                    );
+                  }
+                  const isRerolling = rerollingKey === key;
+                  return (
+                    <li key={key} className="bg-secondary rounded-xl p-3 group">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setRecipeMeal(meal)}
+                          className="flex-1 text-left flex items-center gap-2 min-w-0 hover:text-primary transition-colors"
+                        >
+                          <span className="text-base shrink-0">{meta.emoji}</span>
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {meta.label}
+                            </div>
+                            <div className="font-medium truncate text-sm">{meal.name}</div>
+                          </div>
+                        </button>
+                        {meal.recipe && (
+                          <BookOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 hover:bg-primary/20 hover:text-primary"
+                          onClick={() => handleReroll(meal)}
+                          disabled={isRerolling || !!rerollingKey}
+                          title="Wymień (AI)"
+                        >
+                          {isRerolling ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Shuffle className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {meal.calories ? (
+                        <p className="text-xs text-muted-foreground mt-1 ml-7">
+                          {meal.calories} kcal
+                          {meal.ingredients?.length ? ` · ${meal.ingredients.length} składników` : ""}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={handleImport}
+                  disabled={importing}
+                  className="flex-1 gap-2"
+                  size="sm"
+                >
+                  {importing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  Importuj do planu obiadów
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" title="Wyczyść plan">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Wyczyścić plan?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Wygenerowany plan zostanie usunięty z podglądu. Zaimportowane posiłki w "Planie obiadów" zostaną nietknięte.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => setPlan([])}>Wyczyść</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Recipe dialog */}
+      <Dialog open={!!recipeMeal} onOpenChange={(o) => !o && setRecipeMeal(null)}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          {recipeMeal && (
+            <>
+              <DialogHeader className="pb-3 border-b">
+                <DialogTitle className="font-heading text-lg flex items-center gap-2">
+                  <span className="text-2xl">{MEAL_META[recipeMeal.meal_type].emoji}</span>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-sans font-normal">
+                      {MEAL_META[recipeMeal.meal_type].label} · {DAYS[recipeMeal.day_of_week].full}
+                    </div>
+                    {recipeMeal.name}
+                  </div>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                {recipeMeal.calories ? (
+                  <div className="inline-flex items-center gap-2 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                    <Flame className="w-3.5 h-3.5" />
+                    {recipeMeal.calories} kcal
+                  </div>
+                ) : null}
+                {recipeMeal.ingredients && recipeMeal.ingredients.length > 0 && (
+                  <div>
+                    <h4 className="font-heading font-semibold mb-2 text-sm">🧂 Składniki</h4>
+                    <ul className="space-y-1 text-sm">
+                      {recipeMeal.ingredients.map((ing, i) => (
+                        <li key={i} className="flex justify-between border-b border-border/50 py-1">
+                          <span>{ing.name}</span>
+                          <span className="text-muted-foreground">{ing.amount}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {recipeMeal.recipe && (
+                  <div>
+                    <h4 className="font-heading font-semibold mb-2 text-sm">👨‍🍳 Przepis</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                      {recipeMeal.recipe}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </WidgetWrapper>
   );
 };
