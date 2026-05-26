@@ -59,46 +59,99 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({} as any));
     const rawServings = Number(body?.servings ?? 1);
-    const servings = Math.min(6, Math.max(1, Number.isFinite(rawServings) ? Math.round(rawServings) : 1));
+    const requestedServings = Math.min(6, Math.max(1, Number.isFinite(rawServings) ? Math.round(rawServings) : 1));
 
-    const { data: prefs } = await supabase
+    // Pobierz członków pary (uwzględniając siebie)
+    const { data: memberRows } = await supabase
+      .rpc("get_couple_member_ids", { p_user_id: user.id });
+    const memberIds: string[] = Array.isArray(memberRows)
+      ? memberRows.map((r: any) => (typeof r === "string" ? r : r.get_couple_member_ids)).filter(Boolean)
+      : [];
+    // user na początku, potem reszta
+    const orderedIds = [user.id, ...memberIds.filter((id) => id !== user.id)];
+    const effectiveServings = Math.min(requestedServings, Math.max(1, orderedIds.length));
+    const useIds = orderedIds.slice(0, effectiveServings);
+
+    const { data: prefsRows } = await supabase
       .from("diet_preferences")
       .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .in("user_id", useIds);
+    const prefsById = new Map<string, any>(
+      (prefsRows ?? []).map((p: any) => [p.user_id, p])
+    );
+    const perPerson = useIds.map((id, i) => {
+      const p = prefsById.get(id) ?? null;
+      return {
+        idx: i + 1,
+        kcal: computeCalories(p),
+        prefs: p,
+      };
+    });
 
-    const targetCalories = computeCalories(prefs);
-    // Calorie split for breakfast / lunch / dinner
+    const totalCalories = perPerson.reduce((sum, p) => sum + (p.kcal ?? 0), 0) || null;
+    // Bazowy rozkład kcal na posiłki
     const split = { breakfast: 0.25, lunch: 0.38, dinner: 0.37 } as const;
     const kcalFor = (type: keyof typeof split) =>
-      targetCalories ? Math.round(targetCalories * split[type]) : null;
+      totalCalories ? Math.round(totalCalories * split[type]) : null;
+
+    // Zbiorcze preferencje — sumy ograniczeń (alergie/choroby) muszą obowiązywać dla WSZYSTKICH
+    const collect = (key: string) =>
+      perPerson
+        .map((p) => p.prefs?.[key])
+        .filter((v: any) => typeof v === "string" && v.trim().length > 0);
+
+    const allAllergies = Array.from(new Set(collect("allergies").join(",").split(",").map((s) => s.trim()).filter(Boolean)));
+    const allHealth = collect("health_conditions").join(" | ");
+    const allDislikes = Array.from(new Set(collect("dislikes").join(",").split(",").map((s) => s.trim()).filter(Boolean)));
+    const allDietTypes = Array.from(new Set(collect("diet_type")));
+    const allLikes = collect("likes").join(" | ");
+    const allNotes = collect("notes").join(" | ");
+
+    const perPersonLines = perPerson
+      .map((p) => {
+        const pr = p.prefs ?? {};
+        const sex = pr.biological_sex === "male" ? "M" : pr.biological_sex === "female" ? "K" : "?";
+        const meta = [
+          sex,
+          pr.weight_kg ? `${pr.weight_kg}kg` : null,
+          pr.height_cm ? `${pr.height_cm}cm` : null,
+          pr.birth_year ? `ur.${pr.birth_year}` : null,
+          pr.activity_level ? `akt:${pr.activity_level}` : null,
+          pr.goal ? `cel:${pr.goal}` : null,
+        ].filter(Boolean).join(", ");
+        return `Osoba ${p.idx} (${meta || "brak danych"}): ${p.kcal ?? "?"} kcal/dzień`;
+      })
+      .join("\n");
 
     const ctxParts: string[] = [];
-    if (prefs?.diet_type) ctxParts.push(`Typ diety: ${prefs.diet_type}`);
-    if (prefs?.allergies) ctxParts.push(`ALERGIE (bezwzględnie pomiń): ${prefs.allergies}`);
-    if (prefs?.health_conditions) ctxParts.push(`Ograniczenia zdrowotne: ${prefs.health_conditions}`);
-    if (prefs?.dislikes) ctxParts.push(`Nie lubi: ${prefs.dislikes}`);
-    if (prefs?.likes) ctxParts.push(`Lubi: ${prefs.likes}`);
-    if (prefs?.notes) ctxParts.push(`Uwagi: ${prefs.notes}`);
+    if (allDietTypes.length) ctxParts.push(`Typ diety (musi pasować wszystkim): ${allDietTypes.join(", ")}`);
+    if (allAllergies.length) ctxParts.push(`ALERGIE WSZYSTKICH (bezwzględnie pomiń): ${allAllergies.join(", ")}`);
+    if (allHealth) ctxParts.push(`Ograniczenia zdrowotne: ${allHealth}`);
+    if (allDislikes.length) ctxParts.push(`Czego nie lubią: ${allDislikes.join(", ")}`);
+    if (allLikes) ctxParts.push(`Co lubią: ${allLikes}`);
+    if (allNotes) ctxParts.push(`Uwagi: ${allNotes}`);
     const ctx = ctxParts.length
-      ? `\n\nPREFERENCJE UŻYTKOWNIKA:\n- ${ctxParts.join("\n- ")}`
+      ? `\n\nPREFERENCJE WSPÓLNE (${effectiveServings} ${effectiveServings === 1 ? "osoba" : "os."}):\n- ${ctxParts.join("\n- ")}`
       : "";
 
-    const kcalLine = targetCalories
-      ? `Dzienne zapotrzebowanie użytkownika: ${targetCalories} kcal.
-Rozkład kcal na posiłek:
+    const kcalLine = totalCalories
+      ? `ŁĄCZNE dzienne zapotrzebowanie dla ${effectiveServings} ${effectiveServings === 1 ? "osoby" : "os."}: ${totalCalories} kcal (suma).
+Dane osób:
+${perPersonLines}
+
+Cel kalorii ŁĄCZNIE na posiłek (suma dla wszystkich osób):
 - ŚNIADANIE (breakfast): ~${kcalFor("breakfast")} kcal
 - OBIAD (lunch): ~${kcalFor("lunch")} kcal
 - KOLACJA (dinner): ~${kcalFor("dinner")} kcal`
-      : `Generuj zbilansowane posiłki:
-- śniadanie ~400 kcal, obiad ~700 kcal, kolacja ~500 kcal.`;
+      : `Generuj zbilansowane posiłki dla ${effectiveServings} ${effectiveServings === 1 ? "osoby" : "os."}.`;
 
-    const servingsLine = servings > 1
-      ? `\n\nPLAN GOTUJEMY DLA ${servings} OSÓB:
-- Ilości w polu "ingredients" PODAJ JUŻ POMNOŻONE × ${servings} (czyli łączna ilość potrzebna do zrobienia posiłku dla ${servings} osób).
-- Pola "calories", "protein_g", "carbs_g", "fats_g" zostaw NA 1 PORCJĘ (per osoba).
-- W przepisie ("recipe") krótko zaznacz, że robimy dla ${servings} osób.`
-      : `\n\nPlan gotujemy dla 1 osoby. Ilości składników i makro = na 1 porcję.`;
+    const servingsLine = effectiveServings > 1
+      ? `\n\nGOTUJEMY DLA ${effectiveServings} OSÓB O RÓŻNYCH POTRZEBACH:
+- Składniki w "ingredients" PODAJ ŁĄCZNIE dla ${effectiveServings} osób (sumarycznie, nie per osoba).
+- Pola "calories", "protein_g", "carbs_g", "fats_g" = ŁĄCZNE wartości dla całego posiłku (suma porcji wszystkich osób).
+- Zaplanuj porcje proporcjonalnie do indywidualnych potrzeb (osoba o większym zapotrzebowaniu = większa porcja). W przepisie zaznacz: "Porcja dla osoby 1: X, osoba 2: Y" jeśli różnica jest znacząca.
+- Posiłek musi być akceptowalny dla WSZYSTKICH (alergie/diety/nielubiane składniki obowiązują razem).`
+      : `\n\nPlan dla 1 osoby. Ilości i makro = na 1 porcję.`;
 
     const macroLine = targetCalories
       ? `Rozkład makroskładników (orientacyjnie dla diety zbilansowanej): białko ~25%, węglowodany ~45%, tłuszcze ~30%.`
@@ -187,7 +240,7 @@ Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
     }
 
     return new Response(
-      JSON.stringify({ meals: parsed.meals, targetCalories }),
+      JSON.stringify({ meals: parsed.meals, targetCalories: totalCalories, servings: effectiveServings }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {

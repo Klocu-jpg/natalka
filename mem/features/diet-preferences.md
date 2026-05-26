@@ -1,13 +1,16 @@
 ---
-name: Diet Preferences
-description: Per-user diet preferences (likes, dislikes, allergies, diet type, health conditions, notes) fed into AI recipe generation
+name: Diet preferences & meal planning hub
+description: Diet hub with multi-person meal planning that sums per-member TDEE
 type: feature
 ---
-Table `diet_preferences` (one row per user, UNIQUE user_id). Partner in couple can SELECT (for shared meal planning) but only owner can INSERT/UPDATE/DELETE.
+# Dieta i plan jedzenia (wieloosobowy)
 
-Widget `DietPreferences` is the central "Dieta i plan jedzenia" hub. Header has Sparkles (generate weekly plan) + Settings gear (opens dialog with body data + food preferences form — NOT visible inline anymore). Body shows calorie summary card and the AI-generated weekly plan as a 7-day draft (breakfast/lunch/dinner per day) kept in component state + persisted to localStorage key `diet-plan-draft-v1`. Each meal has reroll + tap-to-view recipe. "Importuj do planu obiadów" button writes all 21 meals into `meals` table (prefixed with emoji + meal type), replacing previous user meals. MealsPlanner no longer has its own AI generate button — generation lives only in the diet widget.
-
-Edge function `generate-meal-plan` returns 21 meals (`day_of_week` 0..6 × `meal_type` breakfast|lunch|dinner) with calorie split 25/38/37 and macros (`protein_g`, `carbs_g`, `fats_g`). Prompt forbids empty meals. `reroll-meal` accepts `mealType`, returns same shape (kcal + macros).
-
-On import: meals are written to `meals` table (recipe text gets a `📊 Makro: B:Xg · W:Xg · T:Xg` header prepended) AND all ingredients are auto-deduped (by lowercased name) and bulk-added to `shopping_items` via `useShoppingItems().addItems`.
-Edge functions `generate-recipe` and `generate-recipe-from-url` fetch the calling user's prefs and inject a Polish "PREFERENCJE UŻYTKOWNIKA" block into the system prompt. Allergies are marked as "BEZWZGLĘDNIE pomiń". Best-effort: failures to fetch prefs don't block recipe generation.
+- Widget DietPreferences = centralny hub: ustawienia (dialog), generowanie planu AI, podgląd 7 dni × 3 posiłki, import do "Planu obiadów" + automatyczne dodanie składników do listy zakupów.
+- Liczba osób (servings 1–4) w lokalnym storage `diet-plan-servings-v1`. Domyślnie = liczba członków pary.
+- Edge `generate-meal-plan` i `reroll-meal` pobierają `diet_preferences` WSZYSTKICH członków pary (via `get_couple_member_ids` RPC), liczą TDEE per osoba (Mifflin–St Jeor), SUMUJĄ kcal i każą AI wygenerować posiłek dla całego gospodarstwa:
+  - `calories`, `protein_g`, `carbs_g`, `fats_g` = ŁĄCZNE wartości na posiłek (suma porcji wszystkich osób).
+  - `ingredients.amount` = łączna ilość dla N osób.
+  - Alergie i nielubiane składniki są UNIĄ wszystkich osób (bezwzględnie pomijane).
+- UI pokazuje łączne dzienne kcal + rozbicie per osoba gdy servings > 1. Ostrzega gdy brakuje danych członka pary.
+- Generowanie zablokowane gdy servings > 1 a któraś osoba nie ma kompletu danych (płeć/wzrost/waga/rok ur.).
+- Draft planu w localStorage `diet-plan-draft-v1`. Import zastępuje istniejące meals (delete all by user_id, then insert 21).
