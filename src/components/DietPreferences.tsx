@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Salad, Save, Loader2, Flame, Settings, Sparkles, Shuffle, BookOpen, ChefHat, Download, Trash2 } from "lucide-react";
+import { Salad, Save, Loader2, Flame, Settings, Sparkles, Shuffle, BookOpen, ChefHat, Download, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useShoppingItems } from "@/hooks/useShoppingItems";
+import { useCouple } from "@/hooks/useCouple";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -79,12 +80,14 @@ const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
 };
 
 const DRAFT_KEY = "diet-plan-draft-v1";
+const SERVINGS_KEY = "diet-plan-servings-v1";
 
 const DietPreferences = () => {
   const { user } = useAuth();
   const { preferences, isLoading, upsertPreferences } = useDietPreferences();
   const { withLoading } = useLoading();
   const { addItems } = useShoppingItems();
+  const { couple } = useCouple();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<DietPreferencesInput>(empty);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -99,6 +102,36 @@ const DietPreferences = () => {
   const [rerollingKey, setRerollingKey] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [recipeMeal, setRecipeMeal] = useState<DraftMeal | null>(null);
+
+  const coupleMemberCount = useMemo(() => {
+    if (!couple) return 1;
+    return [couple.user1_id, couple.user2_id, couple.user3_id, couple.user4_id]
+      .filter(Boolean).length || 1;
+  }, [couple]);
+
+  const [servings, setServings] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(SERVINGS_KEY);
+      if (raw) {
+        const n = parseInt(raw, 10);
+        if (n >= 1 && n <= 6) return n;
+      }
+    } catch { /* ignore */ }
+    return 1;
+  });
+
+  useEffect(() => {
+    // Auto-default to couple size on first load if user hasn't set it yet
+    try {
+      if (!localStorage.getItem(SERVINGS_KEY) && coupleMemberCount > 1) {
+        setServings(coupleMemberCount);
+      }
+    } catch { /* ignore */ }
+  }, [coupleMemberCount]);
+
+  useEffect(() => {
+    try { localStorage.setItem(SERVINGS_KEY, String(servings)); } catch { /* ignore */ }
+  }, [servings]);
 
   useEffect(() => {
     try {
@@ -152,8 +185,8 @@ const DietPreferences = () => {
     setGenerating(true);
     try {
       const { data, error } = await withLoading(
-        () => supabase.functions.invoke("generate-meal-plan", { body: {} }),
-        "AI układa plan na tydzień (śniadania, obiady, kolacje)..."
+        () => supabase.functions.invoke("generate-meal-plan", { body: { servings } }),
+        `AI układa plan na tydzień dla ${servings} ${servings === 1 ? "osoby" : "osób"}...`
       );
       if (error) throw new Error(error.message || "Błąd generowania");
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -174,7 +207,7 @@ const DietPreferences = () => {
     try {
       const excludeNames = plan.map((m) => m.name).filter(Boolean);
       const { data, error } = await supabase.functions.invoke("reroll-meal", {
-        body: { excludeNames, mealType: meal.meal_type },
+        body: { excludeNames, mealType: meal.meal_type, servings },
       });
       if (error) throw new Error(error.message || "Błąd");
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -525,6 +558,34 @@ const DietPreferences = () => {
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Servings selector */}
+          <div className="flex items-center justify-between gap-2 rounded-2xl border bg-card px-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="font-medium">Plan dla</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setServings(n)}
+                  className={cn(
+                    "h-7 w-9 rounded-md text-xs font-semibold transition-all",
+                    servings === n
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                  title={`${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osób"}`}
+                >
+                  {n}
+                </button>
+              ))}
+              <span className="ml-1 text-xs text-muted-foreground">
+                {servings === 1 ? "osoby" : "osób"}
+              </span>
+            </div>
+          </div>
+
           {/* Calorie summary */}
           {calories ? (
             <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">

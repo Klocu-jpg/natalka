@@ -53,7 +53,9 @@ serve(async (req) => {
       });
     }
 
-    const { excludeNames = [], mealType = "dinner" } = await req.json().catch(() => ({}));
+    const { excludeNames = [], mealType = "dinner", servings: rawServings = 1 } =
+      await req.json().catch(() => ({}));
+    const servings = Math.min(6, Math.max(1, Number.isFinite(Number(rawServings)) ? Math.round(Number(rawServings)) : 1));
     const safeExclude: string[] = Array.isArray(excludeNames)
       ? excludeNames.filter((s: unknown) => typeof s === "string").slice(0, 20)
       : [];
@@ -83,6 +85,9 @@ serve(async (req) => {
     const kcalLine = mealKcal
       ? `Cel kalorii: około ${mealKcal} kcal.`
       : "Cel: zbilansowany posiłek.";
+    const servingsLine = servings > 1
+      ? `\nGOTUJEMY DLA ${servings} OSÓB: ilości w "ingredients" pomnóż × ${servings}; "calories" i makro zostaw NA 1 PORCJĘ.`
+      : "";
     const excludeLine = safeExclude.length
       ? `\nNIE PROPONUJ tych dań (były już w planie): ${safeExclude.join(", ")}.`
       : "";
@@ -102,7 +107,7 @@ serve(async (req) => {
           {
             role: "system",
             content: `Jesteś dietetykiem i kucharzem. Proponujesz JEDNO ${typeLabel} po polsku.
-${kcalLine}${excludeLine}
+${kcalLine}${servingsLine}${excludeLine}
 Zawsze pełen przepis (min. 4 kroki) i konkretne ilości składników. Dopasuj do preferencji, NIGDY nie używaj alergenów.
 Odpowiadaj TYLKO w formacie JSON:
 {
