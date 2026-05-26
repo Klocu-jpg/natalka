@@ -83,6 +83,30 @@ serve(async (req) => {
       });
     }
 
+    // Fetch diet preferences (best-effort) to adapt the extracted recipe
+    let dietContext = "";
+    try {
+      const { data: prefs } = await supabaseClient
+        .from("diet_preferences")
+        .select("likes,dislikes,allergies,diet_type,health_conditions,notes")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (prefs) {
+        const parts: string[] = [];
+        if (prefs.diet_type) parts.push(`Typ diety: ${prefs.diet_type}`);
+        if (prefs.allergies) parts.push(`Alergie (BEZWZGLĘDNIE pomiń lub zastąp): ${prefs.allergies}`);
+        if (prefs.health_conditions) parts.push(`Ograniczenia zdrowotne: ${prefs.health_conditions}`);
+        if (prefs.dislikes) parts.push(`Nie lubi: ${prefs.dislikes}`);
+        if (prefs.likes) parts.push(`Lubi: ${prefs.likes}`);
+        if (prefs.notes) parts.push(`Uwagi: ${prefs.notes}`);
+        if (parts.length > 0) {
+          dietContext = `\n\nPREFERENCJE UŻYTKOWNIKA (dostosuj przepis - możesz zaproponować zamienniki dla alergenów / niechcianych składników, ale zachowaj charakter dania):\n- ${parts.join("\n- ")}`;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch diet preferences:", e);
+    }
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -110,7 +134,7 @@ Odpowiadaj TYLKO w formacie JSON bez żadnego dodatkowego tekstu:
 }
 Jeśli strona nie zawiera przepisu, zwróć:
 { "error": "Nie znaleziono przepisu na tej stronie" }
-Przepis przetłumacz na język polski jeśli jest w innym języku. Składniki podawaj z dokładnymi ilościami.`
+Przepis przetłumacz na język polski jeśli jest w innym języku. Składniki podawaj z dokładnymi ilościami.${dietContext}`
           },
           {
             role: 'user',

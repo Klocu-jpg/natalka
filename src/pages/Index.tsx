@@ -18,6 +18,7 @@ import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
 import NudgeWidget from "@/components/NudgeWidget";
 import ChoresPlanner from "@/components/ChoresPlanner";
+import DietPreferences from "@/components/DietPreferences";
 import GenderSelector from "@/components/GenderSelector";
 import MobileDashboard from "@/components/MobileDashboard";
 import { useWidgetVisibility } from "@/contexts/WidgetVisibilityContext";
@@ -56,6 +57,9 @@ const defaultLayouts: Layouts = {
 
     // Row 7: Chores planner
     { i: "chores-planner", x: 0, y: 26, w: 1, h: 5, minH: 4 },
+
+    // Row 8: Diet preferences (full width)
+    { i: "diet-preferences", x: 0, y: 31, w: 3, h: 7, minH: 5 },
   ],
   md: [
     // Row 1: Full width header
@@ -92,6 +96,9 @@ const defaultLayouts: Layouts = {
 
     // Row 10: Chores planner
     { i: "chores-planner", x: 0, y: 39, w: 2, h: 5, minH: 4 },
+
+    // Row 11: Diet preferences
+    { i: "diet-preferences", x: 0, y: 44, w: 2, h: 7, minH: 5 },
   ],
 };
 
@@ -111,6 +118,7 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "photo-albums": PhotoAlbums,
   "nudge-widget": NudgeWidget,
   "chores-planner": ChoresPlanner,
+  "diet-preferences": DietPreferences,
 };
 
 const Index = () => {

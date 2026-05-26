@@ -14,6 +14,7 @@ import SavingsGoals from "@/components/SavingsGoals";
 import PhotoAlbums from "@/components/PhotoAlbums";
 import NudgeWidget from "@/components/NudgeWidget";
 import ChoresPlanner from "@/components/ChoresPlanner";
+import DietPreferences from "@/components/DietPreferences";
 import GenderSelector from "@/components/GenderSelector";
 import MobileHeader from "@/components/MobileHeader";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -38,6 +39,7 @@ const ALL_WIDGETS: Record<string, React.FC> = {
   "photo-albums": PhotoAlbums,
   "nudge-widget": NudgeWidget,
   "chores-planner": ChoresPlanner,
+  "diet-preferences": DietPreferences,
 };
 
 const MobileDashboard = () => {

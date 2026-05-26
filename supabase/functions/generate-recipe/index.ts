@@ -48,6 +48,30 @@ serve(async (req) => {
 
     const sanitizedMealName = mealName.trim();
 
+    // Fetch diet preferences for the authenticated user (best-effort)
+    let dietContext = "";
+    try {
+      const { data: prefs } = await supabaseClient
+        .from("diet_preferences")
+        .select("likes,dislikes,allergies,diet_type,health_conditions,notes")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (prefs) {
+        const parts: string[] = [];
+        if (prefs.diet_type) parts.push(`Typ diety: ${prefs.diet_type}`);
+        if (prefs.allergies) parts.push(`Alergie (BEZWZGLĘDNIE pomiń): ${prefs.allergies}`);
+        if (prefs.health_conditions) parts.push(`Ograniczenia zdrowotne: ${prefs.health_conditions}`);
+        if (prefs.dislikes) parts.push(`Nie lubi: ${prefs.dislikes}`);
+        if (prefs.likes) parts.push(`Lubi: ${prefs.likes}`);
+        if (prefs.notes) parts.push(`Uwagi: ${prefs.notes}`);
+        if (parts.length > 0) {
+          dietContext = `\n\nPREFERENCJE UŻYTKOWNIKA (uwzględnij je przy przepisie, dostosuj składniki):\n- ${parts.join("\n- ")}`;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch diet preferences:", e);
+    }
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -72,7 +96,7 @@ Odpowiadaj TYLKO w formacie JSON bez żadnego dodatkowego tekstu:
     { "name": "nazwa składnika", "amount": "ilość np. 200g, 2 sztuki" }
   ]
 }
-Przepis powinien być prosty i praktyczny. Składniki podawaj z dokładnymi ilościami.`
+Przepis powinien być prosty i praktyczny. Składniki podawaj z dokładnymi ilościami.${dietContext}`
           },
           {
             role: 'user',
