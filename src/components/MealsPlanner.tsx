@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen, Star, Check, Trash2 } from "lucide-react";
+import { UtensilsCrossed, Plus, Loader2, ChefHat, X, ShoppingCart, BookOpen, Star, Check, Trash2, Sparkles, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -27,7 +27,7 @@ const DAYS = [
 type AddMode = "ai" | "simple" | "recipe";
 
 const MealsPlanner = () => {
-  const { meals, isLoading, addMeal, addMealFromFavorite, deleteMeal, clearDay, clearAllMeals, getMealsForDay } = useMeals();
+  const { meals, isLoading, addMeal, addMealFromFavorite, deleteMeal, clearDay, clearAllMeals, getMealsForDay, generateWeekPlan, rerollMeal } = useMeals();
   const { addItem, addItems } = useShoppingItems();
   const { favoriteRecipes, addFavoriteRecipe, isRecipeFavorite } = useFavoriteRecipes();
   const { withLoading } = useLoading();
@@ -113,6 +113,14 @@ const MealsPlanner = () => {
     clearAllMeals.mutate();
   };
 
+  const handleGenerateWeek = async () => {
+    await withLoading(() => generateWeekPlan.mutateAsync(), "AI generuje plan na tydzień...");
+  };
+
+  const handleReroll = async (meal: Meal) => {
+    await withLoading(() => rerollMeal.mutateAsync(meal), "Wymieniam obiad...");
+  };
+
   const isPending = addMeal.isPending || addMealFromFavorite.isPending;
 
   return (
@@ -122,6 +130,26 @@ const MealsPlanner = () => {
       iconBg="gradient-primary"
       actions={
         <div className="flex gap-1">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="icon" variant="soft" className="h-8 w-8" title="Wygeneruj plan tygodniowy AI">
+                <Sparkles className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Wygenerować plan na tydzień?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  AI ułoży 7 obiadów dopasowanych do Twoich preferencji i dziennego zapotrzebowania kalorycznego.
+                  Obecny plan obiadów zostanie zastąpiony.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={handleGenerateWeek}>Generuj</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {meals.length > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -305,6 +333,16 @@ const MealsPlanner = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-primary/20 hover:text-primary"
+                          onClick={() => handleReroll(meal)}
+                          title="Wymień obiad (AI)"
+                          disabled={rerollMeal.isPending}
+                        >
+                          <Shuffle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-green-500/20 hover:text-green-600"
                           onClick={() => handleMarkAsEaten(meal)}
                           title="Oznacz jako zjedzone"
@@ -322,6 +360,7 @@ const MealsPlanner = () => {
                       {meal.ingredients && meal.ingredients.length > 0 && (
                         <p className="text-xs text-muted-foreground mt-1 ml-6">
                           {meal.ingredients.length} składników
+                          {meal.calories ? ` · ${meal.calories} kcal` : ""}
                         </p>
                       )}
                       {!meal.recipe && (

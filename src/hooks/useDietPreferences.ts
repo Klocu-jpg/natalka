@@ -12,13 +12,30 @@ export interface DietPreferences {
   diet_type: string | null;
   health_conditions: string | null;
   notes: string | null;
+  biological_sex: string | null;
+  birth_year: number | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  activity_level: string | null;
+  goal: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export type DietPreferencesInput = Pick<
   DietPreferences,
-  "likes" | "dislikes" | "allergies" | "diet_type" | "health_conditions" | "notes"
+  | "likes"
+  | "dislikes"
+  | "allergies"
+  | "diet_type"
+  | "health_conditions"
+  | "notes"
+  | "biological_sex"
+  | "birth_year"
+  | "height_cm"
+  | "weight_kg"
+  | "activity_level"
+  | "goal"
 >;
 
 export const useDietPreferences = () => {
@@ -51,6 +68,12 @@ export const useDietPreferences = () => {
         diet_type: input.diet_type?.trim() || null,
         health_conditions: input.health_conditions?.trim() || null,
         notes: input.notes?.trim() || null,
+        biological_sex: input.biological_sex?.trim() || null,
+        birth_year: input.birth_year || null,
+        height_cm: input.height_cm || null,
+        weight_kg: input.weight_kg || null,
+        activity_level: input.activity_level?.trim() || null,
+        goal: input.goal?.trim() || null,
       };
       const { data, error } = await supabase
         .from("diet_preferences" as any)
