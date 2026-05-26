@@ -57,6 +57,10 @@ serve(async (req) => {
       });
     }
 
+    const body = await req.json().catch(() => ({} as any));
+    const rawServings = Number(body?.servings ?? 1);
+    const servings = Math.min(6, Math.max(1, Number.isFinite(rawServings) ? Math.round(rawServings) : 1));
+
     const { data: prefs } = await supabase
       .from("diet_preferences")
       .select("*")
@@ -89,6 +93,13 @@ Rozkład kcal na posiłek:
       : `Generuj zbilansowane posiłki:
 - śniadanie ~400 kcal, obiad ~700 kcal, kolacja ~500 kcal.`;
 
+    const servingsLine = servings > 1
+      ? `\n\nPLAN GOTUJEMY DLA ${servings} OSÓB:
+- Ilości w polu "ingredients" PODAJ JUŻ POMNOŻONE × ${servings} (czyli łączna ilość potrzebna do zrobienia posiłku dla ${servings} osób).
+- Pola "calories", "protein_g", "carbs_g", "fats_g" zostaw NA 1 PORCJĘ (per osoba).
+- W przepisie ("recipe") krótko zaznacz, że robimy dla ${servings} osób.`
+      : `\n\nPlan gotujemy dla 1 osoby. Ilości składników i makro = na 1 porcję.`;
+
     const macroLine = targetCalories
       ? `Rozkład makroskładników (orientacyjnie dla diety zbilansowanej): białko ~25%, węglowodany ~45%, tłuszcze ~30%.`
       : "Dobierz makra tak, by danie było zbilansowane.";
@@ -115,7 +126,7 @@ ZASADY (BARDZO WAŻNE):
 - Dania mają być RÓŻNORODNE (różne białka, różne kuchnie świata, brak powtórzeń w tygodniu).
 - DOPASUJ do preferencji użytkownika (lubi/nie lubi/alergie/typ diety). Nigdy nie używaj składników z listy alergii.
 
-${kcalLine}
+${kcalLine}${servingsLine}
 ${macroLine}
 
 Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
