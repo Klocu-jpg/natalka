@@ -641,11 +641,44 @@ const DietPreferences = () => {
           </div>
 
           {/* Calorie summary */}
-          {calories ? (
+          {servings > 1 && totalDailyKcal ? (
             <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <Flame className="w-4 h-4" />
-                <span className="text-xs font-medium opacity-90">Dzienne zapotrzebowanie</span>
+                <span className="text-xs font-medium opacity-90">
+                  Łączne dzienne zapotrzebowanie ({servings} os.)
+                </span>
+              </div>
+              <div className="text-3xl font-heading font-bold">
+                {totalDailyKcal}{" "}
+                <span className="text-base font-normal opacity-90">kcal/dzień</span>
+              </div>
+              <div className="mt-2 space-y-0.5 text-xs opacity-90">
+                {perPersonCalories.map((p) => (
+                  <div key={p.id} className="flex justify-between">
+                    <span>
+                      Osoba {p.idx}
+                      {p.isMe ? " (Ty)" : ""}
+                    </span>
+                    <span className="font-medium">
+                      {p.target ? `${p.target} kcal` : "brak danych"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {!allPersonsHaveData && (
+                <div className="mt-2 text-[11px] bg-background/20 rounded-lg px-2 py-1">
+                  ⚠️ Brakuje danych jednej z osób — poproś ją o uzupełnienie ustawień diety.
+                </div>
+              )}
+            </div>
+          ) : calories ? (
+            <div className="rounded-2xl gradient-primary p-4 text-primary-foreground shadow-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className="w-4 h-4" />
+                <span className="text-xs font-medium opacity-90">
+                  Dzienne zapotrzebowanie (Ty)
+                </span>
               </div>
               <div className="text-3xl font-heading font-bold">
                 {calories.target}{" "}
