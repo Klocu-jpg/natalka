@@ -5,6 +5,7 @@ type: feature
 ---
 Table `diet_preferences` (one row per user, UNIQUE user_id). Partner in couple can SELECT (for shared meal planning) but only owner can INSERT/UPDATE/DELETE.
 
-Widget `DietPreferences` lives in the "home" tab (mobile) and as a full-width row at bottom of desktop grid. Registered in WidgetVisibilityContext as `diet-preferences`.
+Widget `DietPreferences` is the central "Dieta i plan jedzenia" hub. Header has Sparkles (generate weekly plan) + Settings gear (opens dialog with body data + food preferences form — NOT visible inline anymore). Body shows calorie summary card and the AI-generated weekly plan as a 7-day draft (breakfast/lunch/dinner per day) kept in component state + persisted to localStorage key `diet-plan-draft-v1`. Each meal has reroll + tap-to-view recipe. "Importuj do planu obiadów" button writes all 21 meals into `meals` table (prefixed with emoji + meal type), replacing previous user meals. MealsPlanner no longer has its own AI generate button — generation lives only in the diet widget.
 
+Edge function `generate-meal-plan` returns 21 meals (`day_of_week` 0..6 × `meal_type` breakfast|lunch|dinner) with calorie split 25/38/37. `reroll-meal` accepts `mealType` and uses same split.
 Edge functions `generate-recipe` and `generate-recipe-from-url` fetch the calling user's prefs and inject a Polish "PREFERENCJE UŻYTKOWNIKA" block into the system prompt. Allergies are marked as "BEZWZGLĘDNIE pomiń". Best-effort: failures to fetch prefs don't block recipe generation.
