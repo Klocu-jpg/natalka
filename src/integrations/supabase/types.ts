@@ -210,6 +210,45 @@ export type Database = {
         }
         Relationships: []
       }
+      diet_preferences: {
+        Row: {
+          allergies: string | null
+          created_at: string
+          diet_type: string | null
+          dislikes: string | null
+          health_conditions: string | null
+          id: string
+          likes: string | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string | null
+          created_at?: string
+          diet_type?: string | null
+          dislikes?: string | null
+          health_conditions?: string | null
+          id?: string
+          likes?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string | null
+          created_at?: string
+          diet_type?: string | null
+          dislikes?: string | null
+          health_conditions?: string | null
+          id?: string
+          likes?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_countdowns: {
         Row: {
           couple_id: string | null
