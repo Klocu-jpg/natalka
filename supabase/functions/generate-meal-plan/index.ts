@@ -89,6 +89,10 @@ Rozkład kcal na posiłek:
       : `Generuj zbilansowane posiłki:
 - śniadanie ~400 kcal, obiad ~700 kcal, kolacja ~500 kcal.`;
 
+    const macroLine = targetCalories
+      ? `Rozkład makroskładników (orientacyjnie dla diety zbilansowanej): białko ~25%, węglowodany ~45%, tłuszcze ~30%.`
+      : "Dobierz makra tak, by danie było zbilansowane.";
+
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -103,9 +107,16 @@ Rozkład kcal na posiłek:
         messages: [
           {
             role: "system",
-            content: `Jesteś dietetykiem i kucharzem. Generujesz KOMPLETNY plan jedzenia na 7 dni po polsku: ŚNIADANIE, OBIAD i KOLACJA na każdy dzień (łącznie DOKŁADNIE 21 pozycji).
+            content: `Jesteś dietetykiem i kucharzem. Generujesz KOMPLETNY plan jedzenia na 7 dni po polsku: ŚNIADANIE, OBIAD i KOLACJA na każdy dzień.
+
+ZASADY (BARDZO WAŻNE):
+- ZAWSZE wygeneruj DOKŁADNIE 21 pozycji (7 dni × 3 posiłki). Nigdy nie zostawiaj posiłku pustego ani nie pisz "brak". Każdy posiłek musi mieć pełne dane.
+- ZAWSZE pełny przepis krok po kroku (min. 4 kroki) i konkretne ilości w składnikach (gramy / sztuki / łyżki).
+- Dania mają być RÓŻNORODNE (różne białka, różne kuchnie świata, brak powtórzeń w tygodniu).
+- DOPASUJ do preferencji użytkownika (lubi/nie lubi/alergie/typ diety). Nigdy nie używaj składników z listy alergii.
+
 ${kcalLine}
-Dania mają być RÓŻNORODNE (różne białka, różne kuchnie świata, brak powtórzeń w tygodniu).
+${macroLine}
 
 Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
 {
@@ -115,6 +126,9 @@ Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
       "meal_type": "breakfast",
       "name": "nazwa dania",
       "calories": 420,
+      "protein_g": 28,
+      "carbs_g": 45,
+      "fats_g": 14,
       "recipe": "Szczegółowy przepis krok po kroku...",
       "ingredients": [
         { "name": "nazwa składnika", "amount": "ilość np. 200g" }
@@ -126,7 +140,7 @@ Odpowiadaj TYLKO w formacie JSON (bez markdown, bez komentarzy):
           },
           {
             role: "user",
-            content: "Wygeneruj kompletny plan jedzenia na cały tydzień: śniadanie, obiad i kolacja na każdy dzień (21 posiłków).",
+            content: "Wygeneruj kompletny plan jedzenia na cały tydzień: śniadanie, obiad i kolacja na każdy dzień (21 posiłków). Każdy posiłek z makro (białko/węgle/tłuszcze) i pełnym przepisem.",
           },
         ],
       }),
