@@ -17,6 +17,7 @@ export interface Meal {
   name: string;
   recipe: string | null;
   ingredients: Ingredient[];
+  calories: number | null;
   created_at: string;
 }
 
@@ -39,6 +40,7 @@ export const useMeals = () => {
       return (data || []).map((meal) => ({
         ...meal,
         recipe: meal.recipe ?? null,
+        calories: (meal as any).calories ?? null,
         ingredients: Array.isArray(meal.ingredients) ? (meal.ingredients as unknown as Ingredient[]) : [],
       }));
     },
@@ -148,6 +150,84 @@ const deleteMeal = useMutation({
     },
   });
 
+  const generateWeekPlan = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Nie jesteś zalogowany");
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", { body: {} });
+      if (error) throw new Error(error.message || "Nie udało się wygenerować planu");
+      if (data?.error) throw new Error(data.error);
+
+      const planMeals: Array<{
+        day_of_week: number;
+        name: string;
+        recipe?: string;
+        ingredients?: Ingredient[];
+        calories?: number;
+      }> = data?.meals ?? [];
+
+      if (!Array.isArray(planMeals) || planMeals.length === 0) {
+        throw new Error("Pusty plan z AI");
+      }
+
+      // Replace all existing meals for this user
+      const { error: delErr } = await supabase.from("meals").delete().eq("user_id", user.id);
+      if (delErr) throw delErr;
+
+      const rows = planMeals.map((m) => ({
+        user_id: user.id,
+        day_of_week: m.day_of_week,
+        name: m.name,
+        recipe: m.recipe ?? null,
+        ingredients: JSON.parse(JSON.stringify(m.ingredients ?? [])),
+        calories: m.calories ?? null,
+      }));
+
+      const { error: insErr } = await supabase.from("meals").insert(rows);
+      if (insErr) throw insErr;
+
+      return rows.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+      toast.success(`Plan na tydzień gotowy! 🍽️ (${count} obiadów)`);
+      notifyPartner("meals", "Plan tygodniowy", "🍽️ Nowy plan obiadów na tydzień", "🍽️");
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || "Nie udało się wygenerować planu");
+    },
+  });
+
+  const rerollMeal = useMutation({
+    mutationFn: async (meal: Meal) => {
+      if (!user) throw new Error("Nie jesteś zalogowany");
+      const excludeNames = meals.map((m) => m.name).filter(Boolean);
+      const { data, error } = await supabase.functions.invoke("reroll-meal", {
+        body: { excludeNames },
+      });
+      if (error) throw new Error(error.message || "Nie udało się wymienić obiadu");
+      if (data?.error) throw new Error(data.error);
+
+      const { error: upErr } = await supabase
+        .from("meals")
+        .update({
+          name: data.name,
+          recipe: data.recipe ?? null,
+          ingredients: JSON.parse(JSON.stringify(data.ingredients ?? [])),
+          calories: data.calories ?? null,
+        })
+        .eq("id", meal.id);
+      if (upErr) throw upErr;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["meals", user?.id] });
+      toast.success(`Wymieniono: ${data.name} 🎲`);
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || "Nie udało się wymienić obiadu");
+    },
+  });
+
   const clearDay = useMutation({
     mutationFn: async (dayOfWeek: number) => {
       const { error } = await supabase
@@ -195,5 +275,7 @@ const getMealsForDay = (dayOfWeek: number) => {
     clearDay,
     clearAllMeals,
     getMealsForDay,
+    generateWeekPlan,
+    rerollMeal,
   };
 };
