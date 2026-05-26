@@ -212,40 +212,58 @@ export type Database = {
       }
       diet_preferences: {
         Row: {
+          activity_level: string | null
           allergies: string | null
+          biological_sex: string | null
+          birth_year: number | null
           created_at: string
           diet_type: string | null
           dislikes: string | null
+          goal: string | null
           health_conditions: string | null
+          height_cm: number | null
           id: string
           likes: string | null
           notes: string | null
           updated_at: string
           user_id: string
+          weight_kg: number | null
         }
         Insert: {
+          activity_level?: string | null
           allergies?: string | null
+          biological_sex?: string | null
+          birth_year?: number | null
           created_at?: string
           diet_type?: string | null
           dislikes?: string | null
+          goal?: string | null
           health_conditions?: string | null
+          height_cm?: number | null
           id?: string
           likes?: string | null
           notes?: string | null
           updated_at?: string
           user_id: string
+          weight_kg?: number | null
         }
         Update: {
+          activity_level?: string | null
           allergies?: string | null
+          biological_sex?: string | null
+          birth_year?: number | null
           created_at?: string
           diet_type?: string | null
           dislikes?: string | null
+          goal?: string | null
           health_conditions?: string | null
+          height_cm?: number | null
           id?: string
           likes?: string | null
           notes?: string | null
           updated_at?: string
           user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }
@@ -377,6 +395,7 @@ export type Database = {
       }
       meals: {
         Row: {
+          calories: number | null
           created_at: string
           day_of_week: number
           id: string
@@ -386,6 +405,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          calories?: number | null
           created_at?: string
           day_of_week: number
           id?: string
@@ -395,6 +415,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          calories?: number | null
           created_at?: string
           day_of_week?: number
           id?: string

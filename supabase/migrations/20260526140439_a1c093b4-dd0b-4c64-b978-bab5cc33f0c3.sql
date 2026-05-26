@@ -1,0 +1,11 @@
+
+ALTER TABLE public.diet_preferences
+  ADD COLUMN IF NOT EXISTS biological_sex TEXT,
+  ADD COLUMN IF NOT EXISTS birth_year INTEGER,
+  ADD COLUMN IF NOT EXISTS height_cm INTEGER,
+  ADD COLUMN IF NOT EXISTS weight_kg NUMERIC(5,1),
+  ADD COLUMN IF NOT EXISTS activity_level TEXT,
+  ADD COLUMN IF NOT EXISTS goal TEXT;
+
+ALTER TABLE public.meals
+  ADD COLUMN IF NOT EXISTS calories INTEGER;
