@@ -359,6 +359,48 @@ const DietPreferences = () => {
 
   const preferencesForm = (
     <div className="space-y-4">
+      {/* Status danych członków pary */}
+      {coupleMemberCount > 1 && (
+        <div className="rounded-xl border bg-secondary/40 p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Dane osób w planie
+            </h4>
+          </div>
+          <ul className="space-y-1 text-xs">
+            {perPersonCalories.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between rounded-lg bg-background px-2.5 py-1.5"
+              >
+                <span className="font-medium">
+                  Osoba {p.idx} {p.isMe ? "(Ty)" : "(partner)"}
+                </span>
+                {p.target ? (
+                  <span className="text-primary font-semibold">
+                    {p.target} kcal/dzień ✓
+                  </span>
+                ) : (
+                  <span className="text-amber-600">brak danych ⚠️</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          {!allPersonsHaveData && (
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              💡 Każda osoba uzupełnia swoje dane (płeć, wzrost, wagę, wiek) na <strong>własnym koncie</strong> w widgecie „Dieta i plan jedzenia" → ⚙️ Ustawienia. Poproś partnera, żeby wszedł na swój telefon/przeglądarkę i wypełnił formularz poniżej.
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="text-xs text-muted-foreground border-l-2 border-primary/40 pl-2">
+        {coupleMemberCount > 1
+          ? "Poniżej edytujesz TYLKO swoje dane. Dane partnera są widoczne wyżej."
+          : "Uzupełnij swoje dane, aby obliczyć dzienne zapotrzebowanie kaloryczne."}
+      </div>
+
       {/* Body data */}
       <div className="space-y-2 pt-1">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
